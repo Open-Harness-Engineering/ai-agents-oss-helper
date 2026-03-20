@@ -16,3 +16,6 @@ This rule file contains branching, commit, PR, and task-finding conventions for 
 - **Find-task intermediate:** Filter 12352792 (easy issues)
 - **Find-task experienced JQL:** `project = CAMEL AND status = Open AND labels = help-wanted` (maxResults=10)
 - **Scope-too-large redirect:** create a Jira issue directly
+
+## Version
+9cff91b315de9587ebd2f353d255dd837190061c

@@ -18,13 +18,14 @@ AGENTS=("claude" "bob" "gemini")
 
 # Command files to install (relative paths from repo root)
 COMMAND_FILES=(
+    "commands/.oss-init.md"
+    "commands/oss-add-project.md"
     "commands/oss-fix-issue.md"
     "commands/oss-find-task.md"
     "commands/oss-create-issue.md"
     "commands/oss-quick-fix.md"
     "commands/oss-analyze-issue.md"
     "commands/oss-fix-sonarcloud.md"
-    "commands/oss-add-project.md"
     "commands/oss-update-knowledge.md"
     "commands/oss-fix-ci-errors.md"
 )
@@ -304,6 +305,8 @@ main() {
     for file in "${COMMAND_FILES[@]}"; do
         local filename
         filename="$(basename "$file" .md)"
+        # Skip hidden preamble files (not user-invocable)
+        [[ "$filename" == .* ]] && continue
         echo "  /$filename"
     done
 }

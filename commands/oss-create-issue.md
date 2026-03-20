@@ -13,34 +13,9 @@ Create a new issue in the current project's GitHub repository.
 
 ## Instructions
 
-### 1. Detect Project
+### 1. Initialize Project Context
 
-Determine the current project by running:
-
-```bash
-git remote get-url origin
-```
-
-Match the output against the remote patterns to determine the project directory:
-- `wanaku-ai/wanaku` -> `wanaku`
-- `wanaku-ai/wanaku-capabilities-java-sdk` -> `wanaku-capabilities-java-sdk`
-- `wanaku-ai/camel-integration-capability` -> `camel-integration-capability`
-- `apache/camel` -> `camel-core`
-- `apache/camel-quarkus` -> `camel-quarkus`
-- `apache/camel-spring-boot` -> `camel-spring-boot`
-- `apache/camel-kafka-connector` -> `camel-kafka-connector`
-- `apache/camel-k` -> `camel-k`
-- `hawtio/hawtio` -> `hawtio`
-- `KaotoIO/kaoto` -> `kaoto`
-- `KaotoIO/forage` -> `forage`
-- `orpiske/ai-agents-oss-helper` -> `ai-agents-oss-helper`
-
-If no match is found, fall back to the `generic-github` rules directory. Extract the GitHub org/repo from the remote URL (e.g., `https://github.com/org/repo.git` or `git@github.com:org/repo.git` -> `org/repo`) and use it as the project's GitHub repository for all operations.
-
-Once matched, read the project's rule files from the corresponding subdirectory:
-- `<project>/project-info.md` - Repository metadata, issue tracker, related repos
-- `<project>/project-standards.md` - Build tools, commands, code style
-- `<project>/project-guidelines.md` - Branching, commits, PR policies
+**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
 
 If the project's **Create-issue supported** field is "no" (e.g., Jira projects like camel-core), stop and tell the user: "Issue creation is not supported for this project. Please create the issue directly in the project's issue tracker."
 

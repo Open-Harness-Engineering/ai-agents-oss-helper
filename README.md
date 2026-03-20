@@ -44,17 +44,17 @@ cd ai-agents-oss-helper
 
 ## Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `/oss-fix-issue <issue>` | Fix an issue from the project's tracker (GitHub or Jira) |
-| `/oss-find-task` | Find an issue to contribute based on experience level |
-| `/oss-create-issue <title>` | Create a new issue in the project's GitHub repository |
-| `/oss-quick-fix <description>` | Apply a quick fix without a tracked issue (CI, docs, deps, etc.) |
-| `/oss-analyze-issue <issue>` | Analyze an issue to understand the problem and investigate the codebase |
-| `/oss-fix-sonarcloud <rule>` | Fix SonarCloud issues for a given rule |
-| `/oss-add-project <name> <description>` | Register a new project with the helper |
-| `/oss-update-knowledge <source>` | Update a project's rule files from a description or URL |
-| `/oss-fix-ci-errors [run-id]` | Download CI build reports, identify errors, and fix them |
+| Command                                   | Description                                                             |
+|-------------------------------------------|-------------------------------------------------------------------------|
+| `/oss-fix-issue <issue>`                  | Fix an issue from the project's tracker (GitHub or Jira)                |
+| `/oss-find-task`                          | Find an issue to contribute based on experience level                   |
+| `/oss-create-issue <title>`               | Create a new issue in the project's GitHub repository                   |
+| `/oss-quick-fix <description>`            | Apply a quick fix without a tracked issue (CI, docs, deps, etc.)        |
+| `/oss-analyze-issue <issue>`              | Analyze an issue to understand the problem and investigate the codebase |
+| `/oss-fix-sonarcloud <rule>`              | Fix SonarCloud issues for a given rule                                  |
+| `/oss-add-project <name> <description>`  | Add a new project with the helper                                       |
+| `/oss-update-knowledge <source>`          | Update a project's rule files from a description or URL                 |
+| `/oss-fix-ci-errors [run-id]`             | Download CI build reports, identify errors, and fix them                |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -156,18 +156,22 @@ The command will:
 
 ## How It Works
 
-Commands are generic and project-agnostic. Project-specific configuration is stored in rule files:
-
-Each project has its own subdirectory under `rules/` with three files:
+Commands are generic and project-agnostic. Project-specific configuration is stored in rule files with three files per project:
 - **`project-info.md`** - Repository URLs, issue trackers, SonarCloud keys, related repos
 - **`project-standards.md`** - Build tools, commands, code style restrictions
 - **`project-guidelines.md`** - Branch naming, commit formats, PR policies, task labels
 
-When a command runs, it:
-1. Detects the current project via `git remote get-url origin`
-2. Matches against remote patterns to determine the project directory
-3. Reads project-specific configuration from `rules/<project>/`
-4. Adapts behavior accordingly (GitHub vs Jira, build commands, constraints, etc.)
+Every command starts by processing `.oss-init.md`, which loads project rules in this priority order:
+
+1. **Project-local rules** - `.oss-ai-helper-rules/` directory in the repository root (highest priority, can be committed to the repo)
+2. **Installed rules** - Matching `rules/<project>/` from the installed helper (remote pattern matching)
+3. **Auto-discovery** - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files (in `.oss-ai-helper-rules/` for git repos, or in the central `rules/` directory otherwise)
+
+### Project-local rules (`.oss-ai-helper-rules/`)
+
+Projects can ship their own AI helper rules by including a `.oss-ai-helper-rules/` directory in the repository root with the three rule files. This allows project maintainers to control how AI agents interact with their project, and contributors get the right configuration automatically without installing project-specific rules.
+
+If no `.oss-ai-helper-rules/` directory exists and the project isn't in the installed rules, the agent will auto-discover the project's build tool, conventions, and metadata, then generate rule files. For git repositories, rules are created in `.oss-ai-helper-rules/` so they can be committed and shared with other contributors. For non-git directories, rules are created in the central `rules/` directory.
 
 ## Gemini CLI Notes
 
@@ -182,15 +186,16 @@ ai-agents-oss-helper/
 ├── install.sh                        # Installation script
 ├── README.md
 ├── commands/                         # Generic commands (installed to ~/.{agent}/commands/)
+│   ├── oss-add-project.md
 │   ├── oss-fix-issue.md
 │   ├── oss-find-task.md
 │   ├── oss-create-issue.md
 │   ├── oss-quick-fix.md
 │   ├── oss-analyze-issue.md
 │   ├── oss-fix-sonarcloud.md
-│   ├── oss-add-project.md
 │   ├── oss-update-knowledge.md
-│   └── oss-fix-ci-errors.md
+│   ├── oss-fix-ci-errors.md
+│   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Rule files (installed to ~/.{agent}/rules/)
     ├── wanaku/
     │   ├── project-info.md

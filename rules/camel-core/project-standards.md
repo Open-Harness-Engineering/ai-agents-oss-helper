@@ -13,3 +13,6 @@ This rule file contains build tools, commands, and code style constraints for th
   - Do NOT change public API signatures without justification
   - Do NOT add new dependencies without justification
   - Maintain backwards compatibility for public APIs
+
+## Version
+9cff91b315de9587ebd2f353d255dd837190061c

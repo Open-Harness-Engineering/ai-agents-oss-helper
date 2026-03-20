@@ -10,3 +10,6 @@ This rule file contains build tools, commands, and code style constraints for th
 - **Parallelized Maven:** n/a
 - **Code style restrictions:**
   - Follow standard Go conventions (gofmt, go vet)
+
+## Version
+9cff91b315de9587ebd2f353d255dd837190061c

@@ -12,3 +12,6 @@ This rule file contains project-specific metadata used by OSS Helper commands. C
 - **Related repositories:**
   - `apache/camel` - Apache Camel core
 - **Create-issue supported:** yes
+
+## Version
+9cff91b315de9587ebd2f353d255dd837190061c
