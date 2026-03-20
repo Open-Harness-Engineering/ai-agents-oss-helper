@@ -11,3 +11,6 @@ This rule file contains project-specific metadata used by OSS Helper commands. T
 - **Documentation URL:** _(none)_
 - **Related repositories:** _(none)_
 - **Create-issue supported:** yes
+
+## Version
+0.0.1

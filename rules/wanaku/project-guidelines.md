@@ -15,3 +15,6 @@ This rule file contains branching, commit, PR, and task-finding conventions for 
 - **Find-task experienced label:** `help wanted`
 - **Find-task intermediate:** _(none)_
 - **Scope-too-large redirect:** `/oss-create-issue`
+
+## Version
+9cff91b315de9587ebd2f353d255dd837190061c

@@ -9,3 +9,6 @@ This rule file contains build tools, commands, and code style constraints for th
 - **Module-specific build:** no (run from root)
 - **Parallelized Maven:** n/a
 - **Code style restrictions:** none
+
+## Version
+9cff91b315de9587ebd2f353d255dd837190061c
