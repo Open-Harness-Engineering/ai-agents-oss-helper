@@ -49,6 +49,7 @@ cd ai-agents-oss-helper
 | Command                                   | Description                                                             |
 |-------------------------------------------|-------------------------------------------------------------------------|
 | `/oss-fix-issue <issue>`                  | Fix an issue from the project's tracker (GitHub or Jira)                |
+| `/oss-review-pr <pr>`                     | Review a pull request against project rules and contribution standards   |
 | `/oss-find-task`                          | Find an issue to contribute based on experience level                   |
 | `/oss-create-issue <title>`               | Create a new issue in the project's GitHub repository                   |
 | `/oss-quick-fix <description>`            | Apply a quick fix without a tracked issue (CI, docs, deps, etc.)        |
@@ -93,6 +94,23 @@ The command will:
 3. Search for appropriate issues (good first issue, help wanted, etc.)
 4. Present a list of options
 5. Guide you to use `/oss-fix-issue` to implement
+
+### Review a Pull Request
+
+```bash
+# Review by pull request number
+/oss-review-pr 42
+
+# Review by full URL
+/oss-review-pr https://github.com/wanaku-ai/wanaku/pull/42
+```
+
+The command will:
+1. Detect the current project
+2. Load the project's rule files
+3. Fetch the PR metadata and diff
+4. Review the PR against project guidelines, standards, and contribution expectations
+5. Report actionable findings without replacing specialized review tools or static analyzers
 
 ### Analyze an Issue
 
@@ -213,6 +231,7 @@ ai-agents-oss-helper/
 ├── commands/                         # Generic commands (installed to ~/.{agent}/commands/)
 │   ├── oss-add-project.md
 │   ├── oss-fix-issue.md
+│   ├── oss-review-pr.md
 │   ├── oss-find-task.md
 │   ├── oss-create-issue.md
 │   ├── oss-quick-fix.md

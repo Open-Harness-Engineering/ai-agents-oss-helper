@@ -23,6 +23,7 @@ COMMAND_FILES=(
     "commands/.oss-init.md"
     "commands/oss-add-project.md"
     "commands/oss-fix-issue.md"
+    "commands/oss-review-pr.md"
     "commands/oss-find-task.md"
     "commands/oss-create-issue.md"
     "commands/oss-quick-fix.md"
