@@ -4,18 +4,19 @@
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/ai-agents-oss-helper/main/install.sh | bash
-#   ./install.sh              # Install to all agents (claude, bob, gemini, opencode)
+#   ./install.sh              # Install to all agents (claude, bob, gemini, opencode, codex)
 #   ./install.sh claude       # Install to claude only
 #   ./install.sh bob          # Install to bob only
 #   ./install.sh gemini       # Install to gemini only
 #   ./install.sh opencode     # Install to opencode only
+#   ./install.sh codex        # Install to codex only
 #
 
 set -euo pipefail
 
 # Configuration
 BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/orpiske/ai-agents-oss-helper/main}"
-AGENTS=("claude" "bob" "gemini" "opencode")
+AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 
 # Command files to install (relative paths from repo root)
 COMMAND_FILES=(
@@ -203,6 +204,36 @@ convert_md_to_opencode_md() {
     } > "$dest"
 }
 
+# Convert a .md command file to Codex skill format
+convert_md_to_codex_skill() {
+    local src="$1"
+    local dest="$2"
+    local name="$3"
+    local description
+
+    description="$(awk '
+        /^#/ { next }
+        NF { print; exit }
+    ' "$src")"
+
+    if [[ -z "$description" ]]; then
+        description="OSS Helper command"
+    fi
+
+    # Escape quotes and backslashes for YAML
+    description="$(printf '%s' "$description" | sed 's/\\/\\\\/g; s/\"/\\\"/g')"
+
+    {
+        printf -- "---\n"
+        printf 'name: %s\n' "$name"
+        printf 'description: "%s"\n' "$description"
+        printf -- "---\n\n"
+        printf 'Before you begin, read and follow the OSS Helper init file at ~/.codex/oss-helper/.oss-init.md.\n\n'
+        printf 'Invoke this skill by typing `$%s`.\n\n' "$name"
+        cat "$src"
+    } > "$dest"
+}
+
 # Install commands for a specific agent
 install_for_agent() {
     local agent="$1"
@@ -212,6 +243,84 @@ install_for_agent() {
     if [[ "$agent" == "opencode" ]]; then
         commands_dir="$HOME/.config/opencode/commands"
         rules_dir="$HOME/.config/opencode/rules"
+    fi
+
+    if [[ "$agent" == "codex" ]]; then
+        local skills_root="$HOME/.agents/skills"
+        local codex_base="$HOME/.codex/oss-helper"
+        local codex_rules_dir="$codex_base/rules"
+
+        info "Installing for codex..."
+
+        if ! mkdir -p "$skills_root"; then
+            error "Failed to create directory: $skills_root"
+            return 1
+        fi
+
+        if ! mkdir -p "$codex_rules_dir"; then
+            error "Failed to create directory: $codex_rules_dir"
+            return 1
+        fi
+
+        # Install shared init file
+        if ! fetch_file "commands/.oss-init.md" "$codex_base/.oss-init.md"; then
+            error "Failed to install: .oss-init.md"
+            return 1
+        fi
+
+        # Install skills
+        info "  Installing skills..."
+        for file in "${COMMAND_FILES[@]}"; do
+            local filename
+            filename="$(basename "$file")"
+
+            # Skip the shared init file (installed separately)
+            if [[ "$filename" == ".oss-init.md" ]]; then
+                continue
+            fi
+
+            local skill_name="${filename%.md}"
+            local skill_dir="$skills_root/$skill_name"
+            local skill_dest="$skill_dir/SKILL.md"
+            local tmp_md
+
+            rm -rf "$skill_dir"
+            mkdir -p "$skill_dir"
+            tmp_md="$(mktemp)"
+
+            if fetch_file "$file" "$tmp_md"; then
+                convert_md_to_codex_skill "$tmp_md" "$skill_dest" "$skill_name"
+                rm -f "$tmp_md"
+                info "    Installed skill: $skill_name"
+            else
+                rm -f "$tmp_md"
+                error "    Failed to install skill: $skill_name"
+                return 1
+            fi
+        done
+
+        # Install rule files (with subdirectories)
+        info "  Installing rules..."
+        for file in "${RULE_FILES[@]}"; do
+            local rel_path="${file#rules/}"
+            local dest="$codex_rules_dir/$rel_path"
+            local dest_dir
+            dest_dir="$(dirname "$dest")"
+
+            mkdir -p "$dest_dir"
+
+            if fetch_file "$file" "$dest"; then
+                info "    Installed: $rel_path"
+            else
+                error "    Failed to install: $rel_path"
+                return 1
+            fi
+        done
+
+        info "  Skills installed to: $skills_root"
+        info "  Rules installed to: $codex_rules_dir"
+        info "  Init file installed to: $codex_base/.oss-init.md"
+        return 0
     fi
 
     info "Installing for $agent..."

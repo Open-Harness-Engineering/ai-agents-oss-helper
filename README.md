@@ -1,6 +1,6 @@
 # AI Agents OSS Helper
 
-Generic commands for AI coding agents (Claude, Bob, Gemini) to help contribute to open source projects. Commands auto-detect the current project via `git remote get-url origin` and load project-specific configuration from rule files.
+Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contribute to open source projects. Commands auto-detect the current project via `git remote get-url origin` and load project-specific configuration from rule files.
 
 ## Supported Projects
 
@@ -40,6 +40,7 @@ cd ai-agents-oss-helper
 ./install.sh bob       # Bob only
 ./install.sh gemini    # Gemini CLI only
 ./install.sh opencode  # OpenCode only
+./install.sh codex     # Codex only
 ./install.sh           # All agents
 ```
 
@@ -180,6 +181,22 @@ OpenCode uses markdown command files. The installer adds frontmatter description
 
 - `~/.config/opencode/commands/`
 - `~/.config/opencode/rules/` (project rule files)
+
+## Codex Notes
+
+Codex uses skills. The installer generates skills from each command and installs them to:
+
+- `~/.agents/skills/`
+
+The shared OSS Helper init file is installed to:
+
+- `~/.codex/oss-helper/.oss-init.md`
+
+Project rule files are installed to:
+
+- `~/.codex/oss-helper/rules/`
+
+Invoke any command in Codex by typing `$<skill-name>` (for example, `$oss-fix-issue`).
 
 ## Gemini CLI Notes
 
