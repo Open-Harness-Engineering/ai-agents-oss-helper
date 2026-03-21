@@ -4,17 +4,18 @@
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/ai-agents-oss-helper/main/install.sh | bash
-#   ./install.sh              # Install to all agents (claude, bob, gemini)
+#   ./install.sh              # Install to all agents (claude, bob, gemini, opencode)
 #   ./install.sh claude       # Install to claude only
 #   ./install.sh bob          # Install to bob only
 #   ./install.sh gemini       # Install to gemini only
+#   ./install.sh opencode     # Install to opencode only
 #
 
 set -euo pipefail
 
 # Configuration
 BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/orpiske/ai-agents-oss-helper/main}"
-AGENTS=("claude" "bob" "gemini")
+AGENTS=("claude" "bob" "gemini" "opencode")
 
 # Command files to install (relative paths from repo root)
 COMMAND_FILES=(
@@ -169,11 +170,49 @@ convert_md_to_toml() {
     } > "$dest"
 }
 
+# Convert a .md command file to OpenCode markdown with frontmatter
+convert_md_to_opencode_md() {
+    local src="$1"
+    local dest="$2"
+    local first_non_empty
+    local description
+
+    first_non_empty="$(awk 'NF { print; exit }' "$src")"
+    if [[ "$first_non_empty" == "---" ]]; then
+        cp "$src" "$dest"
+        return 0
+    fi
+
+    description="$(awk '
+        /^#/ { next }
+        NF { print; exit }
+    ' "$src")"
+
+    if [[ -z "$description" ]]; then
+        description="OSS Helper command"
+    fi
+
+    # Escape quotes and backslashes for YAML
+    description="$(printf '%s' "$description" | sed 's/\\/\\\\/g; s/\"/\\\"/g')"
+
+    {
+        printf -- "---\n"
+        printf 'description: "%s"\n' "$description"
+        printf -- "---\n\n"
+        cat "$src"
+    } > "$dest"
+}
+
 # Install commands for a specific agent
 install_for_agent() {
     local agent="$1"
     local commands_dir="$HOME/.$agent/commands"
     local rules_dir="$HOME/.$agent/rules"
+
+    if [[ "$agent" == "opencode" ]]; then
+        commands_dir="$HOME/.config/opencode/commands"
+        rules_dir="$HOME/.config/opencode/rules"
+    fi
 
     info "Installing for $agent..."
 
@@ -220,6 +259,21 @@ install_for_agent() {
             else
                 rm -f "$tmp_md"
                 error "    Failed to install: $toml_name"
+                return 1
+            fi
+        elif [[ "$agent" == "opencode" ]]; then
+            # OpenCode uses markdown with frontmatter in ~/.config/opencode/commands
+            local dest="$commands_dir/$filename"
+            local tmp_md
+            tmp_md="$(mktemp)"
+
+            if fetch_file "$file" "$tmp_md"; then
+                convert_md_to_opencode_md "$tmp_md" "$dest"
+                rm -f "$tmp_md"
+                info "    Installed: $filename"
+            else
+                rm -f "$tmp_md"
+                error "    Failed to install: $filename"
                 return 1
             fi
         else

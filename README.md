@@ -39,6 +39,7 @@ cd ai-agents-oss-helper
 ./install.sh claude    # Claude only
 ./install.sh bob       # Bob only
 ./install.sh gemini    # Gemini CLI only
+./install.sh opencode  # OpenCode only
 ./install.sh           # All agents
 ```
 
@@ -172,6 +173,13 @@ Every command starts by processing `.oss-init.md`, which loads project rules in 
 Projects can ship their own AI helper rules by including a `.oss-ai-helper-rules/` directory in the repository root with the three rule files. This allows project maintainers to control how AI agents interact with their project, and contributors get the right configuration automatically without installing project-specific rules.
 
 If no `.oss-ai-helper-rules/` directory exists and the project isn't in the installed rules, the agent will auto-discover the project's build tool, conventions, and metadata, then generate rule files. For git repositories, rules are created in `.oss-ai-helper-rules/` so they can be committed and shared with other contributors. For non-git directories, rules are created in the central `rules/` directory.
+
+## OpenCode Notes
+
+OpenCode uses markdown command files. The installer adds frontmatter descriptions and installs commands to:
+
+- `~/.config/opencode/commands/`
+- `~/.config/opencode/rules/` (project rule files)
 
 ## Gemini CLI Notes
 
