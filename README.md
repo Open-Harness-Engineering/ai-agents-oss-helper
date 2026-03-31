@@ -17,7 +17,7 @@ Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contr
 | Hawtio | GitHub | `hawtio/hawtio` |
 | Kaoto | GitHub | `KaotoIO/kaoto` |
 | Forage | GitHub | `KaotoIO/forage` |
-| AI Agents OSS Helper | GitHub | `orpiske/ai-agents-oss-helper` |
+| AI Agents OSS Helper | GitHub | `Open-Harness-Engineering/ai-agents-oss-helper` |
 | Generic GitHub | GitHub | _(any unmatched GitHub repo)_ |
 
 ## Installation
@@ -25,14 +25,14 @@ Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contr
 ### Quick Install (All Agents)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/orpiske/ai-agents-oss-helper/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
 ```
 
 ### Selective Install
 
 ```bash
 # Clone the repository
-git clone https://github.com/orpiske/ai-agents-oss-helper.git
+git clone https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git
 cd ai-agents-oss-helper
 
 # Install for specific agent
@@ -309,4 +309,4 @@ Apache License 2.0
 
 ---
 
-[GitHub Repository](https://github.com/orpiske/ai-agents-oss-helper)
+[GitHub Repository](https://github.com/Open-Harness-Engineering/ai-agents-oss-helper)
