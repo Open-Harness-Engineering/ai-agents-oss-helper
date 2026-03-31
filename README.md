@@ -58,6 +58,7 @@ cd ai-agents-oss-helper
 | `/oss-add-project <name> <description>`  | Add a new project with the helper                                       |
 | `/oss-update-knowledge <source>`          | Update a project's rule files from a description or URL                 |
 | `/oss-fix-ci-errors [run-id]`             | Download CI build reports, identify errors, and fix them                |
+| `/oss-fix-backlog-task <task> repo=<path>` | Fix a task from a Backlog.md file (requires Backlog MCP server)        |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -168,6 +169,26 @@ The command will:
 /oss-fix-sonarcloud S6126 limit=10
 ```
 
+### Fix a Backlog Task
+
+```bash
+# Fix a backlog task, pointing to the backlog repository
+/oss-fix-backlog-task TASK-001 repo=/home/user/projects/my-backlog
+
+# Another example
+/oss-fix-backlog-task TASK-042 repo=/home/user/work/team-backlog
+```
+
+The command will:
+1. Verify the Backlog MCP server is available
+2. Detect the current project
+3. Fetch the task details from the backlog repository
+4. Implement the fix following project standards
+5. Create a branch, commit, push, and open a PR
+6. Update the backlog task with implementation notes and mark it as done
+
+**Note:** Requires the Backlog MCP server to be configured and running.
+
 ### Add a New Project
 
 ```bash
@@ -239,6 +260,7 @@ ai-agents-oss-helper/
 │   ├── oss-fix-sonarcloud.md
 │   ├── oss-update-knowledge.md
 │   ├── oss-fix-ci-errors.md
+│   ├── oss-fix-backlog-task.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Rule files (installed to ~/.{agent}/rules/)
     ├── wanaku/
