@@ -32,6 +32,8 @@ COMMAND_FILES=(
     "commands/oss-update-knowledge.md"
     "commands/oss-fix-ci-errors.md"
     "commands/oss-fix-backlog-task.md"
+    "commands/oss-pr-status.md"
+    "commands/oss-list-pr-status.md"
 )
 
 # Rule files to install (relative paths from repo root)

@@ -59,6 +59,8 @@ cd ai-agents-oss-helper
 | `/oss-update-knowledge <source>`          | Update a project's rule files from a description or URL                 |
 | `/oss-fix-ci-errors [run-id]`             | Download CI build reports, identify errors, and fix them                |
 | `/oss-fix-backlog-task <task> repo=<path>` | Fix a task from a Backlog.md file (requires Backlog MCP server)        |
+| `/oss-pr-status [pr]`                     | Check CI checks, review state, and merge readiness of a pull request   |
+| `/oss-list-pr-status`                     | List all your open PRs with CI, review, and merge readiness summary    |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -189,6 +191,40 @@ The command will:
 
 **Note:** Requires the Backlog MCP server to be configured and running.
 
+### Check PR Status
+
+```bash
+# Auto-detect PR from current branch
+/oss-pr-status
+
+# By PR number
+/oss-pr-status 42
+
+# By full URL
+/oss-pr-status https://github.com/org/repo/pull/42
+```
+
+The command will:
+1. Detect the current project
+2. Fetch PR metadata, CI check results, and reviews
+3. Present a structured status report
+4. Identify blockers (failing checks, pending reviews, conflicts)
+5. Suggest next steps (e.g., `/oss-fix-ci-errors` for failing CI)
+
+### List All Your PR Statuses
+
+```bash
+# List all your open PRs in the current project
+/oss-list-pr-status
+```
+
+The command will:
+1. Detect the current project
+2. List all your open PRs with CI, review, and merge readiness status
+3. Highlight PRs needing attention (failing CI, changes requested, conflicts)
+4. Suggest using `/oss-pr-status <number>` for detailed inspection of individual PRs
+
+
 ### Add a New Project
 
 ```bash
@@ -261,6 +297,8 @@ ai-agents-oss-helper/
 │   ├── oss-update-knowledge.md
 │   ├── oss-fix-ci-errors.md
 │   ├── oss-fix-backlog-task.md
+│   ├── oss-pr-status.md
+│   ├── oss-list-pr-status.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Rule files (installed to ~/.{agent}/rules/)
     ├── wanaku/
