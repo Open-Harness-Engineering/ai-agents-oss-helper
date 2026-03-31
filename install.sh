@@ -34,6 +34,7 @@ COMMAND_FILES=(
     "commands/oss-fix-backlog-task.md"
     "commands/oss-pr-status.md"
     "commands/oss-list-pr-status.md"
+    "commands/oss-backport-pr.md"
 )
 
 # Rule files to install (relative paths from repo root)

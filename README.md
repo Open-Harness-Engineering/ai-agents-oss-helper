@@ -61,6 +61,7 @@ cd ai-agents-oss-helper
 | `/oss-fix-backlog-task <task> repo=<path>` | Fix a task from a Backlog.md file (requires Backlog MCP server)        |
 | `/oss-pr-status [pr]`                     | Check CI checks, review state, and merge readiness of a pull request   |
 | `/oss-list-pr-status`                     | List all your open PRs with CI, review, and merge readiness summary    |
+| `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -224,6 +225,21 @@ The command will:
 3. Highlight PRs needing attention (failing CI, changes requested, conflicts)
 4. Suggest using `/oss-pr-status <number>` for detailed inspection of individual PRs
 
+### Backport a Merged PR
+
+```bash
+# Backport PR #42 to a release branch
+/oss-backport-pr 42 branch=release/1.x
+
+# Backport by URL
+/oss-backport-pr https://github.com/org/repo/pull/42 branch=camel-4.8.x
+```
+
+The command will:
+1. Validate the source PR is merged and the target branch exists
+2. Cherry-pick the PR commits onto a new backport branch
+3. Attempt to resolve conflicts automatically, or report them clearly
+4. Open a backport PR with `[backport <branch>]` title prefix, linking back to the original PR
 
 ### Add a New Project
 
@@ -299,6 +315,7 @@ ai-agents-oss-helper/
 │   ├── oss-fix-backlog-task.md
 │   ├── oss-pr-status.md
 │   ├── oss-list-pr-status.md
+│   ├── oss-backport-pr.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Rule files (installed to ~/.{agent}/rules/)
     ├── wanaku/
