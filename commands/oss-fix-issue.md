@@ -120,12 +120,14 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - For other projects: run `mvn verify` from root
 
 4. **Commit**: Use the commit format from the project's `project-guidelines.md`
-   ```bash
-   git add -A
-   git commit -m "<COMMIT_MESSAGE>"
-   ```
    - GitHub projects: `Fix #<ISSUE_NUMBER>: <brief description>`
    - Jira projects: `<ISSUE_ID>: <brief description of fix>`
+
+   **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
+   - If the user wants both: `git commit -S -s -m "<COMMIT_MESSAGE>"`
+   - If the user wants only `-S`: `git commit -S -m "<COMMIT_MESSAGE>"`
+   - If the user wants only `-s`: `git commit -s -m "<COMMIT_MESSAGE>"`
+   - If the user wants neither: `git commit -m "<COMMIT_MESSAGE>"`
 
 5. **Push**: Push branch to origin
    ```bash

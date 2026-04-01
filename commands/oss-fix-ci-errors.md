@@ -121,10 +121,12 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - For other projects: run from root
 
 4. **Commit**: Use the CI-fix commit format from the project's `project-guidelines.md`
-   ```bash
-   git add <changed-files>
-   git commit -m "ci: <brief description>"
-   ```
+
+   **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
+   - If the user wants both: `git commit -S -s -m "ci: <brief description>"`
+   - If the user wants only `-S`: `git commit -S -m "ci: <brief description>"`
+   - If the user wants only `-s`: `git commit -s -m "ci: <brief description>"`
+   - If the user wants neither: `git commit -m "ci: <brief description>"`
 
 5. **Push**: Push branch to origin
    ```bash

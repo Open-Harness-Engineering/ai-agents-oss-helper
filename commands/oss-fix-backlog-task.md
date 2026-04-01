@@ -109,10 +109,12 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - For other projects: run `mvn verify` from root
 
 4. **Commit**: Use the fix-issue commit format from the project's `project-guidelines.md`, replacing the issue identifier with the backlog task ID
-   ```bash
-   git add -A
-   git commit -m "<COMMIT_MESSAGE>"
-   ```
+
+   **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
+   - If the user wants both: `git commit -S -s -m "<COMMIT_MESSAGE>"`
+   - If the user wants only `-S`: `git commit -S -m "<COMMIT_MESSAGE>"`
+   - If the user wants only `-s`: `git commit -s -m "<COMMIT_MESSAGE>"`
+   - If the user wants neither: `git commit -m "<COMMIT_MESSAGE>"`
 
 5. **Push**: Push branch to origin
    ```bash
