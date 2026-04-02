@@ -3,19 +3,20 @@
 # Install script for AI Agent OSS Helper commands
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/ai-agents-oss-helper/main/install.sh | bash
-#   ./install.sh              # Install to all agents (claude, bob, gemini, opencode, codex)
-#   ./install.sh claude       # Install to claude only
-#   ./install.sh bob          # Install to bob only
-#   ./install.sh gemini       # Install to gemini only
-#   ./install.sh opencode     # Install to opencode only
-#   ./install.sh codex        # Install to codex only
+#   git clone https://github.com/orpiske/ai-agents-oss-helper.git ~/.oss-helper
+#   ~/.oss-helper/install.sh              # Install to all agents (claude, bob, gemini, opencode, codex)
+#   ~/.oss-helper/install.sh claude       # Install to claude only
+#   ~/.oss-helper/install.sh bob          # Install to bob only
+#   ~/.oss-helper/install.sh gemini       # Install to gemini only
+#   ~/.oss-helper/install.sh opencode     # Install to opencode only
+#   ~/.oss-helper/install.sh codex        # Install to codex only
 #
 
 set -euo pipefail
 
 # Configuration
-BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/orpiske/ai-agents-oss-helper/main}"
+REPO_URL="${REPO_URL:-https://github.com/orpiske/ai-agents-oss-helper.git}"
+INSTALL_DIR="$HOME/.oss-helper"
 AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 
 # Command files to install (relative paths from repo root)
@@ -31,6 +32,7 @@ COMMAND_FILES=(
     "commands/oss-fix-sonarcloud.md"
     "commands/oss-update-knowledge.md"
     "commands/oss-fix-ci-errors.md"
+    "commands/oss-self-update.md"
 )
 
 # Rule files to install (relative paths from repo root)
@@ -124,37 +126,93 @@ error() {
     echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
-# Determine script location (for local installs)
-get_script_dir() {
+# Ensure the repository is available at INSTALL_DIR
+ensure_repo() {
+    local script_dir=""
     if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
-        cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    fi
+
+    if [[ -n "$script_dir" ]] && [[ -d "$script_dir/.git" ]]; then
+        # Running from a local git clone
+        local resolved_script resolved_install
+        resolved_script="$(cd "$script_dir" && pwd -P)"
+        resolved_install="$(cd "$INSTALL_DIR" 2>/dev/null && pwd -P 2>/dev/null || echo "")"
+
+        if [[ "$resolved_script" != "$resolved_install" ]]; then
+            # Script is not at INSTALL_DIR — link INSTALL_DIR to the clone
+            if [[ -L "$INSTALL_DIR" ]]; then
+                rm "$INSTALL_DIR"
+            elif [[ -d "$INSTALL_DIR" ]]; then
+                warn "$INSTALL_DIR already exists. Backing up to ${INSTALL_DIR}.bak"
+                mv "$INSTALL_DIR" "${INSTALL_DIR}.bak"
+            fi
+            ln -s "$script_dir" "$INSTALL_DIR"
+            info "Linked $INSTALL_DIR -> $script_dir"
+        fi
+    elif [[ -d "$INSTALL_DIR/.git" ]] || { [[ -L "$INSTALL_DIR" ]] && [[ -d "$(readlink -f "$INSTALL_DIR" 2>/dev/null)/.git" ]]; }; then
+        # INSTALL_DIR already has a repo, pull updates
+        info "Updating repository..."
+        git -C "$INSTALL_DIR" pull --quiet
     else
-        echo ""
+        # First-time install: clone the repo
+        info "Cloning repository to $INSTALL_DIR..."
+        git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
     fi
 }
 
-# Download or copy a file
+# Copy a file from the install directory
 fetch_file() {
     local src="$1"
     local dest="$2"
-    local script_dir
-    script_dir="$(get_script_dir)"
 
-    # If running locally and file exists, copy it
-    if [[ -n "$script_dir" ]] && [[ -f "$script_dir/$src" ]]; then
-        cp "$script_dir/$src" "$dest"
+    if [[ -f "$INSTALL_DIR/$src" ]]; then
+        cp "$INSTALL_DIR/$src" "$dest"
         return 0
     fi
 
-    # Otherwise, download from remote
-    if command -v curl &> /dev/null; then
-        curl -fsSL "$BASE_URL/$src" -o "$dest"
-    elif command -v wget &> /dev/null; then
-        wget -q "$BASE_URL/$src" -O "$dest"
-    else
-        error "Neither curl nor wget found. Cannot download files."
-        return 1
+    error "Source file not found: $INSTALL_DIR/$src"
+    return 1
+}
+
+# Create a symlink to a file in the install directory
+link_file() {
+    local src="$1"
+    local dest="$2"
+
+    # Resolve INSTALL_DIR to an absolute path (follow symlinks)
+    local abs_install_dir
+    abs_install_dir="$(cd "$INSTALL_DIR" && pwd -P)"
+
+    if [[ -f "$abs_install_dir/$src" ]]; then
+        ln -sf "$abs_install_dir/$src" "$dest"
+        return 0
     fi
+
+    error "Source file not found: $abs_install_dir/$src"
+    return 1
+}
+
+# Create a symlink to a directory in the install directory
+link_dir() {
+    local src="$1"
+    local dest="$2"
+
+    # Resolve INSTALL_DIR to an absolute path (follow symlinks)
+    local abs_install_dir
+    abs_install_dir="$(cd "$INSTALL_DIR" && pwd -P)"
+
+    if [[ -d "$abs_install_dir/$src" ]]; then
+        # Remove existing target (file, symlink, or directory)
+        if [[ -L "$dest" ]] || [[ -e "$dest" ]]; then
+            rm -rf "$dest"
+        fi
+        ln -s "$abs_install_dir/$src" "$dest"
+        return 0
+    fi
+
+    error "Source directory not found: $abs_install_dir/$src"
+    return 1
 }
 
 # Convert a .md command file to Gemini CLI .toml format
@@ -240,6 +298,11 @@ install_for_agent() {
     local agent="$1"
     local commands_dir="$HOME/.$agent/commands"
     local rules_dir="$HOME/.$agent/rules"
+    local use_symlinks=false
+
+    if [[ "$agent" == "claude" || "$agent" == "bob" ]]; then
+        use_symlinks=true
+    fi
 
     if [[ "$agent" == "opencode" ]]; then
         commands_dir="$HOME/.config/opencode/commands"
@@ -386,6 +449,15 @@ install_for_agent() {
                 error "    Failed to install: $filename"
                 return 1
             fi
+        elif [[ "$use_symlinks" == "true" ]]; then
+            # Claude/Bob: create symlinks for instant updates
+            local dest="$commands_dir/$filename"
+            if link_file "$file" "$dest"; then
+                info "    Linked: $filename"
+            else
+                error "    Failed to link: $filename"
+                return 1
+            fi
         else
             local dest="$commands_dir/$filename"
             if fetch_file "$file" "$dest"; then
@@ -403,26 +475,49 @@ install_for_agent() {
         rm -f "$rules_dir/$old_file"
     done
 
-    # Install rule files (with subdirectories)
+    # Install rule files
     info "  Installing rules..."
-    for file in "${RULE_FILES[@]}"; do
-        local rel_path="${file#rules/}"
-        local dest="$rules_dir/$rel_path"
-        local dest_dir
-        dest_dir="$(dirname "$dest")"
+    if [[ "$use_symlinks" == "true" ]]; then
+        # Claude/Bob: symlink entire project directories for instant updates
+        local -A linked_projects
+        for file in "${RULE_FILES[@]}"; do
+            local project
+            project="$(echo "${file#rules/}" | cut -d'/' -f1)"
+            if [[ -z "${linked_projects[$project]:-}" ]]; then
+                if link_dir "rules/$project" "$rules_dir/$project"; then
+                    info "    Linked: $project/"
+                else
+                    error "    Failed to link: $project/"
+                    return 1
+                fi
+                linked_projects[$project]=1
+            fi
+        done
+    else
+        for file in "${RULE_FILES[@]}"; do
+            local rel_path="${file#rules/}"
+            local dest="$rules_dir/$rel_path"
+            local dest_dir
+            dest_dir="$(dirname "$dest")"
 
-        mkdir -p "$dest_dir"
+            mkdir -p "$dest_dir"
 
-        if fetch_file "$file" "$dest"; then
-            info "    Installed: $rel_path"
-        else
-            error "    Failed to install: $rel_path"
-            return 1
-        fi
-    done
+            if fetch_file "$file" "$dest"; then
+                info "    Installed: $rel_path"
+            else
+                error "    Failed to install: $rel_path"
+                return 1
+            fi
+        done
+    fi
 
-    info "  Commands installed to: $commands_dir"
-    info "  Rules installed to: $rules_dir"
+    if [[ "$use_symlinks" == "true" ]]; then
+        info "  Commands linked to: $commands_dir (symlinks -> $INSTALL_DIR)"
+        info "  Rules linked to: $rules_dir (symlinks -> $INSTALL_DIR)"
+    else
+        info "  Commands installed to: $commands_dir"
+        info "  Rules installed to: $rules_dir"
+    fi
 }
 
 # Main
@@ -456,6 +551,9 @@ main() {
     echo "AI Agent OSS Helper - Installer"
     echo "================================"
     echo ""
+
+    # Ensure the git repository is available
+    ensure_repo
 
     # Install for each agent
     for agent in "${agents_to_install[@]}"; do
