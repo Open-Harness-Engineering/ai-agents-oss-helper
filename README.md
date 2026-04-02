@@ -17,7 +17,7 @@ Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contr
 | Hawtio | GitHub | `hawtio/hawtio` |
 | Kaoto | GitHub | `KaotoIO/kaoto` |
 | Forage | GitHub | `KaotoIO/forage` |
-| AI Agents OSS Helper | GitHub | `orpiske/ai-agents-oss-helper` |
+| AI Agents OSS Helper | GitHub | `Open-Harness-Engineering/ai-agents-oss-helper` |
 | Generic GitHub | GitHub | _(any unmatched GitHub repo)_ |
 
 ## Installation
@@ -25,14 +25,14 @@ Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contr
 ### Quick Install (All Agents)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/orpiske/ai-agents-oss-helper/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
 ```
 
 ### Selective Install
 
 ```bash
 # Clone the repository
-git clone https://github.com/orpiske/ai-agents-oss-helper.git
+git clone https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git
 cd ai-agents-oss-helper
 
 # Install for specific agent
@@ -58,6 +58,10 @@ cd ai-agents-oss-helper
 | `/oss-add-project <name> <description>`  | Add a new project with the helper                                       |
 | `/oss-update-knowledge <source>`          | Update a project's rule files from a description or URL                 |
 | `/oss-fix-ci-errors [run-id]`             | Download CI build reports, identify errors, and fix them                |
+| `/oss-fix-backlog-task <task> repo=<path>` | Fix a task from a Backlog.md file (requires Backlog MCP server)        |
+| `/oss-pr-status [pr]`                     | Check CI checks, review state, and merge readiness of a pull request   |
+| `/oss-list-pr-status`                     | List all your open PRs with CI, review, and merge readiness summary    |
+| `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -168,6 +172,75 @@ The command will:
 /oss-fix-sonarcloud S6126 limit=10
 ```
 
+### Fix a Backlog Task
+
+```bash
+# Fix a backlog task, pointing to the backlog repository
+/oss-fix-backlog-task TASK-001 repo=/home/user/projects/my-backlog
+
+# Another example
+/oss-fix-backlog-task TASK-042 repo=/home/user/work/team-backlog
+```
+
+The command will:
+1. Verify the Backlog MCP server is available
+2. Detect the current project
+3. Fetch the task details from the backlog repository
+4. Implement the fix following project standards
+5. Create a branch, commit, push, and open a PR
+6. Update the backlog task with implementation notes and mark it as done
+
+**Note:** Requires the Backlog MCP server to be configured and running.
+
+### Check PR Status
+
+```bash
+# Auto-detect PR from current branch
+/oss-pr-status
+
+# By PR number
+/oss-pr-status 42
+
+# By full URL
+/oss-pr-status https://github.com/org/repo/pull/42
+```
+
+The command will:
+1. Detect the current project
+2. Fetch PR metadata, CI check results, and reviews
+3. Present a structured status report
+4. Identify blockers (failing checks, pending reviews, conflicts)
+5. Suggest next steps (e.g., `/oss-fix-ci-errors` for failing CI)
+
+### List All Your PR Statuses
+
+```bash
+# List all your open PRs in the current project
+/oss-list-pr-status
+```
+
+The command will:
+1. Detect the current project
+2. List all your open PRs with CI, review, and merge readiness status
+3. Highlight PRs needing attention (failing CI, changes requested, conflicts)
+4. Suggest using `/oss-pr-status <number>` for detailed inspection of individual PRs
+
+### Backport a Merged PR
+
+```bash
+# Backport PR #42 to a release branch
+/oss-backport-pr 42 branch=release/1.x
+
+# Backport by URL
+/oss-backport-pr https://github.com/org/repo/pull/42 branch=camel-4.8.x
+```
+
+The command will:
+1. Validate the source PR is merged and the target branch exists
+2. Cherry-pick the PR commits onto a new backport branch
+3. Attempt to resolve conflicts automatically, or report them clearly
+4. Open a backport PR with `[backport <branch>]` title prefix, linking back to the original PR
+
 ### Add a New Project
 
 ```bash
@@ -239,6 +312,10 @@ ai-agents-oss-helper/
 │   ├── oss-fix-sonarcloud.md
 │   ├── oss-update-knowledge.md
 │   ├── oss-fix-ci-errors.md
+│   ├── oss-fix-backlog-task.md
+│   ├── oss-pr-status.md
+│   ├── oss-list-pr-status.md
+│   ├── oss-backport-pr.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Rule files (installed to ~/.{agent}/rules/)
     ├── wanaku/
@@ -309,4 +386,4 @@ Apache License 2.0
 
 ---
 
-[GitHub Repository](https://github.com/orpiske/ai-agents-oss-helper)
+[GitHub Repository](https://github.com/Open-Harness-Engineering/ai-agents-oss-helper)

@@ -15,7 +15,7 @@
 set -euo pipefail
 
 # Configuration
-REPO_URL="${REPO_URL:-https://github.com/orpiske/ai-agents-oss-helper.git}"
+REPO_URL="${REPO_URL:-https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git}"
 INSTALL_DIR="$HOME/.oss-helper"
 AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 
@@ -32,6 +32,10 @@ COMMAND_FILES=(
     "commands/oss-fix-sonarcloud.md"
     "commands/oss-update-knowledge.md"
     "commands/oss-fix-ci-errors.md"
+    "commands/oss-fix-backlog-task.md"
+    "commands/oss-pr-status.md"
+    "commands/oss-list-pr-status.md"
+    "commands/oss-backport-pr.md"
     "commands/oss-self-update.md"
 )
 
