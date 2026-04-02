@@ -3,7 +3,10 @@
 # Install script for AI Agent OSS Helper commands
 #
 # Usage:
-#   git clone https://github.com/orpiske/ai-agents-oss-helper.git ~/.oss-helper
+#   curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash -s claude
+#
+#   git clone https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git ~/.oss-helper
 #   ~/.oss-helper/install.sh              # Install to all agents (claude, bob, gemini, opencode, codex)
 #   ~/.oss-helper/install.sh claude       # Install to claude only
 #   ~/.oss-helper/install.sh bob          # Install to bob only
