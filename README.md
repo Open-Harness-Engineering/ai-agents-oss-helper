@@ -28,21 +28,39 @@ Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contr
 curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
 ```
 
+This clones the repository to `~/.oss-helper/` and installs commands and rules for all supported agents. For Claude and Bob, commands and rules are symlinked so that updates take effect instantly.
+
 ### Selective Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git
-cd ai-agents-oss-helper
+# Install for a single agent
+curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash -s claude
 
-# Install for specific agent
-./install.sh claude    # Claude only
-./install.sh bob       # Bob only
-./install.sh gemini    # Gemini CLI only
-./install.sh opencode  # OpenCode only
-./install.sh codex     # Codex only
-./install.sh           # All agents
+# Or clone first, then install
+git clone https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git ~/.oss-helper
+~/.oss-helper/install.sh claude    # Claude only
+~/.oss-helper/install.sh bob       # Bob only
+~/.oss-helper/install.sh gemini    # Gemini CLI only
+~/.oss-helper/install.sh opencode  # OpenCode only
+~/.oss-helper/install.sh codex     # Codex only
+~/.oss-helper/install.sh           # All agents
 ```
+
+### Updating
+
+Commands automatically check for updates once per day. When updates are available, you'll see a notification suggesting to run `/oss-self-update`.
+
+You can also update manually:
+
+```bash
+# From within any agent session
+/oss-self-update
+
+# Or from the command line
+cd ~/.oss-helper && git pull
+```
+
+For Claude and Bob (which use symlinks), `git pull` is all that's needed. For agents that require format conversion (Gemini, OpenCode, Codex), re-run `install.sh` after pulling.
 
 ## Available Commands
 
@@ -62,6 +80,7 @@ cd ai-agents-oss-helper
 | `/oss-pr-status [pr]`                     | Check CI checks, review state, and merge readiness of a pull request   |
 | `/oss-list-pr-status`                     | List all your open PRs with CI, review, and merge readiness summary    |
 | `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
+| `/oss-self-update`                       | Update OSS Helper commands and rules to the latest version              |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -316,6 +335,7 @@ ai-agents-oss-helper/
 │   ├── oss-pr-status.md
 │   ├── oss-list-pr-status.md
 │   ├── oss-backport-pr.md
+│   ├── oss-self-update.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Rule files (installed to ~/.{agent}/rules/)
     ├── wanaku/
