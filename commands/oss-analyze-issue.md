@@ -80,6 +80,21 @@ Search the current codebase for relevant code:
 - Component or feature names
 - Related functionality
 
+#### Git History
+Investigate the history of affected files to understand context and identify potential causes:
+
+```bash
+# Recent changes to affected files — a recent commit may have introduced the issue
+git log --oneline -20 -- <affected-files>
+
+# Authorship and intent of key areas
+git blame -L <start>,<end> -- <file>
+```
+
+- Read commit messages and linked issue references to understand **why** the code is written the way it is.
+- Check if a recent change correlates with when the issue was reported.
+- Search for related issues in the project tracker (same component, similar keywords) to find prior discussions, rejected approaches, or intentional design decisions.
+
 #### Related Repositories
 
 Check the project's `project-info.md` for the **Related repositories** field. Only investigate related repos when they are listed and the issue might involve them.
@@ -121,6 +136,9 @@ Provide a structured analysis report to the user:
 #### Relevant Files
 - `path/to/file1.java` - <why it's relevant>
 - `path/to/file2.java` - <why it's relevant>
+
+#### Git History Context
+<Notable recent commits, authorship patterns, or prior changes that inform the analysis>
 
 #### Related Repositories
 <Only include if project-info.md lists related repositories>

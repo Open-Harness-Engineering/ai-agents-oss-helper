@@ -74,7 +74,24 @@ Based on the issue description:
 2. Understand the existing implementation
 3. Identify the root cause or area to modify
 
-### 6. Implement the Fix
+### 6. Investigate Git History
+
+Before changing anything, understand **why** the code is written the way it is:
+
+```bash
+# Recent changes to affected files
+git log --oneline -20 -- <affected-files>
+
+# Authorship and intent of key areas
+git blame -L <start>,<end> -- <file>
+```
+
+- Read commit messages and any linked issue references for prior changes.
+- Check if a recent commit might have introduced the bug.
+- If the proposed fix would effectively revert a prior intentional commit, flag this to the user before proceeding.
+- Search for related issues in the project tracker (same component, similar keywords) to find prior discussions or rejected approaches.
+
+### 7. Implement the Fix
 
 Apply changes following these principles:
 
@@ -86,7 +103,7 @@ Apply changes following these principles:
 
 Read the project's `project-standards.md` for project-specific build constraints (e.g., no Records/Lombok for camel-core, module-specific builds, etc.).
 
-### 7. Constraints
+### 8. Constraints
 
 You MUST:
 - Limit changes to what's necessary for the fix
@@ -103,7 +120,7 @@ You MUST NOT:
 - For Jira projects: modify the Jira issue or make multiple API requests
 - For camel-core: change public method signatures without justification
 
-### 8. Workflow
+### 9. Workflow
 
 Read branch naming and commit format from the project's `project-guidelines.md`.
 
@@ -140,7 +157,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
      gh pr create --title "<COMMIT_MESSAGE>" --body "<description>"
      ```
 
-### 9. General Guidelines
+### 10. General Guidelines
 
 - Tests MUST pass before committing
 - Build auto-formats code - include these changes in commit
@@ -150,7 +167,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
 - For camel-core: do NOT parallelize Maven jobs; always run `mvn` in the module directory
 - GPG signing not required
 
-### 10. Acceptance Criteria
+### 11. Acceptance Criteria
 
 - All tests MUST pass
 - Fix must address the issue described in the tracker

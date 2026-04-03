@@ -44,7 +44,24 @@ gh run view <RUN_ID> --repo <REPO> --json jobs
 
 Then download logs for specific failed jobs individually.
 
-### 4. Analyze Errors
+### 4. Check Git History for Recent Changes
+
+Before analyzing errors, check if a recent commit may have introduced the failure:
+
+```bash
+# Recent commits on the branch
+git log --oneline -10
+
+# What changed in the most recent commits
+git diff HEAD~3..HEAD --stat
+```
+
+Correlate the failed files/modules with recent changes. This helps distinguish between:
+- **Regressions** introduced by a recent commit (fix the commit)
+- **Pre-existing issues** exposed by a change (may need deeper investigation)
+- **Flaky/infrastructure failures** unrelated to code changes
+
+### 5. Analyze Errors
 
 Parse the logs to identify error categories:
 
@@ -56,7 +73,7 @@ Parse the logs to identify error categories:
 
 Group errors by type and affected files.
 
-### 5. Triage Errors
+### 6. Triage Errors
 
 Classify each error into one of two categories:
 
@@ -76,7 +93,7 @@ For category B errors: create a GitHub issue (using the same approach as `/oss-c
 
 Present the triage summary to the user for confirmation before proceeding with any fixes.
 
-### 6. Implement Fixes
+### 7. Implement Fixes
 
 For category A errors:
 
@@ -84,7 +101,7 @@ For category A errors:
 2. Follow the project's `project-standards.md` for code style and build constraints
 3. For category B errors that can be partially addressed without shallow workarounds, fix what is genuinely possible
 
-### 7. Constraints
+### 8. Constraints
 
 You MUST:
 - Fix root causes, not symptoms
@@ -104,7 +121,7 @@ You MUST NOT:
 - Mark tests as flaky without proper investigation
 - Comment out failing code
 
-### 8. Workflow
+### 9. Workflow
 
 Read branch naming and commit format from the project's `project-guidelines.md`.
 
@@ -154,7 +171,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    )"
    ```
 
-### 9. Acceptance Criteria
+### 10. Acceptance Criteria
 
 - Local build and tests pass (using commands from the project's `project-standards.md`)
 - Fixes address genuine root causes
