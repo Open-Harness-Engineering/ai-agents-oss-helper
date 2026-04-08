@@ -37,6 +37,7 @@ COMMAND_FILES=(
     "commands/oss-backport-pr.md"
     "commands/oss-address-review.md"
     "commands/oss-merge-pr.md"
+    "commands/oss-create-security-advisory.md"
 )
 
 # Rule files to install (relative paths from repo root)
