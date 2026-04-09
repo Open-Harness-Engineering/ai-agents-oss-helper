@@ -17,6 +17,7 @@ Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contr
 | Hawtio | GitHub | `hawtio/hawtio` |
 | Kaoto | GitHub | `KaotoIO/kaoto` |
 | Forage | GitHub | `KaotoIO/forage` |
+| Quarkus Flow | GitHub | `quarkiverse/quarkus-flow` |
 | AI Agents OSS Helper | GitHub | `Open-Harness-Engineering/ai-agents-oss-helper` |
 | Generic GitHub | GitHub | _(any unmatched GitHub repo)_ |
 
