@@ -55,6 +55,7 @@ cd ai-agents-oss-helper
 | `/oss-quick-fix <description>`            | Apply a quick fix without a tracked issue (CI, docs, deps, etc.)        |
 | `/oss-analyze-issue <issue>`              | Analyze an issue to understand the problem and investigate the codebase |
 | `/oss-fix-sonarcloud <rule>`              | Fix SonarCloud issues for a given rule                                  |
+| `/oss-fix-github-alert <type>`            | Assign and fix a GitHub Code Scanning, Dependabot, or Secret Scanning alert |
 | `/oss-add-project <name> <description>`  | Add a new project with the helper                                       |
 | `/oss-update-knowledge <source>`          | Update a project's rule files from a description or URL                 |
 | `/oss-fix-ci-errors [run-id]`             | Download CI build reports, identify errors, and fix them                |
@@ -171,6 +172,29 @@ The command will:
 # Limit number of issues to process
 /oss-fix-sonarcloud S6126 limit=10
 ```
+
+### Fix a GitHub Security or Quality Alert
+
+```bash
+# List open Code Scanning alerts in the current project
+/oss-fix-github-alert code-scanning
+
+# Work on a specific Code Scanning alert (assigns it to you, walks the fix)
+/oss-fix-github-alert code-scanning alert=42
+
+# Filter Dependabot alerts by severity
+/oss-fix-github-alert dependabot severity=high
+
+# Work on a Secret Scanning alert (warns about provider-side rotation)
+/oss-fix-github-alert secret-scanning alert=7
+```
+
+The command will:
+1. Detect the current project and validate the alert type
+2. List open alerts (when no `alert=` is provided) with severity, rule, and location
+3. For a specific alert: fetch its details and assign it to you via the GitHub API
+4. Walk through analyzing and fixing the alert (root-cause fix, dependency bump, or secret removal)
+5. Create a branch, commit, push, and open a PR linking back to the alert
 
 ### Fix a Backlog Task
 
@@ -310,6 +334,7 @@ ai-agents-oss-helper/
 │   ├── oss-quick-fix.md
 │   ├── oss-analyze-issue.md
 │   ├── oss-fix-sonarcloud.md
+│   ├── oss-fix-github-alert.md
 │   ├── oss-update-knowledge.md
 │   ├── oss-fix-ci-errors.md
 │   ├── oss-fix-backlog-task.md
