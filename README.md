@@ -62,6 +62,7 @@ cd ai-agents-oss-helper
 | `/oss-fix-backlog-task <task> repo=<path>` | Fix a task from a Backlog.md file (requires Backlog MCP server)        |
 | `/oss-pr-status [pr]`                     | Check CI checks, review state, and merge readiness of a pull request   |
 | `/oss-list-pr-status`                     | List all your open PRs with CI, review, and merge readiness summary    |
+| `/oss-list-prs [filters]`                 | List all open PRs in the repo, then pick one to review with `/oss-review-pr` |
 | `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
 
 All commands auto-detect the project from the current directory's git remote.
@@ -249,6 +250,37 @@ The command will:
 3. Highlight PRs needing attention (failing CI, changes requested, conflicts)
 4. Suggest using `/oss-pr-status <number>` for detailed inspection of individual PRs
 
+### Browse Open PRs to Review
+
+```bash
+# List all open PRs in the current repo (non-draft, limit 20)
+/oss-list-prs
+
+# Filter by author
+/oss-list-prs author=octocat
+
+# Filter by label (quote multi-word labels)
+/oss-list-prs label="needs review"
+
+# Raise the limit
+/oss-list-prs limit=50
+
+# Include draft PRs
+/oss-list-prs include-drafts
+
+# Hide PRs you authored
+/oss-list-prs exclude-mine
+```
+
+The command will:
+1. Detect the current project
+2. List all open PRs in the repository (one `gh pr list` call, no per-PR CI fetch)
+3. Present them in a numbered table with author, branch, review state, draft flag, and last update
+4. Ask which PR you want to review
+5. Hand off to `/oss-review-pr <number>` for the actual review
+
+This is the counterpart to `/oss-list-pr-status`: that command lists *your own* PRs for tracking your work, while `/oss-list-prs` lists *all* open PRs in the repo for browsing and review selection.
+
 ### Backport a Merged PR
 
 ```bash
@@ -340,6 +372,7 @@ ai-agents-oss-helper/
 │   ├── oss-fix-backlog-task.md
 │   ├── oss-pr-status.md
 │   ├── oss-list-pr-status.md
+│   ├── oss-list-prs.md
 │   ├── oss-backport-pr.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Rule files (installed to ~/.{agent}/rules/)
