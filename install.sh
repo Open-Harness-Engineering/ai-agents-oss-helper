@@ -29,6 +29,7 @@ COMMAND_FILES=(
     "commands/oss-quick-fix.md"
     "commands/oss-analyze-issue.md"
     "commands/oss-fix-sonarcloud.md"
+    "commands/oss-fix-github-alert.md"
     "commands/oss-update-knowledge.md"
     "commands/oss-fix-ci-errors.md"
     "commands/oss-fix-backlog-task.md"
