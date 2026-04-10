@@ -4,7 +4,7 @@ This rule file contains build tools, commands, and code style constraints for th
 
 - **Build tool:** `Maven`
 - **Build command:** `mvn clean install -DskipTests`
-- **Test command:** `mvn verify -DskipITs=false`
+- **Test command:** `mvn test`
 - **Format command:** `cd <module> && mvn formatter:format impsort:sort`
 - **Module-specific build:** yes (Multi-module Maven project with core, messaging, langchain4j, persistence, and other modules. Build commands should be run from the module directory when working on specific modules.)
 - **Parallelized Maven:** no (Integration tests may conflict if run in parallel. Always use sequential builds.)
