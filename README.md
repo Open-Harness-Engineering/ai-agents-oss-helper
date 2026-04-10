@@ -311,17 +311,30 @@ Commands are generic and project-agnostic. Project-specific configuration is sto
 - **`project-standards.md`** - Build tools, commands, code style restrictions
 - **`project-guidelines.md`** - Branch naming, commit formats, PR policies, task labels
 
+### Project-local rules (recommended)
+
+The recommended approach is to include an `.oss-ai-helper-rules/` directory in the repository root with the three rule files. This way rules are versioned alongside the code and every contributor gets the right configuration automatically — no per-user installation of project-specific rules required.
+
+```
+my-project/
+├── .oss-ai-helper-rules/
+│   ├── project-info.md
+│   ├── project-standards.md
+│   └── project-guidelines.md
+└── ...
+```
+
+Use `/oss-add-project` to generate initial rule files for any project.
+
+### Rule loading priority
+
 Every command starts by processing `.oss-init.md`, which loads project rules in this priority order:
 
-1. **Project-local rules** - `.oss-ai-helper-rules/` directory in the repository root (highest priority, can be committed to the repo)
-2. **Installed rules** - Matching `rules/<project>/` from the installed helper (remote pattern matching)
-3. **Auto-discovery** - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files (in `.oss-ai-helper-rules/` for git repos, or in the central `rules/` directory otherwise)
+1. **Project-local rules** (recommended) - `.oss-ai-helper-rules/` directory in the repository root. Highest priority, versioned with the project.
+2. **Installed rules** (fallback) - Matching `rules/<project>/` from the globally installed helper. Used when the project does not yet ship its own rules.
+3. **Auto-discovery** (fallback) - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files in `.oss-ai-helper-rules/` so they can be committed and shared.
 
-### Project-local rules (`.oss-ai-helper-rules/`)
-
-Projects can ship their own AI helper rules by including a `.oss-ai-helper-rules/` directory in the repository root with the three rule files. This allows project maintainers to control how AI agents interact with their project, and contributors get the right configuration automatically without installing project-specific rules.
-
-If no `.oss-ai-helper-rules/` directory exists and the project isn't in the installed rules, the agent will auto-discover the project's build tool, conventions, and metadata, then generate rule files. For git repositories, rules are created in `.oss-ai-helper-rules/` so they can be committed and shared with other contributors. For non-git directories, rules are created in the central `rules/` directory.
+Projects are encouraged to adopt project-local rules so that configuration travels with the repository and stays in sync across all contributors and agents.
 
 ## OpenCode Notes
 

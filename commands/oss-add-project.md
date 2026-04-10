@@ -74,9 +74,14 @@ If the remote `.oss-ai-helper-rules/` directory does not exist or is incomplete,
 
 ### 4. Create Rule Files
 
-Create a new subdirectory under `rules/` named after the project (e.g., `rules/my-project/`) and add three rule files:
+Determine where to create the rule files based on the current working directory:
 
-#### A. `rules/<project>/project-info.md`
+- **If you are inside the target project's repository:** Create the rules in `<repo-root>/.oss-ai-helper-rules/`. This is the **recommended** approach — rules are versioned with the project and shared automatically across all contributors and agents.
+- **If you are inside the `ai-agents-oss-helper` repository** (or not inside the target project): Create a new subdirectory under `rules/` named after the project (e.g., `rules/my-project/`). These will be installed globally as a fallback.
+
+Add three rule files to the chosen directory:
+
+#### A. `project-info.md`
 Create with:
 - H1 heading: `# Project Information`
 - Intro paragraph (same as other project-info files)
@@ -91,7 +96,7 @@ Create with:
 - Create-issue supported (yes/no)
 - `## Version` section with the current git SHA of the project being configured
 
-#### B. `rules/<project>/project-standards.md`
+#### B. `project-standards.md`
 Create with:
 - H1 heading: `# Project Standards`
 - Intro paragraph (same as other project-standards files)
@@ -105,7 +110,7 @@ Create with:
 - Code style restrictions
 - `## Version` section with the current git SHA of the project being configured
 
-#### C. `rules/<project>/project-guidelines.md`
+#### C. `project-guidelines.md`
 Create with:
 - H1 heading: `# Project Guidelines`
 - Intro paragraph (same as other project-guidelines files)
@@ -126,7 +131,14 @@ Create with:
 
 Use existing project files (e.g., `rules/wanaku/`) as a template for the exact format.
 
-### 5. Update install.sh
+### 5. Update install.sh, .oss-init.md, and README.md
+
+**If rules were created in `.oss-ai-helper-rules/` (project-local):** Skip steps 5a–5c. The rules travel with the repository and do not need global installation. Inform the user:
+> Project rules created in `.oss-ai-helper-rules/`. Review and commit them to share with other contributors.
+
+**If rules were created in `rules/<project>/` (installed rules):** Perform steps 5a–5c:
+
+#### 5a. Update install.sh
 
 Add the three new rule file paths to the `RULE_FILES` array in `install.sh`:
 ```
@@ -135,11 +147,11 @@ Add the three new rule file paths to the `RULE_FILES` array in `install.sh`:
 "rules/<project>/project-guidelines.md"
 ```
 
-### 6. Update .oss-init.md
+#### 5b. Update .oss-init.md
 
 Add the new remote pattern -> project directory mapping to the "Installed rules" section (step 2B) in `commands/.oss-init.md`.
 
-### 7. Update README.md
+#### 5c. Update README.md
 
 Add the new project to the supported projects table in README.md.
 
@@ -160,5 +172,7 @@ You MUST NOT:
 ### 9. Output
 
 After adding the project, confirm:
-- Files updated
+- Where the rule files were created (`.oss-ai-helper-rules/` or `rules/<project>/`)
+- If project-local: remind the user to commit and push the `.oss-ai-helper-rules/` directory
+- If installed: list which files were updated (`install.sh`, `.oss-init.md`, `README.md`)
 - How to use the project with existing commands (e.g., `cd my-project && /oss-fix-issue 42`)
