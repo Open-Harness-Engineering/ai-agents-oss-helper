@@ -1,0 +1,196 @@
+# Triage Security Report
+
+Triage an inbound security vulnerability report by verifying each claim against the current codebase, checking git history for prior fixes or related CVEs, and preparing a structured triage summary. After triage, guide the user to the appropriate follow-up action (private disclosure, tracking issue without security details, or dismissal).
+
+This command does NOT publish any security details to public trackers. It is a local investigative workflow.
+
+## Usage
+
+```
+/oss-triage-security-report [source]
+```
+
+**Arguments:**
+- `[source]` - Optional. Path to a file containing the report, a URL, or the literal keyword `paste`. If omitted, the agent will ask the user to paste the report content inline.
+
+## Instructions
+
+### 1. Initialize Project Context
+
+**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
+
+### 2. Acquire the Report
+
+Determine the report source from the argument:
+
+- **No argument or `paste`** - Ask the user to paste the report in their next message. Wait for the paste before continuing.
+- **File path** - Read the file with the `Read` tool.
+- **URL** - Ask the user to confirm the URL is safe to fetch (security reports are often hosted on untrusted domains). If confirmed, fetch with `WebFetch`.
+
+Store the raw report text for later reference. Do NOT echo it back in full — reference sections as needed.
+
+### 3. Establish Confidentiality
+
+**Before proceeding, remind the user:**
+
+> This triage is local and private. No information from the report will be sent to public issue trackers, PR descriptions, or chat channels unless you explicitly request it. The goal is to validate the claims, understand scope, and decide on the right disclosure path.
+
+Ask the user:
+
+- Is this report **already public** (e.g., a published CVE, a public GitHub issue, a blog post)? If yes, note this — the disclosure path differs.
+- Was it received **privately** (security mailing list, private advisory, direct email)? If yes, treat all specifics as confidential during triage.
+
+### 4. Extract Claims from the Report
+
+Parse the report and list each individual technical claim as a bullet. Typical claims to extract:
+
+- **Vulnerability class** - RCE, SSRF, SQLi, XSS, auth bypass, incomplete CVE fix, etc.
+- **Affected code paths** - Specific files, classes, methods, line numbers cited by the reporter.
+- **Affected versions** - Version ranges the reporter says are vulnerable.
+- **Attack vector** - How an attacker reaches the vulnerable code (network, local, authenticated/unauthenticated).
+- **Impact** - What the attacker achieves (RCE, data exfiltration, DoS, etc.).
+- **Proposed fix** - What the reporter suggests.
+- **Prior CVE reference** - Any CVE the reporter claims this relates to (incomplete fix, variant, etc.).
+
+Present this extracted list back to the user for confirmation. Ask whether any claim was misread.
+
+### 5. Verify Each Claim in the Codebase
+
+For each extracted claim, perform verification. Do NOT take the reporter at face value — the report may be inaccurate, out of date, or based on an older version.
+
+**For each cited file/class:**
+
+```bash
+# Confirm the file exists at the claimed path
+ls <path>
+
+# Read the specific lines the reporter references
+```
+
+Use the `Read` tool to read the cited code. Compare the actual code to what the reporter quoted. Note any discrepancies.
+
+**For each cited behavior:**
+
+- Identify the function or branch in the code.
+- Trace the data flow from the claimed entry point (e.g., external input) to the claimed sink (e.g., command execution, file write).
+- Where feasible, write a tiny standalone reproducer (a Java `main`, a Python snippet, etc.) to verify the behavior in isolation — **without** actually exploiting a running system. The goal is to confirm the *logic*, not to execute the attack.
+
+**For the prior CVE claim (if any):**
+
+```bash
+# Search for the CVE identifier
+git log --all --oneline --grep="<CVE-ID>"
+
+# Search for the related ticket prefix
+git log --all --oneline --grep="<TICKET-ID>"
+
+# Look at the actual fix commit
+git show <commit-hash>
+```
+
+Review what the original fix changed and whether it covers the surface area the reporter is now describing.
+
+**For similar components not mentioned by the reporter:**
+
+Use `Grep` / `Glob` to find sibling classes in the same family (e.g., other `*HeaderFilterStrategy` implementations). Check whether the same defect pattern exists in code the reporter did not enumerate. Scope drift is common; the reporter often sees only what they tested.
+
+### 6. Build the Triage Summary
+
+Produce a structured summary. Include both the validated facts and your confidence level. Do NOT overstate certainty.
+
+```markdown
+> :robot: **Note:** This triage was generated by a coding agent and requires manual verification. The findings below should be reviewed by a human maintainer before any disclosure decision.
+
+## Security Report Triage
+
+### Metadata
+- **Source:** <how the report was received>
+- **Public status:** <public / private>
+- **Reported vulnerability class:** <class>
+- **Prior CVE referenced:** <CVE-ID or none>
+
+### Claims vs. Verification
+
+| Claim | Cited code | Verified? | Notes |
+|-------|------------|-----------|-------|
+| <claim 1> | <file:line> | :white_check_mark: confirmed / :x: refuted / :warning: partial | <what matched or diverged> |
+| <claim 2> | ... | ... | ... |
+
+### Root Cause (if valid)
+<Concise description of the actual defect, independent of the reporter's phrasing.>
+
+### Scope
+- **Components directly implicated by the report:** <list>
+- **Additional components with the same defect pattern (found during triage):** <list or "none found">
+- **Versions affected:** <best estimate, based on git blame of the defect>
+
+### Severity Assessment
+- **Attack vector:** <network / adjacent / local / physical>
+- **Authentication required:** <yes / no>
+- **Impact:** <confidentiality / integrity / availability, with short rationale>
+- **Suggested severity:** <critical / high / medium / low / informational> - <rationale>
+
+### Prior Work
+<Any prior commits, tickets, or CVEs that touched this area. Whether the report is a genuine incomplete fix, a duplicate, or a new issue.>
+
+### Recommendation
+- :large_blue_diamond: **Valid, needs private disclosure** - report to project's security team.
+- :large_blue_diamond: **Valid, safe to track publicly** - file a generic hardening/consistency issue with NO exploit details.
+- :large_blue_diamond: **Invalid / not a vulnerability** - respond to the reporter with the analysis.
+- :large_blue_diamond: **Duplicate of <CVE/ticket>** - respond to the reporter.
+
+### Open Questions for the Reporter
+- <question 1>
+- <question 2>
+```
+
+### 7. Propose a Follow-up Path
+
+Based on the recommendation, offer the user one or more of the following actions. Do NOT execute any of them without explicit confirmation.
+
+**If valid and not public:**
+
+1. **Submit a private advisory** (GitHub projects) - hand off to `/oss-create-security-advisory` with the full technical detail. This is the preferred path when private vulnerability reporting is available.
+2. **Contact the project's security team directly** (ASF projects) - provide the user with the appropriate `security@<project>.apache.org` or `private@<project>.apache.org` address and a draft email body.
+
+**If valid and already public, or safe to track as hardening:**
+
+3. **File a generic tracking issue** - hand off to `/oss-create-issue`. The agent MUST propose issue text that:
+   - Frames the change as a consistency / hardening / refactor task.
+   - Lists the affected classes and the code-level change needed.
+   - References an existing related ticket only if the reporter's claim clearly continues that work. Do not invent a parent relationship.
+   - **Omits** the attack scenario, exploit payload, CVE reference, reporter identity, severity wording, and any language that describes the defect as a vulnerability.
+   - Ask the user to confirm the sanitized text before calling `/oss-create-issue`.
+
+**If invalid:**
+
+4. **Draft a response to the reporter** - a short, factual reply explaining what was verified and why the report does not constitute a vulnerability in the current code. Do not be dismissive; the reporter may have seen something real in an older version.
+
+**If duplicate:**
+
+5. **Point to the existing ticket/CVE** - draft a short acknowledgement referencing the prior work.
+
+### 8. Constraints
+
+You MUST:
+- Include the :robot: disclaimer note at the top of the triage summary.
+- Verify every cited file, line, and behavior against the current codebase before classifying a claim as confirmed.
+- Check git history for prior fixes, related CVEs, and parent tickets.
+- Keep all exploit specifics (payloads, PoC code, reproduction commands) **out** of any public-facing artifact the user may generate afterwards.
+- Ask the user before fetching URLs or contacting external systems.
+- When handing off to `/oss-create-issue`, present the sanitized text for explicit confirmation first.
+
+You MUST NOT:
+- Submit any issue, PR, advisory, or public comment as part of this command. Handoffs go through the dedicated commands only after user confirmation.
+- Include exploit payloads, reporter identity, CVE identifiers, or the word "vulnerability" / "exploit" / "RCE" / "CVE" in proposed public issue text.
+- Mark a claim as confirmed without reading the actual code.
+- Run any code that performs the exploit against a live system, even locally. Verification reproducers must isolate the logic (e.g., a standalone class, a unit-test-style snippet) and not interact with real services.
+- Tell the reporter the report is invalid without completing verification.
+
+### 9. Acceptance Criteria
+
+- Every technical claim in the report is mapped to a verification outcome (confirmed / refuted / partial).
+- Git history has been checked for prior work in the affected area.
+- A structured triage summary is produced with the :robot: disclaimer.
+- A concrete follow-up path is proposed, with the appropriate downstream command named.
+- If a tracking issue is proposed, its text is sanitized of all security specifics and confirmed with the user before creation.

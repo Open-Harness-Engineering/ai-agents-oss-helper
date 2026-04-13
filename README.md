@@ -65,6 +65,7 @@ cd ai-agents-oss-helper
 | `/oss-list-pr-status`                     | List all your open PRs with CI, review, and merge readiness summary    |
 | `/oss-list-prs [filters]`                 | List all open PRs in the repo, then pick one to review with `/oss-review-pr` |
 | `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
+| `/oss-triage-security-report [source]`    | Triage an inbound security report: verify claims, check prior fixes, recommend disclosure path |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -298,6 +299,31 @@ The command will:
 3. Attempt to resolve conflicts automatically, or report them clearly
 4. Open a backport PR with `[backport <branch>]` title prefix, linking back to the original PR
 
+### Triage a Security Report
+
+```bash
+# Paste the report inline (agent will ask)
+/oss-triage-security-report
+
+# Read the report from a local file
+/oss-triage-security-report ~/reports/incoming-report.txt
+
+# Fetch from a URL (the agent will ask for confirmation first)
+/oss-triage-security-report https://example.com/report.txt
+```
+
+The command will:
+1. Detect the current project and load its rules
+2. Acquire the report (paste / file / URL) and confirm confidentiality
+3. Extract each technical claim from the report as a discrete bullet
+4. Verify each claim against the current codebase (file reads, grep, git history)
+5. Check git history for prior fixes, related CVEs, and parent tickets
+6. Produce a structured triage summary with a confirmed/refuted verdict per claim
+7. Recommend a follow-up path (private advisory, sanitized tracking issue, reporter reply, or duplicate pointer)
+8. When a public tracking issue is the right path, propose sanitized issue text with all exploit specifics removed, then hand off to `/oss-create-issue` only after your confirmation
+
+No content is published anywhere until you explicitly confirm a handoff.
+
 ### Add a New Project
 
 ```bash
@@ -375,6 +401,7 @@ ai-agents-oss-helper/
 │   ├── oss-list-pr-status.md
 │   ├── oss-list-prs.md
 │   ├── oss-backport-pr.md
+│   ├── oss-triage-security-report.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Rule files (installed to ~/.{agent}/rules/)
     ├── wanaku/
