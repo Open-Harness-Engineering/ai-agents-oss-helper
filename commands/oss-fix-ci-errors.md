@@ -137,7 +137,13 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - For projects with module-specific builds: run in the affected module directory
    - For other projects: run from root
 
-4. **Commit**: Use the CI-fix commit format from the project's `project-guidelines.md`
+4. **Final Sanity Build** (Maven projects only): As the last step before committing, run a full-reactor compile check from the **repository root**:
+   ```bash
+   mvn clean install -DskipTests
+   ```
+   This catches cross-module breakage that a module-only build in step 3 would miss. Tests are skipped because step 3 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
+
+5. **Commit**: Use the CI-fix commit format from the project's `project-guidelines.md`
 
    **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
    - If the user wants both: `git commit -S -s -m "ci: <brief description>"`
@@ -145,12 +151,12 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - If the user wants only `-s`: `git commit -s -m "ci: <brief description>"`
    - If the user wants neither: `git commit -m "ci: <brief description>"`
 
-5. **Push**: Push branch to origin
+6. **Push**: Push branch to origin
    ```bash
    git push -u origin ci-fix/<short-slug>
    ```
 
-6. **PR**: Create a pull request with a description listing:
+7. **PR**: Create a pull request with a description listing:
    - Link to the failed CI run
    - Errors found and fixes applied
    - Tickets created for deferred issues (if any)
