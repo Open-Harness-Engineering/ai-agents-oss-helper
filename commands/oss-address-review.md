@@ -102,9 +102,19 @@ Run the build and test commands from the project's `project-standards.md`:
 - Regenerate downstream artifacts if needed
 - Check `git status` and commit all changes
 
-### 10. Push and Reply
+### 10. Final Sanity Build
 
-#### 10.1 Commit and Push
+**For Maven projects only:** As the last step before committing, run a full-reactor compile check from the **repository root**:
+
+```bash
+mvn clean install -DskipTests
+```
+
+This catches cross-module breakage that a module-only build in step 9 would miss — especially valuable for review fixes that touch shared APIs. Tests are skipped because step 9 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
+
+### 11. Push and Reply
+
+#### 11.1 Commit and Push
 
 Commit with a message summarizing what was addressed:
 
@@ -116,13 +126,13 @@ git push
 
 Use the commit format from the project's `project-guidelines.md`.
 
-#### 10.2 Reply to Comments
+#### 11.2 Reply to Comments
 
 For each addressed comment:
 - Reply confirming the fix with a brief explanation.
 - For questions, post the drafted reply.
 
-#### 10.3 Update PR Description
+#### 11.3 Update PR Description
 
 Update the PR description to reflect any changes in approach or scope resulting from the review:
 
@@ -130,7 +140,7 @@ Update the PR description to reflect any changes in approach or scope resulting 
 gh pr edit <number> --repo <GITHUB_REPO> --body "..."
 ```
 
-### 11. Constraints
+### 12. Constraints
 
 You MUST:
 - Present all findings and proposed actions before making changes
@@ -145,7 +155,7 @@ You MUST NOT:
 - Make unrelated changes while addressing feedback
 - Reply dismissively to suggestions — acknowledge the reviewer's perspective even when declining
 
-### 12. Acceptance Criteria
+### 13. Acceptance Criteria
 
 - All blocking comments are addressed with code changes
 - All unresolved comments have replies

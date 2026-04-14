@@ -101,7 +101,13 @@ Read branch naming from the project's `project-guidelines.md`.
    - **If tests pass**: Commit with the sonarcloud commit format from the project's `project-guidelines.md`
    - **If tests fail**: Skip commit, continue to next module
 
-3. **Push**: After all modules processed
+3. **Final Sanity Build** (Maven projects only): After all per-module commits are in place and before pushing, run a full-reactor compile check from the **repository root**:
+   ```bash
+   mvn clean install -DskipTests
+   ```
+   This catches cross-module breakage that per-module builds in step 2 would miss (e.g., a SonarCloud fix in module A breaks a caller in module B). Tests are skipped because step 2 already ran them per module. Run this once, not per module. Skip entirely for non-Maven projects. If the build fails, investigate and fix with an additional per-module commit before pushing — do NOT push on a failing root build.
+
+4. **Push**: After all modules processed and the sanity build passes
    ```bash
    git push -u origin <branch-name>
    ```

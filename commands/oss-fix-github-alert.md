@@ -185,7 +185,13 @@ Read branch naming and PR policy from the project's `project-guidelines.md`.
 
 3. **Format & Build:** Run the build command from `project-standards.md`. Include any auto-formatting changes.
 
-4. **Commit:** Use the format:
+4. **Final Sanity Build** (Maven projects only): As the last step before committing, run a full-reactor compile check from the **repository root**:
+   ```bash
+   mvn clean install -DskipTests
+   ```
+   This catches cross-module breakage that a module-only build in step 3 would miss. Tests are skipped because step 3 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
+
+5. **Commit:** Use the format:
    ```
    Fix <type> alert <NUMBER>: <brief description>
    ```
@@ -200,12 +206,12 @@ Read branch naming and PR policy from the project's `project-guidelines.md`.
    - `-s` only: `git commit -s -m "<COMMIT_MESSAGE>"`
    - Neither: `git commit -m "<COMMIT_MESSAGE>"`
 
-5. **Push:**
+6. **Push:**
    ```bash
    git push -u origin <BRANCH_NAME>
    ```
 
-6. **PR:** If PR creation is `always` in `project-guidelines.md`, create the PR:
+7. **PR:** If PR creation is `always` in `project-guidelines.md`, create the PR:
    ```bash
    gh pr create --title "<COMMIT_MESSAGE>" --body "<description>"
    ```

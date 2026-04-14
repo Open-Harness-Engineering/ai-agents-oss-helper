@@ -125,13 +125,35 @@ If cherry-pick **fails with conflicts**:
    >
    > You may want to manually cherry-pick and resolve the conflicts.
 
-### 8. Push the Backport Branch
+### 8. Sanity Build
+
+For **Maven projects**, verify the cherry-picked commits build cleanly on the target branch before pushing. From the **repository root**:
+
+```bash
+mvn clean install -DskipTests
+```
+
+This catches API drift between the source and target branches (e.g., a method used by the backport was renamed on the target branch). Tests are skipped because backport correctness is assumed to be validated upstream; the goal here is a compile-and-wire sanity check across the full reactor.
+
+Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only).
+
+If the build fails:
+1. Inspect the failure — it usually indicates a missing dependency commit or a signature change on the target branch.
+2. Either cherry-pick the missing prerequisite commits, resolve manually, or abort:
+   ```bash
+   git checkout -
+   git branch -D backport/<PR_NUMBER>-to-<TARGET_BRANCH_SLUG>
+   ```
+   and inform the user which prerequisite is missing.
+3. Do NOT push on a failing root build.
+
+### 9. Push the Backport Branch
 
 ```bash
 git push -u origin backport/<PR_NUMBER>-to-<TARGET_BRANCH_SLUG>
 ```
 
-### 9. Create the Backport PR
+### 10. Create the Backport PR
 
 Open a pull request from the backport branch to the target branch:
 
@@ -159,7 +181,7 @@ PREOF
 
 If the `backport` label does not exist, create the PR without it rather than failing.
 
-### 10. Report Result
+### 11. Report Result
 
 Provide the user with:
 
@@ -175,7 +197,7 @@ Provide the user with:
 Use `/oss-pr-status <NEW_PR_NUMBER>` to monitor the backport PR.
 ```
 
-### 11. Constraints
+### 12. Constraints
 
 You MUST:
 - Verify the source PR is merged before attempting the backport
@@ -192,7 +214,7 @@ You MUST NOT:
 - Skip conflict resolution without informing the user
 - Create the backport PR if cherry-pick failed
 
-### 12. Acceptance Criteria
+### 13. Acceptance Criteria
 
 - Source PR is validated as merged
 - Target branch is validated as existing

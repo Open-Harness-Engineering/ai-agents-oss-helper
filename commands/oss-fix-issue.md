@@ -136,7 +136,13 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - For projects with module-specific builds (camel-core): run formatting in the module directory first, then test
    - For other projects: run `mvn verify` from root
 
-4. **Commit**: Use the commit format from the project's `project-guidelines.md`
+4. **Final Sanity Build** (Maven projects only): As the last step before committing, run a full-reactor compile check from the **repository root**:
+   ```bash
+   mvn clean install -DskipTests
+   ```
+   This catches cross-module breakage that a module-only build in step 3 would miss. Tests are skipped because step 3 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
+
+5. **Commit**: Use the commit format from the project's `project-guidelines.md`
    - GitHub projects: `Fix #<ISSUE_NUMBER>: <brief description>`
    - Jira projects: `<ISSUE_ID>: <brief description of fix>`
 
@@ -146,12 +152,12 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - If the user wants only `-s`: `git commit -s -m "<COMMIT_MESSAGE>"`
    - If the user wants neither: `git commit -m "<COMMIT_MESSAGE>"`
 
-5. **Push**: Push branch to origin
+6. **Push**: Push branch to origin
    ```bash
    git push -u origin <BRANCH_NAME>
    ```
 
-6. **PR** (based on `project-guidelines.md`):
+7. **PR** (based on `project-guidelines.md`):
    - If PR creation is specified as "always" or user requests it:
      ```bash
      gh pr create --title "<COMMIT_MESSAGE>" --body "<description>"

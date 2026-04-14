@@ -76,7 +76,13 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - For documentation-only changes, the build step may be skipped if no code was modified
    - For projects with no build tool (ai-agents-oss-helper): skip build
 
-4. **Commit**: Use the quick-fix commit format from the project's `project-guidelines.md`
+4. **Final Sanity Build** (Maven projects only, code changes only): As the last step before committing, run a full-reactor compile check from the **repository root**:
+   ```bash
+   mvn clean install -DskipTests
+   ```
+   This catches cross-module breakage that a module-only build in step 3 would miss. Skip this step for non-Maven projects and for documentation-only changes where step 3 was skipped. If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
+
+5. **Commit**: Use the quick-fix commit format from the project's `project-guidelines.md`
 
    **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
    - If the user wants both: `git commit -S -s -m "chore: <brief description>"`
@@ -84,12 +90,12 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - If the user wants only `-s`: `git commit -s -m "chore: <brief description>"`
    - If the user wants neither: `git commit -m "chore: <brief description>"`
 
-5. **Push**: Push the branch to origin
+6. **Push**: Push the branch to origin
    ```bash
    git push -u origin quick-fix/<short-slug>
    ```
 
-6. **Pull Request**: Create a pull request
+7. **Pull Request**: Create a pull request
    ```bash
    gh pr create --title "chore: <brief description>" --body "<short explanation of what was changed and why>"
    ```
