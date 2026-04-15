@@ -41,6 +41,7 @@ COMMAND_FILES=(
     "commands/oss-merge-pr.md"
     "commands/oss-create-security-advisory.md"
     "commands/oss-triage-security-report.md"
+    "commands/oss-draft-cve.md"
 )
 
 # Rule files to install (relative paths from repo root)
