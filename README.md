@@ -66,6 +66,7 @@ cd ai-agents-oss-helper
 | `/oss-list-prs [filters]`                 | List all open PRs in the repo, then pick one to review with `/oss-review-pr` |
 | `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
 | `/oss-triage-security-report [source]`    | Triage an inbound security report: verify claims, check prior fixes, recommend disclosure path |
+| `/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path>] [fix_pr=<pr>]` | Draft a project-specific CVE advisory page and matching PGP-signable plaintext body from a reserved CVE ID and a reference advisory |
 
 All commands auto-detect the project from the current directory's git remote.
 
