@@ -2,24 +2,20 @@
 
 Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contribute to open source projects. Commands auto-detect the current project via `git remote get-url origin` and load project-specific configuration from rule files.
 
-## Supported Projects
+## Getting Started
 
-| Project | Issue Tracker | Repository |
-|---------|--------------|------------|
-| Wanaku | GitHub | `wanaku-ai/wanaku` |
-| Wanaku Capabilities Java SDK | GitHub | `wanaku-ai/wanaku-capabilities-java-sdk` |
-| Camel Integration Capability | GitHub | `wanaku-ai/camel-integration-capability` |
-| Apache Camel (camel-core) | Jira | `apache/camel` |
-| Apache Camel Quarkus | GitHub | `apache/camel-quarkus` |
-| Apache Camel Spring Boot | Jira | `apache/camel-spring-boot` |
-| Apache Camel Kafka Connector | GitHub | `apache/camel-kafka-connector` |
-| Apache Camel K | GitHub | `apache/camel-k` |
-| Hawtio | GitHub | `hawtio/hawtio` |
-| Kaoto | GitHub | `KaotoIO/kaoto` |
-| Forage | GitHub | `KaotoIO/forage` |
-| Quarkus Flow | GitHub | `quarkiverse/quarkus-flow` |
-| AI Agents OSS Helper | GitHub | `Open-Harness-Engineering/ai-agents-oss-helper` |
-| Generic GitHub | GitHub | _(any unmatched GitHub repo)_ |
+Any project can use the helper by adding an `.oss-ai-helper-rules/` directory to its repository root with three rule files:
+
+```
+my-project/
+├── .oss-ai-helper-rules/
+│   ├── project-info.md          # Repository URLs, issue trackers, related repos
+│   ├── project-standards.md     # Build tools, commands, code style restrictions
+│   └── project-guidelines.md    # Branch naming, commit formats, PR policies
+└── ...
+```
+
+Use `/oss-add-project` to generate initial rule files for any project. Once committed, every contributor gets the right configuration automatically — no per-user installation of project-specific rules required.
 
 ## Installation
 
@@ -44,6 +40,23 @@ cd ai-agents-oss-helper
 ./install.sh codex     # Codex only
 ./install.sh           # All agents
 ```
+
+## How It Works
+
+Commands are generic and project-agnostic. Project-specific configuration is stored in rule files with three files per project:
+- **`project-info.md`** - Repository URLs, issue trackers, SonarCloud keys, related repos
+- **`project-standards.md`** - Build tools, commands, code style restrictions
+- **`project-guidelines.md`** - Branch naming, commit formats, PR policies, task labels
+
+### Rule loading priority
+
+Every command starts by processing `.oss-init.md`, which loads project rules in this priority order:
+
+1. **Project-local rules** - `.oss-ai-helper-rules/` directory in the repository root. Highest priority, versioned with the project.
+2. **Installed fallback rules** - Matching `rules/<project>/` from the globally installed helper. Used when the project does not yet ship its own rules.
+3. **Auto-discovery** - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files in `.oss-ai-helper-rules/` so they can be committed and shared.
+
+Projects should adopt project-local rules so that configuration travels with the repository and stays in sync across all contributors and agents.
 
 ## Available Commands
 
@@ -75,7 +88,7 @@ All commands auto-detect the project from the current directory's git remote.
 ### Fix an Issue
 
 ```bash
-# Navigate to any supported project, then:
+# Navigate to any project with .oss-ai-helper-rules/, then:
 
 # GitHub project - using issue number
 /oss-fix-issue 42
@@ -331,38 +344,6 @@ No content is published anywhere until you explicitly confirm a handoff.
 /oss-add-project my-project "Java project at https://github.com/org/my-project, uses Maven, GitHub issues"
 ```
 
-## How It Works
-
-Commands are generic and project-agnostic. Project-specific configuration is stored in rule files with three files per project:
-- **`project-info.md`** - Repository URLs, issue trackers, SonarCloud keys, related repos
-- **`project-standards.md`** - Build tools, commands, code style restrictions
-- **`project-guidelines.md`** - Branch naming, commit formats, PR policies, task labels
-
-### Project-local rules (recommended)
-
-The recommended approach is to include an `.oss-ai-helper-rules/` directory in the repository root with the three rule files. This way rules are versioned alongside the code and every contributor gets the right configuration automatically — no per-user installation of project-specific rules required.
-
-```
-my-project/
-├── .oss-ai-helper-rules/
-│   ├── project-info.md
-│   ├── project-standards.md
-│   └── project-guidelines.md
-└── ...
-```
-
-Use `/oss-add-project` to generate initial rule files for any project.
-
-### Rule loading priority
-
-Every command starts by processing `.oss-init.md`, which loads project rules in this priority order:
-
-1. **Project-local rules** (recommended) - `.oss-ai-helper-rules/` directory in the repository root. Highest priority, versioned with the project.
-2. **Installed rules** (fallback) - Matching `rules/<project>/` from the globally installed helper. Used when the project does not yet ship its own rules.
-3. **Auto-discovery** (fallback) - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files in `.oss-ai-helper-rules/` so they can be committed and shared.
-
-Projects are encouraged to adopt project-local rules so that configuration travels with the repository and stays in sync across all contributors and agents.
-
 ## OpenCode Notes
 
 OpenCode uses markdown command files. The installer adds frontmatter descriptions and installs commands to:
@@ -417,56 +398,12 @@ ai-agents-oss-helper/
 │   ├── oss-backport-pr.md
 │   ├── oss-triage-security-report.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
-└── rules/                            # Rule files (installed to ~/.{agent}/rules/)
-    ├── wanaku/
+└── rules/                            # Fallback rules for projects without .oss-ai-helper-rules/
+    ├── <project>/
     │   ├── project-info.md
     │   ├── project-standards.md
     │   └── project-guidelines.md
-    ├── wanaku-capabilities-java-sdk/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── camel-integration-capability/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── camel-core/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── camel-quarkus/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── camel-spring-boot/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── camel-kafka-connector/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── camel-k/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── hawtio/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── kaoto/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── forage/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    ├── ai-agents-oss-helper/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    └── generic-github/
+    └── generic-github/               # Catch-all fallback for any GitHub project
         ├── project-info.md
         ├── project-standards.md
         └── project-guidelines.md
