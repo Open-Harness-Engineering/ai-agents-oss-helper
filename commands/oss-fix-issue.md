@@ -128,7 +128,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    ```bash
    git checkout main && git pull && git checkout -b <BRANCH_NAME>
    ```
-   Use the branch naming pattern from the project's `project-guidelines.md` (e.g., `ci-issue-<ISSUE_ID>`).
+   Use the branch naming pattern from the project's `project-guidelines.md` (e.g., `fix/<ISSUE_ID>`).
 
 2. **Implement**: Make necessary code changes
 

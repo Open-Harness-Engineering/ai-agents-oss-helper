@@ -127,9 +127,9 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
 
 1. **Branch**: Create from main
    ```bash
-   git checkout main && git pull && git checkout -b ci-fix/<short-slug>
+   git checkout main && git pull && git checkout -b ci-issue/<short-slug>
    ```
-   Use the CI-fix branch pattern from the project's `project-guidelines.md`.
+   Use the CI-issue branch pattern from the project's `project-guidelines.md`.
 
 2. **Implement**: Apply the fixes for category A errors
 
@@ -143,7 +143,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    ```
    This catches cross-module breakage that a module-only build in step 3 would miss. Tests are skipped because step 3 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
 
-5. **Commit**: Use the CI-fix commit format from the project's `project-guidelines.md`
+5. **Commit**: Use the CI-issue commit format from the project's `project-guidelines.md`
 
    **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
    - If the user wants both: `git commit -S -s -m "ci: <brief description>"`
@@ -153,7 +153,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
 
 6. **Push**: Push branch to origin
    ```bash
-   git push -u origin ci-fix/<short-slug>
+   git push -u origin ci-issue/<short-slug>
    ```
 
 7. **PR**: Create a pull request with a description listing:

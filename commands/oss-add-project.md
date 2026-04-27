@@ -114,13 +114,15 @@ Create with:
 Create with:
 - H1 heading: `# Project Guidelines`
 - Intro paragraph (same as other project-guidelines files)
-- Fix-issue branch naming pattern
+- Fix branch naming pattern
+- Feature branch naming pattern
+- Bugfix branch naming pattern
 - Quick-fix branch naming pattern
 - SonarCloud branch naming pattern
-- Commit format (fix-issue)
+- Commit format (fix)
 - Commit format (quick-fix)
-- CI-fix branch naming pattern
-- Commit format (ci-fix)
+- CI-issue branch naming pattern
+- Commit format (ci-issue)
 - PR creation policy (always/on request)
 - Find-task source (GitHub labels or Jira JQL)
 - Find-task beginner label
