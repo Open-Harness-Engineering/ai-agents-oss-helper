@@ -136,11 +136,23 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - For projects with module-specific builds (camel-core): run formatting in the module directory first, then test
    - For other projects: run `mvn verify` from root
 
-4. **Final Sanity Build** (Maven projects only): As the last step before committing, run a full-reactor compile check from the **repository root**:
-   ```bash
-   mvn clean install -DskipTests
-   ```
-   This catches cross-module breakage that a module-only build in step 3 would miss. Tests are skipped because step 3 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
+4. **Full Build Sanity Check (MANDATORY before commit)**: Regardless of project type, run a full build from the **repository root** before committing. This catches cross-module breakage that a module-only build in step 3 would miss and triggers any project-wide code generation (catalogs, DSL factories, metadata mirrors, schemas, etc.) that downstream modules produce from your changes.
+
+   Pick the command based on the project's build tool (from `project-standards.md`); skip tests since step 3 already ran them:
+
+   | Build tool | Command (run from repo root) |
+   |------------|-----------------------------|
+   | Maven      | `mvn clean install -DskipTests` |
+   | Gradle     | `./gradlew build -x test` |
+   | Go (make)  | `make build` |
+   | yarn       | `yarn build` |
+   | npm        | `npm run build` |
+   | Cargo      | `cargo build` |
+   | none / docs-only | skip this step |
+
+   If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
+
+   After the build succeeds, run `git status` and inspect newly-modified files. All regenerated files that are related to the fix (catalogs, endpoint DSLs, metadata, schemas, etc.) MUST be included in the commit. Revert any unrelated regen artifacts that come from stale upstream state — do NOT commit them.
 
 5. **Commit**: Use the commit format from the project's `project-guidelines.md`
    - GitHub projects: `Fix #<ISSUE_NUMBER>: <brief description>`
