@@ -2,13 +2,15 @@
 
 This rule file contains branching, commit, PR, and task-finding conventions for the project. Commands read this file to determine how to name branches, format commits, and search for tasks.
 
-- **Fix-issue branch:** `ci-issue-<ISSUE_ID>`
+- **Fix branch:** `fix/<ISSUE_ID>`
+- **Feature branch:** `feature/<ISSUE_ID>-<short-slug>`
+- **Bugfix branch:** `bugfix/<ISSUE_ID>`
 - **Quick-fix branch:** `quick-fix/<short-slug>`
 - **SonarCloud branch:** `ci-camel-4-sonarcloud-<rule>` (customizable via `branch=<name>` option)
-- **Commit format (fix-issue):** `<ISSUE_ID>: <brief description of fix>`
+- **Commit format (fix):** `<ISSUE_ID>: <brief description of fix>`
 - **Commit format (quick-fix):** `chore: <brief description>`
-- **CI-fix branch:** `ci-fix/<short-slug>`
-- **Commit format (ci-fix):** `ci: <brief description>`
+- **CI-issue branch:** `ci-issue/<short-slug>`
+- **Commit format (ci-issue):** `ci: <brief description>`
 - **Commit format (sonarcloud):** `(chores): fix SonarCloud <rule> in <component>`
 - **PR creation:** always
 - **Find-task source:** Jira

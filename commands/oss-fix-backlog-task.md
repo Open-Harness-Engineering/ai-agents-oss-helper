@@ -100,7 +100,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    ```bash
    git checkout main && git pull && git checkout -b <BRANCH_NAME>
    ```
-   Use the fix-issue branch naming pattern from the project's `project-guidelines.md` (e.g., `ci-issue-<TASK_ID>`), replacing the issue identifier with the backlog task ID.
+   Use the fix branch naming pattern from the project's `project-guidelines.md` (e.g., `fix/<TASK_ID>`), replacing the issue identifier with the backlog task ID.
 
 2. **Implement**: Make necessary code changes
 
@@ -114,7 +114,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    ```
    This catches cross-module breakage that a module-only build in step 3 would miss. Tests are skipped because step 3 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
 
-5. **Commit**: Use the fix-issue commit format from the project's `project-guidelines.md`, replacing the issue identifier with the backlog task ID
+5. **Commit**: Use the fix commit format from the project's `project-guidelines.md`, replacing the issue identifier with the backlog task ID
 
    **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
    - If the user wants both: `git commit -S -s -m "<COMMIT_MESSAGE>"`
