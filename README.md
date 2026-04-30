@@ -80,6 +80,7 @@ Projects should adopt project-local rules so that configuration travels with the
 | `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
 | `/oss-triage-security-report [source]`    | Triage an inbound security report: verify claims, check prior fixes, recommend disclosure path |
 | `/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path>] [fix_pr=<pr>]` | Draft a project-specific CVE advisory page and matching PGP-signable plaintext body from a reserved CVE ID and a reference advisory |
+| `/oss-analyze-third-party-cve <cve_id> [coords]` | Analyze whether the project is exposed to a CVE in a third-party dependency; produce an exposure report and propose a sanitized follow-up |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -338,6 +339,30 @@ The command will:
 
 No content is published anywhere until you explicitly confirm a handoff.
 
+### Analyze a Third-Party CVE
+
+```bash
+# Analyze by CVE ID (the command will infer affected dependencies from the advisory)
+/oss-analyze-third-party-cve CVE-2024-12345
+
+# Disambiguate when the advisory covers multiple packages
+/oss-analyze-third-party-cve CVE-2024-12345 org.apache.commons:commons-text
+
+# By GHSA ID
+/oss-analyze-third-party-cve GHSA-abcd-efgh-1234
+```
+
+The command will:
+1. Detect the current project and load its rules
+2. Fetch the advisory record from GHSA / NVD / OSV / vendor sources (asking before fetching URLs)
+3. Locate the affected dependency in the project using the project's actual build tool (resolved version, not just manifest)
+4. Map the cited vulnerable APIs / config to project usage with file/line citations and reachability notes
+5. Cross-check prior issues, PRs, commits, and Dependabot alerts referencing the advisory
+6. Produce a structured exposure report with a verdict (`exposed` / `not exposed in current usage` / `not affected` / `inconclusive`) and confidence level
+7. Propose a sanitized follow-up: dependency bump via `/oss-quick-fix`, tracking issue via `/oss-create-issue`, an existing Dependabot alert via `/oss-fix-github-alert`, or a documented "not affected" rationale
+
+Like `/oss-triage-security-report`, this is a local investigative workflow — nothing is published until you explicitly confirm a handoff, and exploit specifics are stripped from any text proposed for downstream public artifacts.
+
 ### Add a New Project
 
 ```bash
@@ -397,6 +422,8 @@ ai-agents-oss-helper/
 │   ├── oss-list-prs.md
 │   ├── oss-backport-pr.md
 │   ├── oss-triage-security-report.md
+│   ├── oss-draft-cve.md
+│   ├── oss-analyze-third-party-cve.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
 └── rules/                            # Fallback rules for projects without .oss-ai-helper-rules/
     ├── <project>/
