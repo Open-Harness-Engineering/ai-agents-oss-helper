@@ -60,7 +60,7 @@ git blame -L <start>,<end> -- <file>
 
 Review the pull request specifically against the loaded project rules:
 
-- **Project guidelines** - Branch naming, commit conventions, PR expectations, contribution process
+- **Project guidelines** - Commit conventions, PR expectations, contribution process
 - **Project standards** - Build, test, format, and code-style expectations
 - **Project information** - Related repositories or tracker conventions that affect the change
 
@@ -72,7 +72,7 @@ Check for issues such as:
 
 - Missing or insufficient tests for the changed behavior
 - Changes that appear inconsistent with the project's build, test, or formatting requirements
-- Branch or commit conventions that do not follow `project-guidelines.md`
+- Commit conventions that do not follow `project-guidelines.md`
 - Scope drift: unrelated changes mixed into the PR
 - Missing issue linkage or context when the project conventions expect it
 - Contribution-process problems (for example, PR body lacks required context)
