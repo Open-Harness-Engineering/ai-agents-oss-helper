@@ -43,6 +43,7 @@ COMMAND_FILES=(
     "commands/oss-triage-security-report.md"
     "commands/oss-draft-cve.md"
     "commands/oss-list-issues.md"
+    "commands/oss-analyze-third-party-cve.md"
 )
 
 # Rule files to install (relative paths from repo root)
