@@ -80,6 +80,7 @@ Projects should adopt project-local rules so that configuration travels with the
 | `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
 | `/oss-triage-security-report [source]`    | Triage an inbound security report: verify claims, check prior fixes, recommend disclosure path |
 | `/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path>] [fix_pr=<pr>]` | Draft a project-specific CVE advisory page and matching PGP-signable plaintext body from a reserved CVE ID and a reference advisory |
+| `/oss-list-issues [filters]`                | List all issues assigned to you in the project's tracker (GitHub or Jira) |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -297,6 +298,29 @@ The command will:
 
 This is the counterpart to `/oss-list-pr-status`: that command lists *your own* PRs for tracking your work, while `/oss-list-prs` lists *all* open PRs in the repo for browsing and review selection.
 
+### List Your Assigned Issues
+
+```bash
+# List all open issues assigned to you
+/oss-list-issues
+
+# Filter by label
+/oss-list-issues label="bug"
+
+# Include closed issues
+/oss-list-issues state=all
+
+# Raise the limit
+/oss-list-issues limit=50
+```
+
+The command will:
+1. Detect the current project and its issue tracker type (GitHub or Jira)
+2. List all issues assigned to you with a single API call
+3. Present them in a numbered table with key details (title, labels, status, priority)
+4. Ask which issue you want to work on
+5. Hand off to `/oss-fix-issue` or `/oss-analyze-issue`
+
 ### Backport a Merged PR
 
 ```bash
@@ -395,6 +419,7 @@ ai-agents-oss-helper/
 │   ├── oss-pr-status.md
 │   ├── oss-list-pr-status.md
 │   ├── oss-list-prs.md
+│   ├── oss-list-issues.md
 │   ├── oss-backport-pr.md
 │   ├── oss-triage-security-report.md
 │   └── .oss-init.md                  # Shared preamble: project detection & rule loading
