@@ -403,13 +403,17 @@ Like `/oss-triage-security-report`, this is a local investigative workflow — n
 
 # Detect the slug from the current git remote and install the matching project
 /oss-install-info auto
+
+# Install every project in the known-projects repository
+/oss-install-info all
 ```
 
 The command will:
 1. Resolve the known-projects repository (default `Open-Harness-Engineering/ai-agents-oss-known-projects`)
-2. Fetch the three rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`) for the requested project
+2. Fetch the three rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`) for the requested project (or for every project when `all` is used)
 3. Write them under the agent's rules directory (e.g., `~/.claude/rules/<project>/`)
-4. Skip the install if the local `## Version` SHA already matches the remote version
+4. Skip projects where the local `## Version` SHA already matches the remote version
+5. In `all` mode, print a single summary table when finished instead of per-project confirmations
 
 Subsequent OSS Helper commands pick up the newly installed rules through `.oss-init.md` step 2B without any further configuration.
 

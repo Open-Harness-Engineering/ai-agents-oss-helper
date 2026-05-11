@@ -9,7 +9,7 @@ Install project rules from the `ai-agents-oss-known-projects` repository into th
 ```
 
 **Arguments:**
-- `<project>` (optional) - Project slug to install (e.g., `camel-core`, `wanaku`). Use `auto` to detect the slug from the current git remote. If omitted, the command lists the projects available in the known-projects repository.
+- `<project>` (optional) - Project slug to install (e.g., `camel-core`, `wanaku`). Use `auto` to detect the slug from the current git remote, or `all` to install every project in the known-projects repository. If omitted, the command lists the projects available in the known-projects repository.
 
 **Examples:**
 ```
@@ -17,6 +17,7 @@ Install project rules from the `ai-agents-oss-known-projects` repository into th
 /oss-install-info wanaku         # install rules for wanaku
 /oss-install-info camel-core     # install rules for Apache Camel core
 /oss-install-info auto           # detect current git remote and install the matching project
+/oss-install-info all            # install every project in the known-projects repository
 ```
 
 ## Instructions
@@ -91,9 +92,48 @@ Stop.
 
 If a match is found, use that slug and continue with the install steps below.
 
-### 5. Install Mode (project slug provided)
+### 5. All Mode (`<project>` is `all`)
 
-#### 5.1 Validate the project exists
+Install every project listed in the known-projects repository.
+
+#### 5.1 Enumerate projects
+
+```bash
+gh api "repos/<OSS_KNOWN_PROJECTS_REPO>/contents?ref=<OSS_KNOWN_PROJECTS_BRANCH>" --jq '.[] | select(.type == "dir") | .name'
+```
+
+#### 5.2 Install each project
+
+For each project slug returned, run the install steps in section 6 (Install Mode) — including the validation in 6.1, the version check in 6.2, and the fetch in 6.3.
+
+When the version check in 6.2 reports a SHA mismatch, ask the user once whether to overwrite, and reuse that answer for the rest of the run. Do not prompt per project.
+
+Do not emit the per-project confirmation block (section 6.4) for each project — aggregate the outcomes instead.
+
+#### 5.3 Aggregate summary
+
+After processing every project, render a single summary table:
+
+```markdown
+## Installed rules for all projects in <OSS_KNOWN_PROJECTS_REPO>
+
+| # | Project | Status |
+|---|---------|--------|
+| 1 | camel-core | installed |
+| 2 | wanaku | already up to date |
+| 3 | hawtio | skipped (user declined overwrite) |
+| ... | ... | ... |
+
+Total: <N> project(s) — <installed> installed, <unchanged> already up to date, <skipped> skipped.
+```
+
+The next OSS Helper command run from any project that matches one of these remote patterns will load the matching rules through `.oss-init.md` step 2B without any further configuration.
+
+Stop after rendering the summary.
+
+### 6. Install Mode (project slug provided)
+
+#### 6.1 Validate the project exists
 
 Check that `<project>/project-info.md` exists in the known-projects repo:
 
@@ -106,7 +146,7 @@ If the project is not found, report:
 
 Stop.
 
-#### 5.2 Check existing local copy
+#### 6.2 Check existing local copy
 
 If `<RULES_DIR>/<project>/project-info.md` exists locally, read its `## Version` SHA. Fetch the remote version:
 
@@ -119,7 +159,7 @@ gh api "repos/<OSS_KNOWN_PROJECTS_REPO>/contents/<project>/project-info.md?ref=<
 
 Stop if the user declines.
 
-#### 5.3 Fetch and write rule files
+#### 6.3 Fetch and write rule files
 
 For each of the three files (`project-info.md`, `project-standards.md`, `project-guidelines.md`):
 
@@ -134,7 +174,7 @@ If `gh` is not available, fall back to `curl`:
 curl -fsSL "https://raw.githubusercontent.com/<OSS_KNOWN_PROJECTS_REPO>/<OSS_KNOWN_PROJECTS_BRANCH>/<project>/<file>" -o <RULES_DIR>/<project>/<file>
 ```
 
-#### 5.4 Confirm the install
+#### 6.4 Confirm the install
 
 Report to the user:
 
@@ -148,25 +188,27 @@ Installed rules for <project> to <RULES_DIR>/<project>/:
 Suggest the next step:
 > The next time you run an OSS Helper command from a project whose git remote matches `<remote-pattern>`, these rules will be loaded automatically.
 
-### 6. Constraints
+### 7. Constraints
 
 You MUST:
-- Make minimal API calls (one to validate, three to fetch the rule files, one extra to compare versions if a local copy already exists)
+- Make minimal API calls — per project: one to validate, three to fetch the rule files, plus one extra to compare versions if a local copy already exists
 - Install only the three rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`)
-- Ask the user before overwriting a local copy that has a different `## Version` SHA
-- Create the target rules directory if it does not exist
+- Ask the user before overwriting a local copy that has a different `## Version` SHA; in `all` mode, reuse the first answer for the rest of the run
+- Create each target rules directory if it does not exist
 
 You MUST NOT:
 - Modify the known-projects repository itself (this command is read-only against it)
 - Install commands or other helper files (use `install.sh` for that)
-- Install rules for more than one project per invocation
+- Install rules for projects other than those covered by the current invocation (single slug, `auto` match, or every project under `all`)
 - Overwrite local rules without performing the version check first
 - Touch project-local `.oss-ai-helper-rules/` directories (those take precedence over installed rules)
+- Prompt the user once per project in `all` mode — collect overwrite consent at most once
 
-### 7. Acceptance Criteria
+### 8. Acceptance Criteria
 
-- The three rule files for `<project>` are present in `<RULES_DIR>/<project>/` after the command completes successfully
-- The local `## Version` SHA matches the remote SHA for the installed project
+- The three rule files for each requested `<project>` are present in `<RULES_DIR>/<project>/` after the command completes successfully
+- The local `## Version` SHA matches the remote SHA for each installed project
 - Subsequent OSS Helper commands load the newly installed rules through `.oss-init.md` step 2B
 - Existing project-local `.oss-ai-helper-rules/` directories continue to take precedence
 - No commands or helper files outside `<RULES_DIR>/<project>/` are modified
+- In `all` mode, a single aggregated summary table is produced instead of per-project confirmation messages
