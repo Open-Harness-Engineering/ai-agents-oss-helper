@@ -413,6 +413,26 @@ The command will:
 
 Subsequent OSS Helper commands pick up the newly installed rules through `.oss-init.md` step 2B without any further configuration.
 
+#### Pointing at a different rules repository
+
+The default source is [`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects) on the `main` branch. You can override either part with environment variables — useful for teams that maintain a private fork of the rules repo:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `OSS_KNOWN_PROJECTS_REPO` | `Open-Harness-Engineering/ai-agents-oss-known-projects` | GitHub `org/repo` to read rules from |
+| `OSS_KNOWN_PROJECTS_BRANCH` | `main` | Branch within that repository |
+
+Example:
+
+```bash
+# Use a private fork on a release branch
+export OSS_KNOWN_PROJECTS_REPO=acme-corp/ai-agents-oss-known-projects
+export OSS_KNOWN_PROJECTS_BRANCH=release/2026.05
+/oss-install-info camel-core
+```
+
+Both variables are read each time `/oss-install-info` runs, so the override only applies for the current shell session unless you export it persistently.
+
 ### Add a New Project
 
 ```bash
