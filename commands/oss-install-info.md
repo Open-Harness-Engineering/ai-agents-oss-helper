@@ -51,7 +51,7 @@ Project rule files will be written to `<RULES_DIR>/<project>/`.
 If no argument is provided, list the projects available in the known-projects repository:
 
 ```bash
-gh api repos/<OSS_KNOWN_PROJECTS_REPO>/contents --ref <OSS_KNOWN_PROJECTS_BRANCH> --jq '.[] | select(.type == "dir") | .name'
+gh api "repos/<OSS_KNOWN_PROJECTS_REPO>/contents?ref=<OSS_KNOWN_PROJECTS_BRANCH>" --jq '.[] | select(.type == "dir") | .name'
 ```
 
 For each listed project, indicate whether it is already installed locally (i.e., whether `<RULES_DIR>/<project>/project-info.md` exists).
@@ -98,7 +98,7 @@ If a match is found, use that slug and continue with the install steps below.
 Check that `<project>/project-info.md` exists in the known-projects repo:
 
 ```bash
-gh api repos/<OSS_KNOWN_PROJECTS_REPO>/contents/<project>/project-info.md --ref <OSS_KNOWN_PROJECTS_BRANCH> --jq '.name' 2>/dev/null
+gh api "repos/<OSS_KNOWN_PROJECTS_REPO>/contents/<project>/project-info.md?ref=<OSS_KNOWN_PROJECTS_BRANCH>" --jq '.name' 2>/dev/null
 ```
 
 If the project is not found, report:
@@ -111,7 +111,7 @@ Stop.
 If `<RULES_DIR>/<project>/project-info.md` exists locally, read its `## Version` SHA. Fetch the remote version:
 
 ```bash
-gh api repos/<OSS_KNOWN_PROJECTS_REPO>/contents/<project>/project-info.md --ref <OSS_KNOWN_PROJECTS_BRANCH> --jq '.content' 2>/dev/null | base64 -d | grep -A1 '## Version'
+gh api "repos/<OSS_KNOWN_PROJECTS_REPO>/contents/<project>/project-info.md?ref=<OSS_KNOWN_PROJECTS_BRANCH>" --jq '.content' 2>/dev/null | base64 -d | grep -A1 '## Version'
 ```
 
 - If the SHAs match: inform the user the rules are already up to date and stop.
@@ -125,7 +125,7 @@ For each of the three files (`project-info.md`, `project-standards.md`, `project
 
 ```bash
 mkdir -p <RULES_DIR>/<project>
-gh api repos/<OSS_KNOWN_PROJECTS_REPO>/contents/<project>/<file> --ref <OSS_KNOWN_PROJECTS_BRANCH> --jq '.content' | base64 -d > <RULES_DIR>/<project>/<file>
+gh api "repos/<OSS_KNOWN_PROJECTS_REPO>/contents/<project>/<file>?ref=<OSS_KNOWN_PROJECTS_BRANCH>" --jq '.content' | base64 -d > <RULES_DIR>/<project>/<file>
 ```
 
 If `gh` is not available, fall back to `curl`:
