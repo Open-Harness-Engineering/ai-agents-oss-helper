@@ -44,56 +44,12 @@ COMMAND_FILES=(
     "commands/oss-draft-cve.md"
     "commands/oss-list-issues.md"
     "commands/oss-analyze-third-party-cve.md"
+    "commands/oss-install-info.md"
 )
 
-# Rule files to install (relative paths from repo root)
-RULE_FILES=(
-    "rules/wanaku/project-info.md"
-    "rules/wanaku/project-standards.md"
-    "rules/wanaku/project-guidelines.md"
-    "rules/wanaku-capabilities-java-sdk/project-info.md"
-    "rules/wanaku-capabilities-java-sdk/project-standards.md"
-    "rules/wanaku-capabilities-java-sdk/project-guidelines.md"
-    "rules/camel-integration-capability/project-info.md"
-    "rules/camel-integration-capability/project-standards.md"
-    "rules/camel-integration-capability/project-guidelines.md"
-    "rules/camel-core/project-info.md"
-    "rules/camel-core/project-standards.md"
-    "rules/camel-core/project-guidelines.md"
-    "rules/camel-quarkus/project-info.md"
-    "rules/camel-quarkus/project-standards.md"
-    "rules/camel-quarkus/project-guidelines.md"
-    "rules/camel-spring-boot/project-info.md"
-    "rules/camel-spring-boot/project-standards.md"
-    "rules/camel-spring-boot/project-guidelines.md"
-    "rules/camel-kafka-connector/project-info.md"
-    "rules/camel-kafka-connector/project-standards.md"
-    "rules/camel-kafka-connector/project-guidelines.md"
-    "rules/camel-k/project-info.md"
-    "rules/camel-k/project-standards.md"
-    "rules/camel-k/project-guidelines.md"
-    "rules/hawtio/project-info.md"
-    "rules/hawtio/project-standards.md"
-    "rules/hawtio/project-guidelines.md"
-    "rules/kaoto/project-info.md"
-    "rules/kaoto/project-standards.md"
-    "rules/kaoto/project-guidelines.md"
-    "rules/forage/project-info.md"
-    "rules/forage/project-standards.md"
-    "rules/forage/project-guidelines.md"
-    "rules/camel-kit/project-info.md"
-    "rules/camel-kit/project-standards.md"
-    "rules/camel-kit/project-guidelines.md"
-    "rules/camel-kit-knowledge/project-info.md"
-    "rules/camel-kit-knowledge/project-standards.md"
-    "rules/camel-kit-knowledge/project-guidelines.md"
-    "rules/ai-agents-oss-helper/project-info.md"
-    "rules/ai-agents-oss-helper/project-standards.md"
-    "rules/ai-agents-oss-helper/project-guidelines.md"
-    "rules/generic-github/project-info.md"
-    "rules/generic-github/project-standards.md"
-    "rules/generic-github/project-guidelines.md"
-)
+# Project rule files are no longer bundled with the installer. They live in a
+# separate repository (Open-Harness-Engineering/ai-agents-oss-known-projects)
+# and are installed on demand via the /oss-install-info command.
 
 # Old rule files to clean up (relative paths under rules/)
 OLD_RULE_FILES=(
@@ -319,26 +275,8 @@ install_for_agent() {
             fi
         done
 
-        # Install rule files (with subdirectories)
-        info "  Installing rules..."
-        for file in "${RULE_FILES[@]}"; do
-            local rel_path="${file#rules/}"
-            local dest="$codex_rules_dir/$rel_path"
-            local dest_dir
-            dest_dir="$(dirname "$dest")"
-
-            mkdir -p "$dest_dir"
-
-            if fetch_file "$file" "$dest"; then
-                info "    Installed: $rel_path"
-            else
-                error "    Failed to install: $rel_path"
-                return 1
-            fi
-        done
-
         info "  Skills installed to: $skills_root"
-        info "  Rules installed to: $codex_rules_dir"
+        info "  Rules directory: $codex_rules_dir (project rules installed on demand via /oss-install-info)"
         info "  Init file installed to: $codex_base/.oss-init.md"
         return 0
     fi
@@ -416,32 +354,14 @@ install_for_agent() {
         fi
     done
 
-    # Remove old monolithic rule files
+    # Remove old monolithic rule files (legacy cleanup)
     info "  Cleaning up old rule files..."
     for old_file in "${OLD_RULE_FILES[@]}"; do
         rm -f "$rules_dir/$old_file"
     done
 
-    # Install rule files (with subdirectories)
-    info "  Installing rules..."
-    for file in "${RULE_FILES[@]}"; do
-        local rel_path="${file#rules/}"
-        local dest="$rules_dir/$rel_path"
-        local dest_dir
-        dest_dir="$(dirname "$dest")"
-
-        mkdir -p "$dest_dir"
-
-        if fetch_file "$file" "$dest"; then
-            info "    Installed: $rel_path"
-        else
-            error "    Failed to install: $rel_path"
-            return 1
-        fi
-    done
-
     info "  Commands installed to: $commands_dir"
-    info "  Rules installed to: $rules_dir"
+    info "  Rules directory: $rules_dir (project rules installed on demand via /oss-install-info)"
 }
 
 # Main

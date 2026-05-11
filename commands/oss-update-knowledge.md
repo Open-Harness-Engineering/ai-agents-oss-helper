@@ -85,13 +85,14 @@ Ask the user to confirm before applying. If the user rejects or wants modificati
 
 Once confirmed, update the rule files with the approved changes. Preserve the existing file format and structure - only modify the specific values that were approved.
 
-### 8. Update install.sh Mapping (if needed)
+### 8. Publish the Updated Rules
 
-If the changes include a new remote pattern or project directory rename, update the remote pattern mapping in:
-- `install.sh` (RULE_FILES array)
-- All command files under `commands/` (Detect Project section)
+If the rules being updated live in:
 
-This should be rare - most updates only change values within existing rule files.
+- `<repo-root>/.oss-ai-helper-rules/` (project-local): commit the edits in the project repository and open a PR there. The rules travel with the project, so no other repository needs to change.
+- `ai-agents-oss-known-projects` (centralized): commit the edits in that repository and open a PR. Once merged, users can pick up the changes by re-running `/oss-install-info <project>`. The `## Version` SHA at the bottom of each rule file should be bumped to the new commit so the version check in `.oss-init.md` detects the update.
+
+Renaming a project directory inside `ai-agents-oss-known-projects` is a breaking change — coordinate with users that have already installed the old slug before doing it.
 
 ### 9. Constraints
 

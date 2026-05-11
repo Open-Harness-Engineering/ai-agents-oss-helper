@@ -53,10 +53,14 @@ Commands are generic and project-agnostic. Project-specific configuration is sto
 Every command starts by processing `.oss-init.md`, which loads project rules in this priority order:
 
 1. **Project-local rules** - `.oss-ai-helper-rules/` directory in the repository root. Highest priority, versioned with the project.
-2. **Installed fallback rules** - Matching `rules/<project>/` from the globally installed helper. Used when the project does not yet ship its own rules.
+2. **Installed fallback rules** - A subdirectory under the agent's local rules directory (for example `~/.claude/rules/<project>/`) whose `project-info.md` declares a matching `Remote pattern`. Install these on demand with [`/oss-install-info`](#install-project-rules).
 3. **Auto-discovery** - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files in `.oss-ai-helper-rules/` so they can be committed and shared.
 
 Projects should adopt project-local rules so that configuration travels with the repository and stays in sync across all contributors and agents.
+
+### Where the rules come from
+
+Project rules are not bundled with the installer. They live in a separate repository, [`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects), and are installed on demand via `/oss-install-info <project>`. This keeps the helper focused on commands and lets projects that prefer not to host AI-agent metadata in their source tree have rules hosted centrally instead.
 
 ## Available Commands
 
@@ -82,6 +86,7 @@ Projects should adopt project-local rules so that configuration travels with the
 | `/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path>] [fix_pr=<pr>]` | Draft a project-specific CVE advisory page and matching PGP-signable plaintext body from a reserved CVE ID and a reference advisory |
 | `/oss-list-issues [filters]`                | List all issues assigned to you in the project's tracker (GitHub or Jira) |
 | `/oss-analyze-third-party-cve <cve_id> [coords]` | Analyze whether the project is exposed to a CVE in a third-party dependency; produce an exposure report and propose a sanitized follow-up |
+| `/oss-install-info [project]`               | Install (or list) project rules from the `ai-agents-oss-known-projects` repository |
 
 All commands auto-detect the project from the current directory's git remote.
 
@@ -387,6 +392,27 @@ The command will:
 
 Like `/oss-triage-security-report`, this is a local investigative workflow — nothing is published until you explicitly confirm a handoff, and exploit specifics are stripped from any text proposed for downstream public artifacts.
 
+### Install Project Rules
+
+```bash
+# List projects available in the known-projects repository
+/oss-install-info
+
+# Install the rules for a specific project
+/oss-install-info camel-core
+
+# Detect the slug from the current git remote and install the matching project
+/oss-install-info auto
+```
+
+The command will:
+1. Resolve the known-projects repository (default `Open-Harness-Engineering/ai-agents-oss-known-projects`)
+2. Fetch the three rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`) for the requested project
+3. Write them under the agent's rules directory (e.g., `~/.claude/rules/<project>/`)
+4. Skip the install if the local `## Version` SHA already matches the remote version
+
+Subsequent OSS Helper commands pick up the newly installed rules through `.oss-init.md` step 2B without any further configuration.
+
 ### Add a New Project
 
 ```bash
@@ -428,38 +454,34 @@ Since Gemini CLI has no auto-loading `rules/` directory, each generated TOML com
 ai-agents-oss-helper/
 ├── install.sh                        # Installation script
 ├── README.md
-├── commands/                         # Generic commands (installed to ~/.{agent}/commands/)
-│   ├── oss-add-project.md
-│   ├── oss-fix-issue.md
-│   ├── oss-review-pr.md
-│   ├── oss-find-task.md
-│   ├── oss-create-issue.md
-│   ├── oss-quick-fix.md
-│   ├── oss-analyze-issue.md
-│   ├── oss-fix-sonarcloud.md
-│   ├── oss-fix-github-alert.md
-│   ├── oss-update-knowledge.md
-│   ├── oss-fix-ci-errors.md
-│   ├── oss-fix-backlog-task.md
-│   ├── oss-pr-status.md
-│   ├── oss-list-pr-status.md
-│   ├── oss-list-prs.md
-│   ├── oss-list-issues.md
-│   ├── oss-backport-pr.md
-│   ├── oss-triage-security-report.md
-│   ├── oss-draft-cve.md
-│   ├── oss-analyze-third-party-cve.md
-│   └── .oss-init.md                  # Shared preamble: project detection & rule loading
-└── rules/                            # Fallback rules for projects without .oss-ai-helper-rules/
-    ├── <project>/
-    │   ├── project-info.md
-    │   ├── project-standards.md
-    │   └── project-guidelines.md
-    └── generic-github/               # Catch-all fallback for any GitHub project
-        ├── project-info.md
-        ├── project-standards.md
-        └── project-guidelines.md
+└── commands/                         # Generic commands (installed to ~/.{agent}/commands/)
+    ├── oss-add-project.md
+    ├── oss-fix-issue.md
+    ├── oss-review-pr.md
+    ├── oss-find-task.md
+    ├── oss-create-issue.md
+    ├── oss-quick-fix.md
+    ├── oss-analyze-issue.md
+    ├── oss-fix-sonarcloud.md
+    ├── oss-fix-github-alert.md
+    ├── oss-update-knowledge.md
+    ├── oss-fix-ci-errors.md
+    ├── oss-fix-backlog-task.md
+    ├── oss-pr-status.md
+    ├── oss-list-pr-status.md
+    ├── oss-list-prs.md
+    ├── oss-list-issues.md
+    ├── oss-backport-pr.md
+    ├── oss-triage-security-report.md
+    ├── oss-draft-cve.md
+    ├── oss-analyze-third-party-cve.md
+    ├── oss-install-info.md
+    └── .oss-init.md                  # Shared preamble: project detection & rule loading
 ```
+
+Project rule files are no longer bundled with this repository. They live in
+[`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects)
+and are installed on demand via `/oss-install-info <project>`.
 
 ## Contributing
 
