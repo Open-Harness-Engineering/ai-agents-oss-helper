@@ -150,6 +150,8 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    | Cargo      | `cargo build` |
    | none / docs-only | skip this step |
 
+   **Critical (Maven):** This is a **full reactor build**. Do NOT add `-pl` or `-am` flags — a scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (e.g. project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
+
    If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
 
    After the build succeeds, run `git status` and inspect newly-modified files. All regenerated files that are related to the fix (catalogs, endpoint DSLs, metadata, schemas, etc.) MUST be included in the commit. Revert any unrelated regen artifacts that come from stale upstream state — do NOT commit them.

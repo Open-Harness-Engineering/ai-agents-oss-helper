@@ -105,6 +105,8 @@ Read branch naming from the project's `project-guidelines.md`.
    ```bash
    mvn clean install -DskipTests
    ```
+   This must be a **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
+
    This catches cross-module breakage that per-module builds in step 2 would miss (e.g., a SonarCloud fix in module A breaks a caller in module B). Tests are skipped because step 2 already ran them per module. Run this once, not per module. Skip entirely for non-Maven projects. If the build fails, investigate and fix with an additional per-module commit before pushing — do NOT push on a failing root build.
 
 4. **Push**: After all modules processed and the sanity build passes

@@ -110,6 +110,8 @@ Run the build and test commands from the project's `project-standards.md`:
 mvn clean install -DskipTests
 ```
 
+This must be a **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
+
 This catches cross-module breakage that a module-only build in step 9 would miss — especially valuable for review fixes that touch shared APIs. Tests are skipped because step 9 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
 
 ### 11. Push and Reply
