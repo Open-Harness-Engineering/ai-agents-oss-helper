@@ -102,17 +102,17 @@ Run the build and test commands from the project's `project-standards.md`:
 - Regenerate downstream artifacts if needed
 - Check `git status` and commit all changes
 
-### 10. Final Sanity Build
+### 10. Final Sanity Build (MANDATORY before commit)
 
-**For Maven projects only:** As the last step before committing, run a full-reactor compile check from the **repository root**:
+**For Maven projects only:** As the last step before committing, run a full-reactor build from the **repository root**.
 
-```bash
-mvn clean install -DskipTests
-```
+**Before running, ask the user** which build to run (use `AskUserQuestion`):
+- **(a) Skip tests** (faster, step 9 already ran tests): `mvn clean install -DskipTests`
+- **(b) Run full tests** (slower, catches cross-module integration regressions): `mvn clean install`
 
-This must be a **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
+Do NOT pick a default silently — wait for the user's choice. Both options run the **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
 
-This catches cross-module breakage that a module-only build in step 9 would miss — especially valuable for review fixes that touch shared APIs. Tests are skipped because step 9 already ran them. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
+This catches cross-module breakage that a module-only build in step 9 would miss — especially valuable for review fixes that touch shared APIs. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
 
 ### 11. Push and Reply
 

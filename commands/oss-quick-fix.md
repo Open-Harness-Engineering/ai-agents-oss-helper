@@ -76,11 +76,13 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - For documentation-only changes, the build step may be skipped if no code was modified
    - For projects with no build tool (ai-agents-oss-helper): skip build
 
-4. **Final Sanity Build** (Maven projects only, code changes only): As the last step before committing, run a full-reactor compile check from the **repository root**:
-   ```bash
-   mvn clean install -DskipTests
-   ```
-   This must be a **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
+4. **Final Sanity Build (MANDATORY before commit)** (Maven projects only, code changes only): As the last step before committing, run a full-reactor build from the **repository root**.
+
+   **Before running, ask the user** which build to run (use `AskUserQuestion`):
+   - **(a) Skip tests** (faster, recommended when step 3 already ran tests): `mvn clean install -DskipTests`
+   - **(b) Run full tests** (slower, catches cross-module integration regressions): `mvn clean install`
+
+   Do NOT pick a default silently — wait for the user's choice. Both options run the **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
 
    This catches cross-module breakage that a module-only build in step 3 would miss. Skip this step for non-Maven projects and for documentation-only changes where step 3 was skipped. If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
 

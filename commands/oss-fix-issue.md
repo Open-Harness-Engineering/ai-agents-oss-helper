@@ -138,17 +138,21 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
 
 4. **Full Build Sanity Check (MANDATORY before commit)**: Regardless of project type, run a full build from the **repository root** before committing. This catches cross-module breakage that a module-only build in step 3 would miss and triggers any project-wide code generation (catalogs, DSL factories, metadata mirrors, schemas, etc.) that downstream modules produce from your changes.
 
-   Pick the command based on the project's build tool (from `project-standards.md`); skip tests since step 3 already ran them:
+   **Before running, ask the user** which build mode to use (use `AskUserQuestion`):
+   - **(a) Skip tests** (faster, recommended when step 3 already ran tests)
+   - **(b) Run full tests** (slower, catches cross-module integration regressions)
 
-   | Build tool | Command (run from repo root) |
-   |------------|-----------------------------|
-   | Maven      | `mvn clean install -DskipTests` |
-   | Gradle     | `./gradlew build -x test` |
-   | Go (make)  | `make build` |
-   | yarn       | `yarn build` |
-   | npm        | `npm run build` |
-   | Cargo      | `cargo build` |
-   | none / docs-only | skip this step |
+   Do NOT pick a default silently — wait for the user's choice. Then pick the command based on the project's build tool (from `project-standards.md`):
+
+   | Build tool | (a) Skip tests | (b) Full tests |
+   |------------|----------------|----------------|
+   | Maven      | `mvn clean install -DskipTests` | `mvn clean install` |
+   | Gradle     | `./gradlew build -x test` | `./gradlew build` |
+   | Go (make)  | `make build` | `make test` |
+   | yarn       | `yarn build` | `yarn build && yarn test` |
+   | npm        | `npm run build` | `npm run build && npm test` |
+   | Cargo      | `cargo build` | `cargo test` |
+   | none / docs-only | skip this step | skip this step |
 
    **Critical (Maven):** This is a **full reactor build**. Do NOT add `-pl` or `-am` flags — a scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (e.g. project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
 

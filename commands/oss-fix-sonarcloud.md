@@ -101,13 +101,15 @@ Read branch naming from the project's `project-guidelines.md`.
    - **If tests pass**: Commit with the sonarcloud commit format from the project's `project-guidelines.md`
    - **If tests fail**: Skip commit, continue to next module
 
-3. **Final Sanity Build** (Maven projects only): After all per-module commits are in place and before pushing, run a full-reactor compile check from the **repository root**:
-   ```bash
-   mvn clean install -DskipTests
-   ```
-   This must be a **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
+3. **Final Sanity Build (MANDATORY before push)** (Maven projects only): After all per-module commits are in place and before pushing, run a full-reactor build from the **repository root**.
 
-   This catches cross-module breakage that per-module builds in step 2 would miss (e.g., a SonarCloud fix in module A breaks a caller in module B). Tests are skipped because step 2 already ran them per module. Run this once, not per module. Skip entirely for non-Maven projects. If the build fails, investigate and fix with an additional per-module commit before pushing — do NOT push on a failing root build.
+   **Before running, ask the user** which build to run (use `AskUserQuestion`):
+   - **(a) Skip tests** (faster, step 2 already ran tests per module): `mvn clean install -DskipTests`
+   - **(b) Run full tests** (slower, catches cross-module integration regressions): `mvn clean install`
+
+   Do NOT pick a default silently — wait for the user's choice. Both options run the **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
+
+   This catches cross-module breakage that per-module builds in step 2 would miss (e.g., a SonarCloud fix in module A breaks a caller in module B). Run this once, not per module. Skip entirely for non-Maven projects. If the build fails, investigate and fix with an additional per-module commit before pushing — do NOT push on a failing root build.
 
 4. **Push**: After all modules processed and the sanity build passes
    ```bash
