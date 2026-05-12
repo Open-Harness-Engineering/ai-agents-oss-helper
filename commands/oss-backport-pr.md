@@ -5,12 +5,13 @@ Cherry-pick a merged pull request onto a maintenance or release branch and open 
 ## Usage
 
 ```
-/oss-backport-pr <pr> branch=<target-branch>
+/oss-backport-pr <pr> branch=<target-branch> [remote=<remote-name>]
 ```
 
 **Arguments:**
 - `<pr>` - Pull request identifier: number (e.g., `42`) or full URL (e.g., `https://github.com/org/repo/pull/42`)
 - `branch=<target-branch>` - The target branch to backport onto (e.g., `release/1.x`, `camel-4.8.x`)
+- `remote=<remote-name>` - (Optional) The git remote that hosts the target branch and will receive the backport branch push. Defaults to `origin`. Common values: `origin`, `upstream`, `downstream` — useful when the local clone has a personal fork as `origin` and the project repository as `upstream`.
 
 ## Instructions
 
@@ -20,12 +21,22 @@ Cherry-pick a merged pull request onto a maintenance or release branch and open 
 
 ### 2. Parse Input
 
-Extract the PR identifier and the target branch from the arguments:
+Extract the PR identifier, the target branch, and the remote from the arguments:
 
 - If a number is provided: use as-is
 - If a full URL (e.g., `https://github.com/org/repo/pull/42`): extract the number from the path
 - If `branch=` is missing: **STOP** and ask the user:
-  > Please specify the target branch. Usage: `/oss-backport-pr <pr> branch=<target-branch>`
+  > Please specify the target branch. Usage: `/oss-backport-pr <pr> branch=<target-branch> [remote=<remote-name>]`
+- If `remote=` is provided: use that value as `<REMOTE>`. Otherwise default `<REMOTE>` to `origin`.
+
+Validate that `<REMOTE>` exists in the local clone:
+
+```bash
+git remote get-url <REMOTE>
+```
+
+If the command fails (remote not found), **STOP** and inform the user:
+> Remote `<REMOTE>` is not configured in this clone. Available remotes can be listed with `git remote -v`.
 
 ### 3. Validate the Source PR
 
@@ -45,18 +56,18 @@ Validate:
 Verify the target branch exists on the remote:
 
 ```bash
-git ls-remote --heads origin <TARGET_BRANCH>
+git ls-remote --heads <REMOTE> <TARGET_BRANCH>
 ```
 
 If the branch does not exist, **STOP** and inform the user:
-> Target branch `<TARGET_BRANCH>` does not exist on the remote. Available branches can be listed with `git branch -r`.
+> Target branch `<TARGET_BRANCH>` does not exist on remote `<REMOTE>`. Available branches can be listed with `git branch -r`.
 
 ### 5. Fetch and Identify Commits to Cherry-Pick
 
 Fetch the latest remote state:
 
 ```bash
-git fetch origin <TARGET_BRANCH>
+git fetch <REMOTE> <TARGET_BRANCH>
 ```
 
 Get the list of commits from the source PR:
@@ -78,7 +89,7 @@ gh pr view <PR_NUMBER> --repo <GITHUB_REPO> --json mergeCommit --jq '.mergeCommi
 Create a new branch from the target branch:
 
 ```bash
-git checkout -b backport/<PR_NUMBER>-to-<TARGET_BRANCH_SLUG> origin/<TARGET_BRANCH>
+git checkout -b backport/<PR_NUMBER>-to-<TARGET_BRANCH_SLUG> <REMOTE>/<TARGET_BRANCH>
 ```
 
 Where `<TARGET_BRANCH_SLUG>` is the target branch name with `/` replaced by `-` (e.g., `release/1.x` becomes `release-1.x`).
@@ -152,7 +163,7 @@ If the build fails:
 ### 9. Push the Backport Branch
 
 ```bash
-git push -u origin backport/<PR_NUMBER>-to-<TARGET_BRANCH_SLUG>
+git push -u <REMOTE> backport/<PR_NUMBER>-to-<TARGET_BRANCH_SLUG>
 ```
 
 ### 10. Create the Backport PR
