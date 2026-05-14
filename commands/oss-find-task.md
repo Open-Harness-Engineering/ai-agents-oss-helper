@@ -46,21 +46,26 @@ gh issue list --repo <GITHUB_REPO> --label "<BEGINNER_LABEL>" --state open --lim
 gh issue list --repo <GITHUB_REPO> --label "<EXPERIENCED_LABEL>" --state open --limit 10 --json number,title,labels
 ```
 
-#### Jira Projects (camel-core)
+#### Jira Projects
 
-**Beginner:**
+Read the **Issue tracker URL** from the project's `project-info.md` and use it as `<ISSUE_TRACKER_URL>` below.
+Read the **Find-task beginner JQL**, **Find-task intermediate**, and **Find-task experienced JQL** from the project's `project-guidelines.md`.
+
+**Beginner** (uses `Find-task beginner JQL`):
 ```bash
-curl -s "https://issues.apache.org/jira/rest/api/2/search?jql=project%20%3D%20CAMEL%20AND%20status%20%3D%20Open%20AND%20labels%20%3D%20good-first-issue&maxResults=10" | jq '.issues[] | {key: .key, summary: .fields.summary, priority: .fields.priority.name, components: [.fields.components[].name]}'
+curl -s "<ISSUE_TRACKER_URL>rest/api/2/search?jql=<BEGINNER_JQL_URL_ENCODED>&maxResults=10" | jq '.issues[] | {key: .key, summary: .fields.summary, priority: .fields.priority.name, components: [.fields.components[].name]}'
 ```
 
-**Intermediate:**
+**Intermediate** (uses `Find-task intermediate` — skip if not configured):
+
+If `Find-task intermediate` specifies a Jira filter ID (e.g., `Filter 12352792`):
 ```bash
-curl -s "https://issues.apache.org/jira/rest/api/2/filter/12352792" | jq -r '.searchUrl' | xargs -I {} curl -s "{}&maxResults=10" | jq '.issues[] | {key: .key, summary: .fields.summary, priority: .fields.priority.name, components: [.fields.components[].name]}'
+curl -s "<ISSUE_TRACKER_URL>rest/api/2/filter/<FILTER_ID>" | jq -r '.searchUrl' | xargs -I {} curl -s "{}&maxResults=10" | jq '.issues[] | {key: .key, summary: .fields.summary, priority: .fields.priority.name, components: [.fields.components[].name]}'
 ```
 
-**Experienced:**
+**Experienced** (uses `Find-task experienced JQL`):
 ```bash
-curl -s "https://issues.apache.org/jira/rest/api/2/search?jql=project%20%3D%20CAMEL%20AND%20status%20%3D%20Open%20AND%20labels%20%3D%20help-wanted&maxResults=10" | jq '.issues[] | {key: .key, summary: .fields.summary, priority: .fields.priority.name, components: [.fields.components[].name]}'
+curl -s "<ISSUE_TRACKER_URL>rest/api/2/search?jql=<EXPERIENCED_JQL_URL_ENCODED>&maxResults=10" | jq '.issues[] | {key: .key, summary: .fields.summary, priority: .fields.priority.name, components: [.fields.components[].name]}'
 ```
 
 ### 4. Rate Limiting
