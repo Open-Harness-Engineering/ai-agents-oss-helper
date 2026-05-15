@@ -45,6 +45,7 @@ COMMAND_FILES=(
     "commands/oss-list-issues.md"
     "commands/oss-analyze-third-party-cve.md"
     "commands/oss-install-info.md"
+    "commands/oss-create-rules.md"
 )
 
 # Project rule files are no longer bundled with the installer. They live in a
