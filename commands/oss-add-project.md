@@ -115,6 +115,29 @@ Create with:
 
 Use any existing project directory in the [`ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects) repository (e.g., `wanaku/`) as a template for the exact format.
 
+#### D. `project-security.md` (optional)
+
+Create this file **only** if the project has a defined security / CVE-handling workflow worth recording (most relevant for projects that publish CVE advisories, such as ASF projects). Do **not** fabricate a workflow: if the user has not described one and you cannot determine it from the project's security policy (`SECURITY.md`, an `https://www.apache.org/security/`-style page, etc.), skip this file and tell the user it can be added later.
+
+When you do create it, include:
+- H1 heading: `# Project Security`
+- Intro paragraph (note that the file is optional and consumed only by the security commands: `/oss-triage-security-report`, `/oss-create-security-advisory`, `/oss-draft-cve`, `/oss-analyze-third-party-cve`)
+- Private reporting channel
+- GitHub private vulnerability reporting (used / not used)
+- CVE Numbering Authority (CNA)
+- Severity scheme
+- Advisory source format and section structure
+- Advisory template (reference)
+- Publication location
+- Signing key
+- Supported release lines / backport branches
+- Disclosure & announcement steps
+- Third-party CVE "not affected" notes location
+- A short `## CVE Handling Workflow` section
+- `## Version` section with the current git SHA of the project being configured
+
+Use any `camel-*` project directory in the known-projects repository as a template for the exact format.
+
 ### 5. Publish the Rules
 
 **If rules were created in `.oss-ai-helper-rules/` (project-local):** The rules travel with the repository and do not need any other publication step. Inform the user:
@@ -138,7 +161,7 @@ Inform the user:
 You MUST:
 - Follow the existing format of each rule file exactly (use other project directories as templates)
 - Confirm all details with the user before making changes
-- Create all three rule files in the new subdirectory
+- Create all three required rule files in the new subdirectory; create the optional `project-security.md` only when a real security/CVE workflow is known (never invent one)
 
 You MUST NOT:
 - Create per-project command files (all commands are generic)

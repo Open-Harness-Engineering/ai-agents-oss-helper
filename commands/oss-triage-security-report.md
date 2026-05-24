@@ -17,7 +17,9 @@ This command does NOT publish any security details to public trackers. It is a l
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
+**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
+
+If `project-security.md` is present, use its **Private reporting channel** verbatim in the follow-up step (step 7) instead of guessing an address.
 
 ### 2. Acquire the Report
 
@@ -151,7 +153,7 @@ Based on the recommendation, offer the user one or more of the following actions
 **If valid and not public:**
 
 1. **Submit a private advisory** (GitHub projects) - hand off to `/oss-create-security-advisory` with the full technical detail. This is the preferred path when private vulnerability reporting is available.
-2. **Contact the project's security team directly** (ASF projects) - provide the user with the appropriate `security@<project>.apache.org` or `private@<project>.apache.org` address and a draft email body.
+2. **Contact the project's security team directly** (ASF projects) - use the **Private reporting channel** from `project-security.md` if present (do **not** guess the address); otherwise provide the appropriate `security@<project>.apache.org` or `private@<project>.apache.org` address. Include a draft email body.
 
 **If valid and already public, or safe to track as hardening:**
 

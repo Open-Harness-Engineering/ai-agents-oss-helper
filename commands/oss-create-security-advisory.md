@@ -15,9 +15,13 @@ Privately report a security vulnerability to a GitHub repository using GitHub's 
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
+**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
+
+If `project-security.md` declares a **Private reporting channel** that is not GitHub private vulnerability reporting (for example an ASF `security@apache.org` list), prefer guiding the reporter to that channel over the GitHub `/reports` flow — see step 2.
 
 ### 2. Verify Eligibility
+
+**First, check `project-security.md` (if present).** If it declares a **Private reporting channel** other than GitHub private vulnerability reporting (for example an ASF `security@apache.org` mailing list), do **not** use the GitHub `/reports` flow. Instead, give the user the exact reporting address from that file, draft a private report email body (reuse the Markdown structure from step 5), and remind them of responsible-disclosure expectations. Only continue with the GitHub flow below if no security file exists, the file points to GitHub PVR, or the user explicitly asks for the GitHub path.
 
 Read the **Issue tracker** field from the project's `project-info.md`:
 - If the issue tracker is **not** `GitHub`, stop and tell the user: "Private vulnerability reporting is a GitHub-specific feature. This project uses a different issue tracker."

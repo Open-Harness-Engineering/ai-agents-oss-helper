@@ -12,7 +12,7 @@ This command is drafting-only: it produces the advisory files locally for the ma
 
 **Arguments:**
 - `<cve_id>` - The **reserved** CVE ID (e.g. `CVE-2026-25747`). Required. The command does not reserve IDs — it only drafts against one already issued by the CNA.
-- `template=<url_or_path>` - Required. URL to a reference advisory (e.g. `https://camel.apache.org/security/CVE-2026-25747.html`) **or** a local file (`.md` / `.pdf` / `.html`) whose layout the draft should match.
+- `template=<url_or_path>` - URL to a reference advisory (e.g. `https://camel.apache.org/security/CVE-2025-27636.html`) **or** a local file (`.md` / `.pdf` / `.html`) whose layout the draft should match. Required **unless** `project-security.md` provides an *Advisory template (reference)*, which is then used by default.
 - `triage_ref=<path_or_url>` - Optional. Path or URL to the output of `/oss-triage-security-report`. Used to auto-populate description, affected code paths, and severity.
 - `fix_pr=<pr_or_url>` - Optional. PR number or URL containing the fix. Used to extract fixed-version ranges, commit hashes, and issue references.
 
@@ -20,7 +20,9 @@ This command is drafting-only: it produces the advisory files locally for the ma
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
+**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
+
+If `project-security.md` is present, treat its fields as defaults for this command: **Advisory template (reference)** seeds `template=` (steps 2 and 4); **Advisory section structure** seeds the skeleton (step 5); **Advisory source format** sets the output extension (step 7); **Supported release lines** inform the version mapping (step 6.2); **Publication location** and **Signing key** feed the review checklist (step 8). When the file is absent, gather these interactively as described below.
 
 ### 2. Parse Input
 
@@ -31,7 +33,7 @@ Parse the argument string into four values:
 - `triage_ref` - optional key/value
 - `fix_pr` - optional key/value
 
-If `cve_id` or `template` is missing, stop and print the usage block above.
+If `cve_id` is missing, stop and print the usage block above. If `template` is missing, fall back to the **Advisory template (reference)** declared in `project-security.md`; only stop and print the usage block if neither a `template=` argument nor a security-file reference is available.
 
 ### 3. Validate the Reserved CVE ID
 

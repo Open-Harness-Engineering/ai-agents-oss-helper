@@ -18,7 +18,9 @@ This command is the dependency-side counterpart of `/oss-triage-security-report`
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
+**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
+
+If `project-security.md` names a location for third-party **"not affected" notes**, use it when proposing where to record the analysis (step 8).
 
 ### 2. Establish Boundaries
 
@@ -228,7 +230,7 @@ Based on the verdict, offer one or more of the following actions. Do NOT execute
 
 **If not exposed in current usage:**
 
-4. **Document the rationale** - propose a short, sanitized note for the project's security notes or a private tracking issue. Do NOT publish exploit specifics. The note should describe *why* the project's usage does not reach the vulnerable path, so future contributors do not re-derive the analysis.
+4. **Document the rationale** - propose a short, sanitized note for the project's security notes or a private tracking issue. If `project-security.md` names a location for third-party **"not affected" notes**, propose recording it there. Do NOT publish exploit specifics. The note should describe *why* the project's usage does not reach the vulnerable path, so future contributors do not re-derive the analysis.
 
 **If not affected:**
 

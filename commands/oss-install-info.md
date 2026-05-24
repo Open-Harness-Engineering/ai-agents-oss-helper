@@ -174,6 +174,14 @@ If `gh` is not available, fall back to `curl`:
 curl -fsSL "https://raw.githubusercontent.com/<OSS_KNOWN_PROJECTS_REPO>/<OSS_KNOWN_PROJECTS_BRANCH>/<project>/<file>" -o <RULES_DIR>/<project>/<file>
 ```
 
+Then handle the **optional** `project-security.md`. First check whether the project ships it:
+
+```bash
+gh api "repos/<OSS_KNOWN_PROJECTS_REPO>/contents/<project>/project-security.md?ref=<OSS_KNOWN_PROJECTS_BRANCH>" --jq '.name' 2>/dev/null
+```
+
+If that returns `project-security.md`, fetch it the same way as the required files. If it returns nothing, the project has no security rules — skip it; its absence is expected and must not fail the install.
+
 #### 6.4 Confirm the install
 
 Report to the user:
@@ -185,14 +193,16 @@ Installed rules for <project> to <RULES_DIR>/<project>/:
 - project-guidelines.md
 ```
 
+If `project-security.md` was present and fetched, list it too.
+
 Suggest the next step:
 > The next time you run an OSS Helper command from a project whose git remote matches `<remote-pattern>`, these rules will be loaded automatically.
 
 ### 7. Constraints
 
 You MUST:
-- Make minimal API calls — per project: one to validate, three to fetch the rule files, plus one extra to compare versions if a local copy already exists
-- Install only the three rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`)
+- Make minimal API calls — per project: one to validate, three to fetch the required rule files, one to check for the optional `project-security.md` (and one more to fetch it when present), plus one extra to compare versions if a local copy already exists
+- Install the three required rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`), plus the optional `project-security.md` when the project provides it
 - Ask the user before overwriting a local copy that has a different `## Version` SHA; in `all` mode, reuse the first answer for the rest of the run
 - Create each target rules directory if it does not exist
 
@@ -206,7 +216,7 @@ You MUST NOT:
 
 ### 8. Acceptance Criteria
 
-- The three rule files for each requested `<project>` are present in `<RULES_DIR>/<project>/` after the command completes successfully
+- The three required rule files for each requested `<project>` are present in `<RULES_DIR>/<project>/` after the command completes successfully, plus `project-security.md` when the project provides it
 - The local `## Version` SHA matches the remote SHA for each installed project
 - Subsequent OSS Helper commands load the newly installed rules through `.oss-init.md` step 2B
 - Existing project-local `.oss-ai-helper-rules/` directories continue to take precedence
