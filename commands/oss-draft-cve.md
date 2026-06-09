@@ -2,12 +2,12 @@
 
 Draft a project-specific CVE advisory page (e.g. Apache Camel-style `CVE-YYYY-NNNNN.html`) from a reserved CVE number, a reference advisory used as a format template, and optional context from a prior triage report and fix PR.
 
-This command is drafting-only: it produces the advisory files locally for the maintainer to review, sign, and publish. It never pushes to a public security site, submits to MITRE, or reserves CVE identifiers.
+This command is drafting-only: it produces the advisory files locally — optionally copying them into a local website/advisory repository checkout for in-place review — for the maintainer to review, sign, and publish. It never pushes to a public security site, submits to MITRE, or reserves CVE identifiers.
 
 ## Usage
 
 ```
-/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path_or_url>] [fix_pr=<pr_or_url>]
+/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path_or_url>] [fix_pr=<pr_or_url>] [website_repo=<path>]
 ```
 
 **Arguments:**
@@ -15,6 +15,7 @@ This command is drafting-only: it produces the advisory files locally for the ma
 - `template=<url_or_path>` - URL to a reference advisory (e.g. `https://camel.apache.org/security/CVE-2025-27636.html`) **or** a local file (`.md` / `.pdf` / `.html`) whose layout the draft should match. Required **unless** `project-security.md` provides an *Advisory template (reference)*, which is then used by default.
 - `triage_ref=<path_or_url>` - Optional. Path or URL to the output of `/oss-triage-security-report`. Used to auto-populate description, affected code paths, and severity.
 - `fix_pr=<pr_or_url>` - Optional. PR number or URL containing the fix. Used to extract fixed-version ranges, commit hashes, and issue references.
+- `website_repo=<path>` - Optional. Path to a local checkout of the project's website/advisory repository (e.g. `camel-website`). When provided, the emitted `<cve_id>.<ext>` and `<cve_id>.txt` are **also copied** into the repository's advisory directory (`<path>/content/security/` by default) so the maintainer can review and commit them in place. Copy only — the command still does NOT commit, sign, push, or publish. May also be seeded from a **Publication location** declared in `project-security.md`.
 
 ## Instructions
 
@@ -22,16 +23,17 @@ This command is drafting-only: it produces the advisory files locally for the ma
 
 **MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
 
-If `project-security.md` is present, treat its fields as defaults for this command: **Advisory template (reference)** seeds `template=` (steps 2 and 4); **Advisory section structure** seeds the skeleton (step 5); **Advisory source format** sets the output extension (step 7); **Supported release lines** inform the version mapping (step 6.2); **Publication location** and **Signing key** feed the review checklist (step 8). When the file is absent, gather these interactively as described below.
+If `project-security.md` is present, treat its fields as defaults for this command: **Advisory template (reference)** seeds `template=` (steps 2 and 4); **Advisory section structure** seeds the skeleton (step 5); **Advisory source format** sets the output extension (step 7); **Supported release lines** inform the version mapping (step 6.2); **Publication location** seeds `website_repo=` (step 7.1) and, together with **Signing key**, feeds the review checklist (step 9). When the file is absent, gather these interactively as described below.
 
 ### 2. Parse Input
 
-Parse the argument string into four values:
+Parse the argument string into five values:
 
 - `cve_id` - first positional argument
 - `template` - required key/value
 - `triage_ref` - optional key/value
 - `fix_pr` - optional key/value
+- `website_repo` - optional key/value (path to the website/advisory repo for the copy step in 7.1)
 
 If `cve_id` is missing, stop and print the usage block above. If `template` is missing, fall back to the **Advisory template (reference)** declared in `project-security.md`; only stop and print the usage block if neither a `template=` argument nor a security-file reference is available.
 
@@ -125,7 +127,7 @@ For any section the template expects but neither source provides, insert an expl
 TODO: <what is missing and where it should come from>
 ```
 
-Do NOT guess CVSS scores, CWE mappings, severity ratings, version ranges, or reporter names. A wrong CVE advisory is worse than an incomplete one.
+Do NOT guess CVSS scores, severity ratings, version ranges, or reporter names. (CWE is handled separately and is **not** optional — always provide a reasoned classification in step 8, derived from the code path and fix.) A wrong CVE advisory is worse than an incomplete one.
 
 ### 7. Emit Artifacts
 
@@ -144,7 +146,29 @@ Include a top banner in both files:
 
 The banner MUST be removed manually before signing and publishing.
 
-### 8. Review Checklist
+#### 7.1 Copy to the website repository (if `website_repo` provided)
+
+If `website_repo` is set (from the argument or the **Publication location** default in `project-security.md`), copy the two emitted files into the advisory directory of that repository so they sit beside the existing advisories:
+
+- **Destination:** `<website_repo>/content/security/<cve_id>.<ext>` and `<website_repo>/content/security/<cve_id>.txt`. Use the advisory directory declared as **Publication location** in `project-security.md` if it differs from `content/security/`.
+- Before copying, verify `<website_repo>` exists and is a git repository, and that the destination directory exists. If the path is wrong or the directory is missing, stop and ask the user — do NOT create directories blindly.
+- Do NOT overwrite an existing `<cve_id>.*` in the destination without confirming with the user (same rule as the local emit).
+- **Copy only.** Do NOT `git add`, commit, sign, push, or switch branches in the website repository. Report the destination paths and remind the maintainer to review, remove the `:robot:` banner, commit on a dedicated branch, and sign.
+- Keep the copied `.txt` byte-identical to the copied `<cve_id>.<ext>` from the advisory body onward (no drift between the two).
+
+### 8. CWE Classification (always required)
+
+Always conclude the analysis with a CWE classification, regardless of whether the template carries a CWE field. Derive it from the vulnerability class and the actual code path / fix established in step 6 (not from the issue title alone), and present it to the user as a short, reasoned block:
+
+- **Primary CWE** — the single weakness that best characterizes the root cause (e.g. `CWE-88` Argument Injection, `CWE-502` Deserialization of Untrusted Data, `CWE-22` Path Traversal, `CWE-611` XXE), with one line of justification.
+- **Secondary CWE** — the next most relevant weakness when the issue spans more than one class (e.g. a path-traversal aspect alongside argument injection). State explicitly when none genuinely applies.
+- **Optional / umbrella CWE** — a broader parent category for maintainers who prefer a single high-level mapping (e.g. `CWE-20` Improper Input Validation, `CWE-77` Command Injection), with one line.
+
+Where relevant, also state which closely-related CWE does **not** apply and why (e.g. "not `CWE-78` OS Command Injection — the subprocess is invoked list-based with no shell"), so the classification is defensible.
+
+This block is a recommendation for the MITRE/CNA CVE record. Whether a `cwe:` field is added to the advisory page itself follows the template's house style — do NOT insert a CWE into the advisory files unless the template carries one or the user asks.
+
+### 9. Review Checklist
 
 After writing the files, print a checklist for the maintainer to run through before publication. Do NOT mark any item as done for them.
 
@@ -153,40 +177,46 @@ After writing the files, print a checklist for the maintainer to run through bef
 
 - [ ] CVE ID `<cve_id>` matches the one reserved with the CNA (not a typo, not a different year).
 - [ ] Severity / CVSS score reviewed against the triage assessment.
-- [ ] CWE mapping (if present) is correct.
+- [ ] Primary / secondary / optional CWE classification (step 8) reviewed; if the advisory page carries a `cwe:` field, it matches the primary CWE.
 - [ ] Versions Affected ranges verified against `git tag` and release history.
 - [ ] Versions Fixed matches the tags that contain the fix commit(s).
 - [ ] Description contains no exploit payloads, PoC code, or reporter-private details.
 - [ ] Credit line matches what the reporter agreed to (coordinate with them if unclear).
 - [ ] References resolve (PR URL, commit URL, JIRA/GitHub issue, prior CVE).
 - [ ] `<cve_id>.txt` matches `<cve_id>.<ext>` (same facts, no drift between HTML and signed plaintext).
-- [ ] `:robot:` draft banner removed from both files.
+- [ ] `:robot:` draft banner removed from both files (including any copy placed in `website_repo`).
 - [ ] Plaintext body clearsigned with the project release key (`gpg --clearsign <cve_id>.txt` → `<cve_id>.txt.asc`).
+- [ ] If copied to `website_repo`: files reviewed in `content/security/` and committed on a dedicated branch (this command does not commit or push there).
 ```
 
-### 9. Constraints
+### 10. Constraints
 
 You MUST:
 - Validate the CVE ID format before doing anything else.
 - Learn the section structure from the template provided, not from a hardcoded layout.
 - Produce both the advisory page and the matching plaintext body, and keep their content in sync.
 - Insert explicit `TODO:` markers for any section whose content cannot be derived from the provided sources.
-- Stop after emitting the files. Do not sign, push, publish, or open a PR.
+- Conclude the analysis with a primary, secondary, and optional/umbrella CWE classification (step 8), based on the code path and fix.
+- Stop after emitting the files (and copying them into `website_repo` if requested). Do not sign, push, publish, commit, or open a PR.
 - Confirm URL fetches with the user before calling `WebFetch`.
 
 You MUST NOT:
 - Reserve, request, or generate CVE identifiers.
-- Guess CVSS scores, CWE mappings, severity ratings, or release-line-to-version mappings.
+- Guess CVSS scores, severity ratings, or release-line-to-version mappings.
+- Fabricate a CWE without justification, or insert a CWE into the advisory files unless the template carries one or the user asks (the reasoned step 8 classification is still always presented to the user).
 - Include exploit payloads, PoC code, or reporter-private details in the draft.
 - Run `gpg` or any signing command.
 - Submit the draft to MITRE, a project security site, or a public tracker.
-- Overwrite an existing `<cve_id>.<ext>` or `<cve_id>.txt` without confirming with the user.
+- Commit, push, or switch branches in the `website_repo` (copy only).
+- Overwrite an existing `<cve_id>.<ext>` or `<cve_id>.txt` — in the working directory or in `website_repo` — without confirming with the user.
 
-### 10. Acceptance Criteria
+### 11. Acceptance Criteria
 
 - The reserved `cve_id` is validated and carried through both artifacts unchanged.
 - The advisory layout matches the sections and labels of the provided template.
 - Each template section is either populated from `triage_ref` / `fix_pr` / user input, or contains an explicit `TODO:` marker.
 - Two files are produced: `<cve_id>.<ext>` and `<cve_id>.txt`, with matching content.
+- If `website_repo` was provided, both files are also copied into its advisory directory (`content/security/` by default) with no commit, sign, or push.
 - A `:robot:` draft banner is present on both files.
-- A review checklist is printed and nothing is signed, pushed, or published.
+- The analysis concludes with a primary, secondary, and optional/umbrella CWE classification.
+- A review checklist is printed and nothing is signed, pushed, published, or committed.
