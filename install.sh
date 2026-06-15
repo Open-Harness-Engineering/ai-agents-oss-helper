@@ -44,6 +44,7 @@ COMMAND_FILES=(
     "commands/oss-draft-cve.md"
     "commands/oss-list-issues.md"
     "commands/oss-analyze-third-party-cve.md"
+    "commands/oss-security-scan.md"
     "commands/oss-install-info.md"
     "commands/oss-create-rules.md"
 )

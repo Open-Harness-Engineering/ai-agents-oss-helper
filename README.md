@@ -86,6 +86,7 @@ Project rules are not bundled with the installer. They live in a separate reposi
 | `/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path>] [fix_pr=<pr>]` | Draft a project-specific CVE advisory page and matching PGP-signable plaintext body from a reserved CVE ID and a reference advisory |
 | `/oss-list-issues [filters]`                | List all issues assigned to you in the project's tracker (GitHub or Jira) |
 | `/oss-analyze-third-party-cve <cve_id> [coords]` | Analyze whether the project is exposed to a CVE in a third-party dependency; produce an exposure report and propose a sanitized follow-up |
+| `/oss-security-scan [path] [severity=<min>] [scanners=<auto\|off\|list>]` | Proactively scan first-party code for vulnerabilities, anchored to the project's threat model; produce a confidential findings report and propose sanitized follow-ups |
 | `/oss-install-info [project]`               | Install (or list) project rules from the `ai-agents-oss-known-projects` repository |
 
 All commands auto-detect the project from the current directory's git remote.
@@ -392,6 +393,34 @@ The command will:
 
 Like `/oss-triage-security-report`, this is a local investigative workflow — nothing is published until you explicitly confirm a handoff, and exploit specifics are stripped from any text proposed for downstream public artifacts.
 
+### Scan the Codebase for Vulnerabilities
+
+```bash
+# Scan the whole first-party codebase, anchored to the project's threat model
+/oss-security-scan
+
+# Scope to a module or path
+/oss-security-scan services/auth
+
+# Only report high+ severity, and skip external scanners (reasoning only)
+/oss-security-scan core/ severity=high scanners=off
+
+# Restrict to specific installed scanners
+/oss-security-scan scanners=semgrep,gosec
+```
+
+The command will:
+1. Detect the current project and load its rules (including `project-security.md` when present)
+2. Establish a threat / security model — from `project-security.md`, an in-repo `SECURITY.md` / threat-model doc, or by generating a lightweight one when none exists
+3. Determine and state the scan scope, excluding vendored/generated/build output
+4. Detect and run whatever security scanners are installed (SAST/SCA/secrets), recording which ran and which were skipped
+5. Add reasoning-based static analysis, tracing data flow from threat-model entry points to sinks beyond what the tools flag
+6. Triage findings — de-duplicate, drop false positives, assess reachability, assign severity and confidence
+7. Produce a confidential findings report under the :robot: disclaimer
+8. Propose a follow-up per finding: private advisory via `/oss-create-security-advisory`, deeper triage via `/oss-triage-security-report`, a sanitized hardening issue via `/oss-create-issue`, a dependency CVE via `/oss-analyze-third-party-cve` / `/oss-fix-github-alert`, or a trivial fix via `/oss-quick-fix`
+
+Findings are treated as potential undisclosed vulnerabilities and kept confidential — nothing is published until you confirm a handoff, and exploit specifics are stripped from any public-facing text. When a threat model is generated, it is offered as a public-safe PR (via `/oss-quick-fix`), separate from the findings.
+
 ### Install Project Rules
 
 ```bash
@@ -499,6 +528,7 @@ ai-agents-oss-helper/
     ├── oss-triage-security-report.md
     ├── oss-draft-cve.md
     ├── oss-analyze-third-party-cve.md
+    ├── oss-security-scan.md
     ├── oss-install-info.md
     └── .oss-init.md                  # Shared preamble: project detection & rule loading
 ```
