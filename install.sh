@@ -28,6 +28,7 @@ COMMAND_FILES=(
     "commands/oss-create-issue.md"
     "commands/oss-quick-fix.md"
     "commands/oss-analyze-issue.md"
+    "commands/oss-triage-issue.md"
     "commands/oss-fix-sonarcloud.md"
     "commands/oss-fix-github-alert.md"
     "commands/oss-update-knowledge.md"

@@ -72,6 +72,7 @@ Project rules are not bundled with the installer. They live in a separate reposi
 | `/oss-create-issue <title>`               | Create a new issue in the project's GitHub repository                   |
 | `/oss-quick-fix <description>`            | Apply a quick fix without a tracked issue (CI, docs, deps, etc.)        |
 | `/oss-analyze-issue <issue>`              | Analyze an issue to understand the problem and investigate the codebase |
+| `/oss-triage-issue <issue>`               | Triage a filed issue (maintainer-side): reproduce, dedupe, check prior fixes, classify, recommend a disposition |
 | `/oss-fix-sonarcloud <rule>`              | Fix SonarCloud issues for a given rule                                  |
 | `/oss-fix-github-alert <type>`            | Assign and fix a GitHub Code Scanning, Dependabot, or Secret Scanning alert |
 | `/oss-add-project <name> <description>`  | Add a new project with the helper                                       |
@@ -158,6 +159,28 @@ The command will:
 3. Check related repos if configured
 4. Provide a structured analysis report
 5. Suggest next steps (fix, ask for more info, etc.)
+
+### Triage an Issue
+
+```bash
+# Triage by issue number
+/oss-triage-issue 42
+
+# Using full URL (GitHub or Jira)
+/oss-triage-issue https://github.com/org/repo/issues/42
+```
+
+The command will:
+1. Detect the current project and load its rules
+2. Fetch the issue and its comments (GitHub or Jira)
+3. Understand the report and flag any missing information
+4. Attempt to reproduce it against current `main` (or justify why it can't)
+5. Search the tracker for duplicates and git history for prior fixes
+6. Classify it — type, priority, affected component — with labels validated against the tracker
+7. Produce a triage summary with a recommended disposition
+8. Propose a follow-up: hand off to `/oss-fix-issue`, draft a "needs more info" reply, refine via `/oss-create-issue`, or close as duplicate / already-fixed / invalid / wontfix
+
+This is maintainer-side triage (distinct from the contributor-side `/oss-analyze-issue`). Nothing is posted to the tracker — no comments, labels, state changes, or assignments — until you confirm a specific handoff.
 
 ### Create an Issue
 
@@ -515,6 +538,7 @@ ai-agents-oss-helper/
     ├── oss-create-issue.md
     ├── oss-quick-fix.md
     ├── oss-analyze-issue.md
+    ├── oss-triage-issue.md
     ├── oss-fix-sonarcloud.md
     ├── oss-fix-github-alert.md
     ├── oss-update-knowledge.md
