@@ -81,6 +81,7 @@ Project rules are not bundled with the installer. They live in a separate reposi
 | `/oss-pr-status [pr]`                     | Check CI checks, review state, and merge readiness of a pull request   |
 | `/oss-list-pr-status`                     | List all your open PRs with CI, review, and merge readiness summary    |
 | `/oss-list-prs [filters]`                 | List all open PRs in the repo, then pick one to review with `/oss-review-pr` |
+| `/oss-review-prs [filters]`               | Review a batch of open PRs you haven't reviewed yet — one consolidated report, one approval |
 | `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
 | `/oss-triage-security-report [source]`    | Triage an inbound security report: verify claims, check prior fixes, recommend disclosure path |
 | `/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path>] [fix_pr=<pr>]` | Draft a project-specific CVE advisory page and matching PGP-signable plaintext body from a reserved CVE ID and a reference advisory |
@@ -305,6 +306,38 @@ The command will:
 
 This is the counterpart to `/oss-list-pr-status`: that command lists *your own* PRs for tracking your work, while `/oss-list-prs` lists *all* open PRs in the repo for browsing and review selection.
 
+### Review a Batch of Open PRs
+
+```bash
+# Review every open PR you haven't reviewed yet (non-draft)
+/oss-review-prs
+
+# Dry run — produce the consolidated report, post nothing
+/oss-review-prs post=none
+
+# Post only the actionable reviews (comments / change requests), skip approvals
+/oss-review-prs post=actionable
+
+# Post everything, allowing formal approvals on clean PRs
+/oss-review-prs post=all auto-approve
+
+# Re-review PRs you've already reviewed (e.g. after the author pushed new commits)
+/oss-review-prs include-reviewed
+
+# Scope to one author or label
+/oss-review-prs author=octocat
+/oss-review-prs label="needs review"
+```
+
+The command will:
+1. Detect the current project
+2. Select the open PRs you haven't reviewed (excluding your own and, by default, drafts and `[DO NOT MERGE]` PRs)
+3. Review each in parallel against the project rules — the same evaluation as `/oss-review-pr`
+4. Verify CI state and factual claims, then present one consolidated, severity-sorted report
+5. Submit all the reviews after a single approval — never formally approving in your name unless `auto-approve` is set
+
+This is the batch counterpart to `/oss-list-prs`: where `/oss-list-prs` hands a single PR to `/oss-review-pr`, `/oss-review-prs` reviews many at once and gates once.
+
 ### List Your Assigned Issues
 
 ```bash
@@ -523,6 +556,7 @@ ai-agents-oss-helper/
     ├── oss-pr-status.md
     ├── oss-list-pr-status.md
     ├── oss-list-prs.md
+    ├── oss-review-prs.md
     ├── oss-list-issues.md
     ├── oss-backport-pr.md
     ├── oss-triage-security-report.md

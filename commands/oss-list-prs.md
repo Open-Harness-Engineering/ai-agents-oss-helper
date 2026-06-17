@@ -19,6 +19,8 @@ This command is the counterpart to `/oss-list-pr-status`:
 - `/oss-list-pr-status` lists **your own** open PRs with full CI/merge readiness — used for tracking your own work.
 - `/oss-list-prs` lists **all** open PRs in the repository — used for browsing and picking one to review.
 
+To review **several** PRs in one pass instead of picking one, use `/oss-review-prs` (batch review): it selects the PRs you haven't reviewed yet, reviews them together against the project rules, and posts after a single approval.
+
 ## Instructions
 
 ### 1. Initialize Project Context

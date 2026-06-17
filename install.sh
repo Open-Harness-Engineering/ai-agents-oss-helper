@@ -36,6 +36,7 @@ COMMAND_FILES=(
     "commands/oss-pr-status.md"
     "commands/oss-list-pr-status.md"
     "commands/oss-list-prs.md"
+    "commands/oss-review-prs.md"
     "commands/oss-backport-pr.md"
     "commands/oss-address-review.md"
     "commands/oss-merge-pr.md"
