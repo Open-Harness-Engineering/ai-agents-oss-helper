@@ -30,6 +30,10 @@ Read the **Issue tracker** field from the project's `project-info.md`. If the is
 
 Read the **GitHub repo** field — this is `<OWNER>/<REPO>` for the API calls below.
 
+### Agent Delegation
+
+If you have access to agents specialized in **coding or implementation** (e.g., backend, frontend, or language-specific coding agents) or **security analysis** (e.g., security or application-security agents), you should delegate the analysis (step 7) and fix implementation (step 10) to one or more of those agents. Provide them with the alert details, affected files, and project standards. If no specialized agents are available, perform all steps directly.
+
 ### 2. Parse Arguments
 
 Validate `<type>` is one of: `code-scanning`, `dependabot`, `secret-scanning`. If missing or invalid, stop and tell the user the accepted values.

@@ -33,6 +33,10 @@ Nothing is posted to GitHub until you explicitly approve. By default the command
 
 **MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
 
+### Agent Delegation
+
+If you have access to agents specialized in **code review** (e.g., code review agents), you should use them for the per-PR evaluations in step 5. Each agent should receive the PR diff, project rules, and git history context, and return a structured verdict. If no specialized agents are available, perform all evaluations directly.
+
 ### 2. Parse Arguments
 
 Parse the optional arguments into local variables. Use these defaults when an argument is not provided:

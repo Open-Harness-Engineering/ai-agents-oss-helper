@@ -17,6 +17,10 @@ Address review feedback on a pull request: read comments, categorize them, fix i
 
 **MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (`project-info.md`, `project-standards.md`, `project-guidelines.md`) is loaded.
 
+### Agent Delegation
+
+If you have access to agents specialized in **coding or implementation** (e.g., backend, frontend, or language-specific coding agents), you should delegate the code changes in steps 7–8 to one or more of those agents. Provide them with the review comments, affected files, and project standards context. If no specialized agents are available, perform all steps directly.
+
 ### 2. Identify the Pull Request
 
 - If a PR number or URL is provided, use it.

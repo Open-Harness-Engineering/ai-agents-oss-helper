@@ -17,6 +17,10 @@ Analyze an issue from the current project's issue tracker to gain deeper underst
 
 **MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
 
+### Agent Delegation
+
+If you have access to agents specialized in **software architecture or system design** (e.g., architecture or senior developer agents), you should delegate the codebase investigation (step 5) and root-cause analysis (step 6) to one or more of those agents. Provide them with the issue details and project context. If no specialized agents are available, perform all steps directly.
+
 ### 2. Parse Input
 
 Extract the issue ID from the argument based on the project's issue tracker type (from the project's `project-info.md`):

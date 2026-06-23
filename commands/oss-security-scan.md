@@ -27,6 +27,10 @@ If `project-security.md` is present, use it for:
 - The **Private reporting channel** — used verbatim in the follow-up step (step 9) instead of guessing an address.
 - The **threat model anchor** — its scope, supported release lines, and any documented security posture inform what counts as in-scope (step 3).
 
+### Agent Delegation
+
+If you have access to agents specialized in **security analysis** (e.g., security or application-security agents), you should delegate the reasoning-based analysis (step 6) and finding triage (step 7) to one or more of those agents. Provide them with the threat model, scan scope, scanner output, and project context. If no specialized agents are available, perform all steps directly.
+
 ### 2. Establish Boundaries
 
 **Before proceeding, remind the user:**

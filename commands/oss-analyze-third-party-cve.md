@@ -22,6 +22,10 @@ This command is the dependency-side counterpart of `/oss-triage-security-report`
 
 If `project-security.md` names a location for third-party **"not affected" notes**, use it when proposing where to record the analysis (step 8).
 
+### Agent Delegation
+
+If you have access to agents specialized in **security analysis** (e.g., security or application-security agents), you should delegate the vulnerability analysis (steps 5–6) to one or more of those agents. Provide them with the CVE metadata, dependency coordinates, and project context. If no specialized agents are available, perform all steps directly.
+
 ### 2. Establish Boundaries
 
 **Before proceeding, remind the user:**
