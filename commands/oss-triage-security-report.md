@@ -21,6 +21,10 @@ This command does NOT publish any security details to public trackers. It is a l
 
 If `project-security.md` is present, use its **Private reporting channel** verbatim in the follow-up step (step 7) instead of guessing an address.
 
+### Agent Delegation
+
+If you have access to agents specialized in **security analysis** (e.g., security or application-security agents), you should delegate the claim verification (step 5) to one or more of those agents. Provide them with the extracted claims, affected files, and project context. If no specialized agents are available, perform all steps directly.
+
 ### 2. Acquire the Report
 
 Determine the report source from the argument:

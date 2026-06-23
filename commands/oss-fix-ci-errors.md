@@ -17,6 +17,10 @@ Download CI build reports, identify errors, and fix them properly.
 
 **MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
 
+### Agent Delegation
+
+If you have access to agents specialized in **coding or implementation** (e.g., backend, frontend, or language-specific coding agents), you should delegate the fix implementation (step 7) to one or more of those agents. Provide them with the error analysis, affected files, and project standards. If no specialized agents are available, perform all steps directly.
+
 ### 2. Parse Input
 
 - If a run ID is provided, use it directly.

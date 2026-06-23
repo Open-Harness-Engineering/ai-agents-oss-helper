@@ -24,6 +24,10 @@ Fix SonarCloud issues in the current project's codebase.
 
 Check the **SonarCloud component key** field in the project's `project-info.md`. If the project has no SonarCloud component key configured (shows `_(none)_`), stop and tell the user: "SonarCloud is not configured for this project."
 
+### Agent Delegation
+
+If you have access to agents specialized in **coding or implementation** (e.g., backend, frontend, or language-specific coding agents), you should delegate the fix application (step 3) to one or more of those agents. Provide them with the SonarCloud rule details, affected files, and project standards. If no specialized agents are available, perform all steps directly.
+
 ### 2. Gather Context
 
 #### A. Fetch Open Issues

@@ -17,6 +17,10 @@ Review a pull request against the project's rules, standards, and contribution e
 
 **MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (`project-info.md`, `project-standards.md`, `project-guidelines.md`) is loaded.
 
+### Agent Delegation
+
+If you have access to agents specialized in **code review** or **software architecture** (e.g., code review or architecture agents), you should delegate the evaluation (steps 5–6) to one or more of those agents. Provide them with the PR diff, project rules, and git history context. If no specialized agents are available, perform all steps directly.
+
 ### 2. Parse Input
 
 Extract the pull request number:

@@ -23,6 +23,10 @@ This command is read-only with respect to the tracker: it does NOT post comments
 
 **MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
 
+### Agent Delegation
+
+If you have access to agents specialized in **software architecture** or **QA/testing** (e.g., architecture, senior developer, or test strategy agents), you should delegate the reproduction (step 5) and classification (step 8) to one or more of those agents. Provide them with the issue details, codebase context, and project standards. If no specialized agents are available, perform all steps directly.
+
 ### 2. Parse Input
 
 Extract the issue ID from the argument based on the project's **Issue tracker** type (from `project-info.md`):

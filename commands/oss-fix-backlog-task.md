@@ -22,6 +22,10 @@ Fix a task from the project's Backlog.md.
 
 Do NOT proceed with any further steps if the Backlog MCP server is not reachable.
 
+### Agent Delegation
+
+If you have access to agents specialized in **coding or implementation** (e.g., backend, frontend, or language-specific coding agents), you should delegate the implementation (step 8) to one or more of those agents. Provide them with the task details, affected files, and project standards. If no specialized agents are available, perform all steps directly.
+
 ### 2. Initialize Project Context
 
 **MANDATORY:** Read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
