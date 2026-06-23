@@ -49,6 +49,8 @@ COMMAND_FILES=(
     "commands/oss-security-scan.md"
     "commands/oss-install-info.md"
     "commands/oss-create-rules.md"
+    "commands/oss-qe-create-test-plan.md"
+    "commands/oss-qe-verify.md"
 )
 
 # Project rule files are no longer bundled with the installer. They live in a
