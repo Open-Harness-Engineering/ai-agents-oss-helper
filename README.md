@@ -72,6 +72,10 @@ Project rules are not bundled with the installer. They live in a separate reposi
 | `/oss-create-issue <title>`               | Create a new issue in the project's GitHub repository                   |
 | `/oss-quick-fix <description>`            | Apply a quick fix without a tracked issue (CI, docs, deps, etc.)        |
 | `/oss-analyze-issue <issue>`              | Analyze an issue to understand the problem and investigate the codebase |
+| `/oss-workspace-init [name]`              | Initialize or rediscover a multi-repo workspace from related repositories |
+| `/oss-workspace-status`                   | Show branch, worktree, dirty, PR, rules, and validation state for every workspace repo |
+| `/oss-create-multi-repo-issue [title]`    | Create a canonical cross-repo issue with optional linked child issues   |
+| `/oss-fix-multi-repo-issue <issue>`       | Plan and execute a coordinated fix across workspace repositories        |
 | `/oss-triage-issue <issue>`               | Triage a filed issue (maintainer-side): reproduce, dedupe, check prior fixes, classify, recommend a disposition |
 | `/oss-fix-sonarcloud <rule>`              | Fix SonarCloud issues for a given rule                                  |
 | `/oss-fix-github-alert <type>`            | Assign and fix a GitHub Code Scanning, Dependabot, or Secret Scanning alert |
@@ -160,6 +164,31 @@ The command will:
 3. Check related repos if configured
 4. Provide a structured analysis report
 5. Suggest next steps (fix, ask for more info, etc.)
+
+### Multi-Repo Workspace Workflows
+
+```bash
+# Initialize a workspace from the current project's Related repositories
+/oss-workspace-init
+
+# Add explicit repositories and choose a workspace root
+/oss-workspace-init my-family repo=org/core repo=org/web root=../my-family-workspace
+
+# Inspect all repositories in the workspace
+/oss-workspace-status
+
+# Create a canonical cross-repo tracking issue
+/oss-create-multi-repo-issue "Add coordinated feature across core and UI"
+
+# Fix an existing cross-repo issue
+/oss-fix-multi-repo-issue https://github.com/org/core/issues/42
+```
+
+The workspace commands provide a durable model for project families made of multiple repositories. `/oss-workspace-init` reads `Related repositories` from `project-info.md`, asks which repositories belong in the workspace, clones or registers them under a deterministic workspace root, loads each repository's own rules, detects normal checkouts versus git worktrees, and writes lightweight metadata in `.oss-helper-workspace.json` outside the individual repositories.
+
+`/oss-workspace-status` is read-only and reports each repository's branch, checkout/worktree type, dirty state, remote tracking state, loaded rule source, open PR for the current branch, and known build/test commands.
+
+For tracked cross-repo work, `/oss-create-multi-repo-issue` searches for duplicates across affected repositories, asks which tracker owns the canonical issue, creates a primary issue with affected repositories and validation expectations, and can create linked child issues after confirmation. `/oss-fix-multi-repo-issue` fetches the canonical issue, inspects the workspace, presents a cross-repo impact plan before editing, prepares branches or worktrees per repository, validates each changed repository from the correct path, and opens linked sibling PRs.
 
 ### Triage an Issue
 
@@ -571,6 +600,10 @@ ai-agents-oss-helper/
     ├── oss-create-issue.md
     ├── oss-quick-fix.md
     ├── oss-analyze-issue.md
+    ├── oss-workspace-init.md
+    ├── oss-workspace-status.md
+    ├── oss-create-multi-repo-issue.md
+    ├── oss-fix-multi-repo-issue.md
     ├── oss-triage-issue.md
     ├── oss-fix-sonarcloud.md
     ├── oss-fix-github-alert.md
