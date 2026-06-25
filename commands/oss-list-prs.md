@@ -4,11 +4,12 @@ List all open pull requests in the current project's repository for browsing and
 
 ## Usage
 
-```
+```text
 /oss-list-prs [author=<user>] [label=<label>] [limit=<N>] [include-drafts] [exclude-mine]
 ```
 
 **Arguments (all optional):**
+
 - `author=<user>` - Filter to PRs authored by `<user>`
 - `label=<label>` - Filter to PRs with the given label (quote multi-word labels, e.g. `label="needs review"`)
 - `limit=<N>` - Maximum number of PRs to fetch (default: `20`)
@@ -16,6 +17,7 @@ List all open pull requests in the current project's repository for browsing and
 - `exclude-mine` - Hide PRs you authored (included by default)
 
 This command is the counterpart to `/oss-list-pr-status`:
+
 - `/oss-list-pr-status` lists **your own** open PRs with full CI/merge readiness — used for tracking your own work.
 - `/oss-list-prs` lists **all** open PRs in the repository — used for browsing and picking one to review.
 
@@ -94,6 +96,7 @@ Filters: <human-readable summary of active filters, e.g. "open, non-draft, label
 ```
 
 Map `reviewDecision` values to readable text:
+
 - `APPROVED` -> `approved`
 - `CHANGES_REQUESTED` -> `changes requested`
 - `REVIEW_REQUIRED` -> `review required`
@@ -112,6 +115,7 @@ If nothing stands out, skip this section.
 ### 7. Ask the User to Select a PR
 
 Ask the user which PR they want to review. They can answer by:
+
 - The list index (e.g., `2`)
 - The PR number (e.g., `#42` or `42`)
 - A full GitHub PR URL
@@ -122,7 +126,7 @@ If the user does not want to review any of them, stop without further action.
 
 Once the user picks a PR, **do not** start the review yourself. Instruct the user to run:
 
-```
+```text
 /oss-review-pr <PR_NUMBER>
 ```
 
@@ -131,6 +135,7 @@ This keeps the review flow inside `/oss-review-pr` (which performs the rules-bas
 ### 9. Constraints
 
 You MUST:
+
 - Make exactly ONE `gh pr list` call (no per-PR fetches, no polling)
 - Apply the documented defaults (open, exclude drafts, include the user's own PRs, limit 20)
 - Present results as a numbered table so the user can select by index
@@ -138,6 +143,7 @@ You MUST:
 - Stop gracefully if no PRs match
 
 You MUST NOT:
+
 - Merge, close, comment on, label, or otherwise modify any PR
 - Fetch CI checks or detailed reviews for every PR (defer that to `/oss-pr-status`)
 - Submit a review on behalf of the user

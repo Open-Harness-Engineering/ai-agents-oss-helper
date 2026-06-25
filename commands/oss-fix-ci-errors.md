@@ -4,11 +4,12 @@ Download CI build reports, identify errors, and fix them properly.
 
 ## Usage
 
-```
+```text
 /oss-fix-ci-errors [run-id]
 ```
 
 **Arguments:**
+
 - `[run-id]` - GitHub Actions run ID (optional). If omitted, auto-detects the latest failed run on the default branch.
 
 ## Instructions
@@ -61,6 +62,7 @@ git diff HEAD~3..HEAD --stat
 ```
 
 Correlate the failed files/modules with recent changes. This helps distinguish between:
+
 - **Regressions** introduced by a recent commit (fix the commit)
 - **Pre-existing issues** exposed by a change (may need deeper investigation)
 - **Flaky/infrastructure failures** unrelated to code changes
@@ -82,12 +84,14 @@ Group errors by type and affected files.
 Classify each error into one of two categories:
 
 **A. Directly fixable** - Clear root cause, straightforward fix:
+
 - Compilation errors with obvious cause
 - Simple test fixes (e.g., updated API, renamed method)
 - Dependency version issues
 - Style/formatting violations
 
 **B. Needs investigation** - Root cause unclear or fix is non-trivial:
+
 - Intermittent test failures
 - Complex logic bugs
 - Design-level issues
@@ -108,6 +112,7 @@ For category A errors:
 ### 8. Constraints
 
 You MUST:
+
 - Fix root causes, not symptoms
 - Create tickets for problems too large to fix inline
 - Reference created tickets in the PR description
@@ -115,6 +120,7 @@ You MUST:
 - Present the full analysis to the user before making any changes
 
 You MUST NOT:
+
 - Disable, skip, or delete failing tests (`@Ignore`, `@Disabled`, `skipTests`, `-DskipTests`, etc.)
 - Weaken assertions (e.g., removing asserts, loosening expected values, widening tolerances)
 - Suppress warnings or errors without addressing the root cause
@@ -130,9 +136,11 @@ You MUST NOT:
 Read branch naming and commit format from the project's `project-guidelines.md`.
 
 1. **Branch**: Create from main
+
    ```bash
    git checkout main && git pull && git checkout -b ci-issue/<short-slug>
    ```
+
    Use the CI-issue branch pattern from the project's `project-guidelines.md`.
 
 2. **Implement**: Apply the fixes for category A errors
@@ -160,6 +168,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - If the user wants neither: `git commit -m "ci: <brief description>"`
 
 6. **Push**: Push branch to origin
+
    ```bash
    git push -u origin ci-issue/<short-slug>
    ```

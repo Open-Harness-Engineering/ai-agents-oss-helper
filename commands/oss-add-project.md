@@ -4,16 +4,18 @@ Add a new project to the AI Agents OSS Helper by adding its configuration to the
 
 ## Usage
 
-```
+```text
 /oss-add-project <name> <description>
 ```
 
 **Arguments:**
+
 - `<name>` - Short project name (e.g., `my-project`)
 - `<description>` - What the project is and relevant details (repo URL, issue tracker type, build tool, etc.)
 
 **Examples:**
-```
+
+```text
 /oss-add-project my-project "Java project at https://github.com/org/my-project, uses Maven, GitHub issues"
 /oss-add-project my-jira-project "Java project at https://github.com/apache/my-project, uses Jira at https://issues.apache.org/jira, SonarCloud key: apache_my-project"
 ```
@@ -23,12 +25,14 @@ Add a new project to the AI Agents OSS Helper by adding its configuration to the
 ### 1. Parse Input
 
 Extract from arguments:
+
 - **Project name** - First word
 - **Description** - Everything after the name
 
 ### 2. Analyze Description
 
 From the description, identify:
+
 - **GitHub repository** (e.g., `org/my-project`)
 - **Issue tracker type** (GitHub or Jira)
 - **Issue tracker URL** (if Jira)
@@ -64,7 +68,9 @@ Determine where to create the rule files based on the current working directory:
 Add three rule files to the chosen directory:
 
 #### A. `project-info.md`
+
 Create with:
+
 - H1 heading: `# Project Information`
 - Intro paragraph (same as other project-info files)
 - Remote pattern
@@ -79,7 +85,9 @@ Create with:
 - `## Version` section with the current git SHA of the project being configured
 
 #### B. `project-standards.md`
+
 Create with:
+
 - H1 heading: `# Project Standards`
 - Intro paragraph (same as other project-standards files)
 - Build tool
@@ -93,7 +101,9 @@ Create with:
 - `## Version` section with the current git SHA of the project being configured
 
 #### C. `project-guidelines.md`
+
 Create with:
+
 - H1 heading: `# Project Guidelines`
 - Intro paragraph (same as other project-guidelines files)
 - Fix branch naming pattern
@@ -120,6 +130,7 @@ Use any existing project directory in the [`ai-agents-oss-known-projects`](https
 Create this file **only** if the project has a defined security / CVE-handling workflow worth recording (most relevant for projects that publish CVE advisories, such as ASF projects). Do **not** fabricate a workflow: if the user has not described one and you cannot determine it from the project's security policy (`SECURITY.md`, an `https://www.apache.org/security/`-style page, etc.), skip this file and tell the user it can be added later.
 
 When you do create it, include:
+
 - H1 heading: `# Project Security`
 - Intro paragraph (note that the file is optional and consumed only by the security commands: `/oss-triage-security-report`, `/oss-create-security-advisory`, `/oss-draft-cve`, `/oss-analyze-third-party-cve`)
 - Private reporting channel
@@ -159,11 +170,13 @@ Inform the user:
 ### 6. Constraints
 
 You MUST:
+
 - Follow the existing format of each rule file exactly (use other project directories as templates)
 - Confirm all details with the user before making changes
 - Create all three required rule files in the new subdirectory; create the optional `project-security.md` only when a real security/CVE workflow is known (never invent one)
 
 You MUST NOT:
+
 - Create per-project command files (all commands are generic)
 - Modify existing project directories without user consent
 - Skip creating any of the three rule files
@@ -172,6 +185,7 @@ You MUST NOT:
 ### 7. Output
 
 After adding the project, confirm:
+
 - Where the rule files were created (`.oss-ai-helper-rules/` in the target project, or `<project>/` in `ai-agents-oss-known-projects`)
 - If project-local: remind the user to commit and push the `.oss-ai-helper-rules/` directory
 - If in the known-projects repo: confirm the PR has been opened and remind the user that `/oss-install-info <project>` will work once it is merged

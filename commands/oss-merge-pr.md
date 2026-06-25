@@ -4,11 +4,12 @@ Merge a pull request after verifying all requirements are met: CI green, approva
 
 ## Usage
 
-```bash
+```text
 /oss-merge-pr [pr]
 ```
 
 **Arguments:**
+
 - `[pr]` - Pull request number or full GitHub URL (optional). If omitted, detects the PR for the current branch.
 
 ## Instructions
@@ -21,9 +22,11 @@ Merge a pull request after verifying all requirements are met: CI green, approva
 
 - If a PR number or URL is provided, use it.
 - If omitted, detect from the current branch:
+
   ```bash
   gh pr view --repo <GITHUB_REPO> --json number,url --jq '.number'
   ```
+
 - If no PR is found, abort: "No pull request found for the current branch."
 
 ### 3. Pre-merge Checks
@@ -45,6 +48,7 @@ gh api repos/{owner}/{repo}/pulls/<number>/reviews
 ```
 
 Check for:
+
 - Reviews with state `CHANGES_REQUESTED` that haven't been followed by an `APPROVED` from the same reviewer.
 - Unresolved review threads.
 
@@ -65,10 +69,13 @@ If insufficient approvals, abort: "Only N approval(s) found. Need at least M."
 #### 4.1 Read PR Context
 
 - Read the PR description and all commit messages:
+
   ```bash
   gh pr view <number> --repo <GITHUB_REPO> --json title,body,commits,headRefName
   ```
+
 - Read the full diff:
+
   ```bash
   gh pr diff <number> --repo <GITHUB_REPO>
   ```
@@ -99,7 +106,7 @@ Compose a squash-merge commit message following the commit format from the proje
 
 General structure:
 
-```
+```text
 <prefix>: Short title (under 70 chars)
 
 <Description of the changes in 200 words max. Explain WHAT changed and WHY.
@@ -113,6 +120,7 @@ The `<prefix>` depends on the project conventions (e.g., issue ID for Jira proje
 ### 6. Confirm with User
 
 Present the following for approval before proceeding:
+
 - Pre-merge check results (all passed)
 - The composed commit message
 - Merge strategy (squash)
@@ -137,6 +145,7 @@ gh pr view <number> --repo <GITHUB_REPO> --json state --jq '.state'
 
 - Confirm the remote branch was deleted.
 - If the local branch matches the PR branch, switch to `main` and pull:
+
   ```bash
   git checkout main && git pull
   ```
@@ -144,6 +153,7 @@ gh pr view <number> --repo <GITHUB_REPO> --json state --jq '.state'
 ### 9. Constraints
 
 You MUST:
+
 - Run all pre-merge checks before proceeding
 - Abort immediately if any check fails
 - Present the commit message for user approval before merging
@@ -151,6 +161,7 @@ You MUST:
 - Delete the remote branch after merge
 
 You MUST NOT:
+
 - Merge with failing CI
 - Merge with unresolved review discussions
 - Merge without sufficient approvals

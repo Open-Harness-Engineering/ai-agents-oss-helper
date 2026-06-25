@@ -8,13 +8,14 @@ Nothing is posted to GitHub until you explicitly approve. By default the command
 
 ## Usage
 
-```
+```text
 /oss-review-prs [author=<user>] [label=<label>] [limit=<N>]
                 [include-reviewed] [include-drafts]
                 [post=ask|actionable|all|none] [auto-approve]
 ```
 
 **Arguments (all optional):**
+
 - `author=<user>` — Only review PRs authored by `<user>`.
 - `label=<label>` — Only review PRs with the given label (quote multi-word labels, e.g. `label="needs review"`).
 - `limit=<N>` — Maximum number of candidate PRs to fetch (default: `20`).
@@ -125,6 +126,7 @@ gh pr review <PR> --repo <GITHUB_REPO> --approve         --body-file <file>
 ### 9. Constraints
 
 You MUST:
+
 - Initialize project context via `.oss-init.md` first.
 - Select candidates with aggregate `gh pr list --search` calls only — never poll per-PR review history.
 - Always exclude PRs authored by the current user, and (by default) PRs they have already reviewed.
@@ -135,6 +137,7 @@ You MUST:
 - Be constructive and empathetic when requesting changes — acknowledge the contributor's effort.
 
 You MUST NOT:
+
 - Post any review, comment, label, or state change before approval.
 - Formally `APPROVE` a PR in the operator's name unless `auto-approve` is set.
 - Review or approve a PR authored by the operator.

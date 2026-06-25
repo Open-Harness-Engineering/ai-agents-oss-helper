@@ -6,11 +6,12 @@ This command decides how cross-repo work is represented in the issue tracker. It
 
 ## Usage
 
-```
+```text
 /oss-create-multi-repo-issue [title] [root=<path>] [repo=<org/repo> ...]
 ```
 
 **Arguments (all optional):**
+
 - `title` - Proposed issue title.
 - `root=<path>` - Workspace root containing `.oss-helper-workspace.json`.
 - `repo=<org/repo>` - Limit or extend the affected repository set. May be repeated.
@@ -43,6 +44,7 @@ Do not assume secondary repositories use the same tracker as the primary reposit
 If `title` was not provided, ask for a concise title.
 
 Ask for:
+
 - Problem or feature description.
 - Expected change areas per repository.
 - Validation expectations per repository.
@@ -55,6 +57,7 @@ Keep the gathered information local until the final confirmation step.
 ### 4. Select Affected Repositories
 
 Start with:
+
 - Repositories explicitly provided via `repo=`.
 - Repositories the user names while describing the work.
 - Repositories inferred from the workspace metadata and related repository fields.
@@ -62,6 +65,7 @@ Start with:
 Show the candidate set and ask the user to confirm which repositories are affected.
 
 For each affected repository, record:
+
 - Expected change area.
 - Validation command from that repository's `project-standards.md`.
 - Whether issue creation is supported.
@@ -93,6 +97,7 @@ Present possible duplicates grouped by repository and ask whether to continue, l
 Ask which repository or tracker should own the canonical issue.
 
 Default recommendation:
+
 - Use the primary workspace repository when it supports issue creation.
 - Otherwise use the first affected repository that supports issue creation.
 
@@ -142,6 +147,7 @@ Include links to duplicate or related issues if the user chose to proceed despit
 Ask whether to create child issues in secondary repositories.
 
 Only create child issues after explicit confirmation. For each child issue:
+
 - Confirm that the repository's **Create-issue supported** field is not `no`.
 - Use the repository's own tracker and issue format.
 - Link back to the canonical issue.
@@ -152,6 +158,7 @@ If child issue creation is not supported for a repository, include that reposito
 ### 9. Confirm Before Creating
 
 Show:
+
 - Canonical repository/tracker.
 - Title.
 - Labels/components.
@@ -183,6 +190,7 @@ For each created child issue, update or comment on the canonical issue with link
 ### 11. Report Result
 
 Print:
+
 - Canonical issue URL.
 - Child issue URLs, if any.
 - Affected repositories.
@@ -195,6 +203,7 @@ Print:
 ### 12. Constraints
 
 You MUST:
+
 - Initialize project context and workspace metadata before creating anything.
 - Search for duplicates across affected repositories.
 - Ask which tracker owns the canonical issue.
@@ -203,6 +212,7 @@ You MUST:
 - Create child issues only after explicit confirmation.
 
 You MUST NOT:
+
 - Create issues in repositories that declare issue creation unsupported.
 - Assume GitHub and Jira issue fields are interchangeable.
 - Create duplicate issues without showing the duplicate search results.

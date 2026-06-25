@@ -4,11 +4,12 @@ List all issues assigned to you in the current project's issue tracker (GitHub o
 
 ## Usage
 
-```
+```text
 /oss-list-issues [state=<open|closed|all>] [label=<label>] [limit=<N>]
 ```
 
 **Arguments (all optional):**
+
 - `state=<open|closed|all>` - Filter by issue state (default: `open`)
 - `label=<label>` - Filter to issues with the given label (quote multi-word labels, e.g. `label="bug"`)
 - `limit=<N>` - Maximum number of issues to fetch (default: `20`)
@@ -32,6 +33,7 @@ Parse the optional arguments into local variables. Use these defaults when an ar
 ### 3. Detect Issue Tracker Type
 
 Read the **Issue tracker** field from the project's `project-info.md`:
+
 - If `GitHub` -> follow the **GitHub path** (step 4)
 - If `Jira` -> follow the **Jira path** (step 5)
 
@@ -90,11 +92,12 @@ Read the **Jira project key** from the project's `project-info.md` (e.g., `CAMEL
 
 Build a JQL query that searches for issues assigned to the current user:
 
-```
+```text
 project = <PROJECT_KEY> AND assignee = currentUser()
 ```
 
 Add filters based on the parsed arguments:
+
 - If `state=open` (default): append `AND status != Closed AND status != Resolved`
 - If `state=closed`: append `AND (status = Closed OR status = Resolved)`
 - If `state=all`: do not add a status filter
@@ -144,6 +147,7 @@ Filters: <human-readable summary of active filters, e.g. "open, label='bug'">
 ### 6. Ask the User to Select an Issue
 
 Ask the user which issue they want to work on. They can answer by:
+
 - The list index (e.g., `2`)
 - The issue number or key (e.g., `#42` or `CAMEL-20410`)
 - A full issue URL
@@ -154,7 +158,7 @@ If the user does not want to work on any of them, stop without further action.
 
 Once the user picks an issue, suggest the appropriate follow-up:
 
-```
+```text
 To fix this issue, use:
 /oss-fix-issue <ISSUE_ID>
 
@@ -165,6 +169,7 @@ To analyze this issue first, use:
 ### 8. Constraints
 
 You MUST:
+
 - Make exactly ONE API call to list issues (no polling, no per-issue fetches)
 - Only list issues assigned to the current user
 - Present results as a numbered table so the user can select by index
@@ -172,6 +177,7 @@ You MUST:
 - Stop gracefully if no issues match
 
 You MUST NOT:
+
 - Close, modify, comment on, or reassign any issue
 - Fetch detailed information for every issue (defer that to `/oss-analyze-issue`)
 - List issues assigned to other users

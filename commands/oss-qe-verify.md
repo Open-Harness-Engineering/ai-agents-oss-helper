@@ -6,16 +6,18 @@ This command is **execution only**. It runs an existing plan. To create a plan, 
 
 ## Usage
 
-```
+```text
 /oss-qe-verify <test-plan> [description or guidance]
 ```
 
 **Arguments:**
+
 - `<test-plan>` - Test plan name (e.g., `operator-basic-tests`) or path to a plan file
 - `[description or guidance]` - Optional guidance: which phases to run, environment overrides, specific concerns
 
 **Examples:**
-```
+
+```text
 /oss-qe-verify operator-basic-tests
 /oss-qe-verify smoke-tests Skip Phase 0, the cluster is already set up
 /oss-qe-verify cli-commands Only run Phase 3 (negative tests)
@@ -31,12 +33,14 @@ This command is **execution only**. It runs an existing plan. To create a plan, 
 ### 2. Parse Input
 
 Extract from the arguments:
+
 - **Test plan identifier** — either a short name (e.g., `operator-basic-tests`) or a file path
 - **Guidance** — optional: which phases to run/skip, environment overrides, specific focus areas
 
 ### 3. Agent Delegation
 
 If a **qa-test-strategist**, **QE**, **QA**, or **tester** agent is available, delegate plan execution to it. The specialized agent should receive:
+
 - The project context (project-info, project-standards, project-guidelines)
 - The full test plan content
 - Any user guidance (phases to run/skip, overrides)
@@ -91,6 +95,7 @@ Report missing prerequisites clearly before starting. If critical prerequisites 
 Work through the plan phase by phase, test by test:
 
 For each test step:
+
 1. **Run the command(s)** from the plan
 2. **Evaluate the assertion** — check the expected outcome against the actual result
 3. **Record the result:**
@@ -106,6 +111,7 @@ For each test step:
 ### 8. Bug Collection
 
 For each FAIL result, record:
+
 - **Test ID** — the phase and test number (e.g., `3.2`)
 - **Test name** — the test description from the plan
 - **Observed behavior** — what actually happened
@@ -180,6 +186,7 @@ Based on the results, offer one or more actions. Do NOT execute any without expl
 ## Constraints
 
 You MUST:
+
 - Read and process `.oss-init.md` first.
 - Delegate to QE/QA/tester agents when available, not coding agents.
 - Present the plan summary and get user confirmation before execution.
@@ -191,6 +198,7 @@ You MUST:
 - Stop execution if a failure blocks subsequent tests, and present findings so far.
 
 You MUST NOT:
+
 - Delegate execution to coding agents (backend-specialist, frontend-specialist, java-test-engineer, etc.) unless the user explicitly asks.
 - Skip the results table under any circumstances.
 - Mark a test as PASS when the assertion was not met.

@@ -6,11 +6,12 @@ This command is the dependency-side counterpart of `/oss-triage-security-report`
 
 ## Usage
 
-```
+```text
 /oss-analyze-third-party-cve <CVE-ID> [dependency-coordinates]
 ```
 
 **Arguments:**
+
 - `<CVE-ID>` - CVE or GHSA identifier (e.g., `CVE-2024-12345`, `GHSA-abcd-efgh-1234`).
 - `[dependency-coordinates]` - Optional. Disambiguates which artifact to focus on when the CVE record covers multiple packages (e.g., `org.apache.commons:commons-text`, `lodash`, `github.com/foo/bar`). If omitted, the command infers the affected dependency from the CVE record and walks each one.
 
@@ -33,6 +34,7 @@ If you have access to agents specialized in **security analysis** (e.g., securit
 > This analysis is local and investigative. No information from the CVE record, exploit details, or project findings will be sent to public issue trackers, PR descriptions, or chat channels unless you explicitly request it. The goal is to verify whether the project's specific usage triggers the vulnerable code paths and to choose the right follow-up.
 
 Confirm with the user:
+
 - Is the CVE **already public** (default for assigned CVE/GHSA identifiers)?
 - Does any embargo or private advisory channel still apply (e.g., the user received the CVE detail under a coordinated-disclosure agreement before the public publication)? If yes, treat all specifics as confidential during analysis.
 
@@ -41,6 +43,7 @@ Confirm with the user:
 Fetch the advisory record from public sources, in this order. Stop at the first authoritative match and use later sources only to fill gaps.
 
 1. **GHSA / GitHub Advisory Database** (rich technical detail, free):
+
    ```bash
    # By GHSA ID
    gh api graphql -f query='
@@ -69,6 +72,7 @@ Fetch the advisory record from public sources, in this order. Stop at the first 
        }
      }' -F cve=<CVE-ID>
    ```
+
 2. **NVD** (when GHSA does not have it): `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=<CVE-ID>`
 3. **OSV.dev** as a cross-check, especially for non-GitHub-tracked ecosystems: `https://api.osv.dev/v1/vulns/<CVE-or-GHSA>`
 4. **Vendor advisory** linked from the record (often the only source with concrete vulnerable-API detail).
@@ -76,6 +80,7 @@ Fetch the advisory record from public sources, in this order. Stop at the first 
 For URL fetches, ask the user to confirm the URL before fetching.
 
 Record the following fields in a structured note:
+
 - **Identifier(s):** CVE, GHSA, vendor IDs.
 - **Severity / CVSS vector:** base score and vector string.
 - **CWE class:** weakness category.
@@ -101,6 +106,7 @@ Read the **Build tool** field from `project-standards.md` and use the matching m
 When `[dependency-coordinates]` is provided, restrict the search to that artifact. Otherwise, infer the dependency from the CVE record and walk through each affected coordinate.
 
 For each coordinate found, record:
+
 - **Resolved version.**
 - **Direct or transitive** (and, if transitive, the path to the direct dependency that brings it in).
 - **In-range verdict:** `in-range`, `out-of-range`, or `inconclusive` (when the version cannot be resolved cleanly).
@@ -125,6 +131,7 @@ rg -n "<vulnerable-config-key>" --glob '!**/target/**' --glob '!**/build/**'
 Use language-appropriate search patterns for non-JVM languages (e.g., `import` in Go, `require`/`from` in Node, `use` in Rust).
 
 For each match, record:
+
 - **File and line.**
 - **Caller / surrounding context** — which feature in our project triggers it.
 - **Reachability assessment** — is the code path reached at runtime, or only in a non-default branch / opt-in feature flag?
@@ -249,6 +256,7 @@ In all cases, ask the user to confirm the sanitized text before any handoff.
 ### 9. Constraints
 
 You MUST:
+
 - Include the :robot: disclaimer note at the top of the exposure report.
 - Verify the dependency's resolved version using the project's actual build tool, not heuristics (manifest-only inspection misses BOM-managed and transitive overrides).
 - Distinguish "in vulnerable range" from "vulnerable code path reached" — they are not equivalent.
@@ -257,6 +265,7 @@ You MUST:
 - Sanitize any text proposed for downstream public artifacts.
 
 You MUST NOT:
+
 - Run the exploit / PoC against a live system or test instance, even locally. Verification is static and reproducer-based at most.
 - Submit any issue, PR, advisory, or comment as part of this command. Handoffs go through the dedicated commands only after user confirmation.
 - Include exploit payloads, raw advisory excerpts, or severity / "RCE" / "exploit" wording in any text intended for a downstream public artifact, unless the user explicitly authorizes it.

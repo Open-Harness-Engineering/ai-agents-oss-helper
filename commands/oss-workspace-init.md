@@ -6,11 +6,12 @@ Use this command when a project spans several repositories and the operator want
 
 ## Usage
 
-```
+```text
 /oss-workspace-init [name] [repo=<org/repo> ...] [root=<path>] [readonly]
 ```
 
 **Arguments (all optional):**
+
 - `name` - Workspace name. Defaults to the primary repository name with `-workspace` appended.
 - `repo=<org/repo>` - Additional repository to include. May be repeated.
 - `root=<path>` - Workspace root. Defaults to a sibling directory of the current checkout: `../<name>/`.
@@ -63,6 +64,7 @@ Commands may add non-authoritative cache fields, but they must preserve the fiel
 ### 2. Parse Arguments
 
 Parse:
+
 - Workspace `name`, if present.
 - Any repeated `repo=<org/repo>` values.
 - Optional `root=<path>`.
@@ -71,6 +73,7 @@ Parse:
 Use the current project's **GitHub repo** field as the primary repository.
 
 If `name` is omitted, derive it from the primary repository basename:
+
 - `apache/camel` -> `camel-workspace`
 - `wanaku-ai/wanaku` -> `wanaku-workspace`
 
@@ -97,6 +100,7 @@ If the project has no related repositories and no `repo=` arguments were provide
 ### 4. Confirm Workspace Plan
 
 Before cloning or writing metadata, show:
+
 - Workspace name.
 - Workspace root.
 - Primary repository.
@@ -164,6 +168,7 @@ git -C <PATH> worktree list --porcelain
 ```
 
 Classify the path as:
+
 - `main checkout` - normal checkout whose git dir is the repository's main `.git` directory.
 - `worktree` - linked worktree whose git dir is under the common git directory's `worktrees/` area or whose `.git` file points elsewhere.
 - `unknown` - command output is incomplete; report the raw paths.
@@ -181,6 +186,7 @@ Write or update:
 Use stable absolute paths in the metadata. Preserve repositories that are still present unless the user confirms removal.
 
 If a metadata file already exists:
+
 - Read it first.
 - Merge newly discovered repositories.
 - Ask before changing the primary repository or root.
@@ -210,6 +216,7 @@ Next:
 ### 11. Constraints
 
 You MUST:
+
 - Initialize project context before discovering related repositories.
 - Ask before cloning repositories or writing workspace metadata.
 - Store metadata outside the individual repositories by default.
@@ -218,6 +225,7 @@ You MUST:
 - Preserve dirty or existing repositories; never reset, delete, or overwrite them.
 
 You MUST NOT:
+
 - Assume all repositories share one build tool, tracker, branch naming scheme, or PR policy.
 - Clone repositories into arbitrary locations without showing the plan first.
 - Create branches or commits; this command only initializes workspace metadata.

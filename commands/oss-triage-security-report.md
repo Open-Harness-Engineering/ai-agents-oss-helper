@@ -6,11 +6,12 @@ This command does NOT publish any security details to public trackers. It is a l
 
 ## Usage
 
-```
+```text
 /oss-triage-security-report [source]
 ```
 
 **Arguments:**
+
 - `[source]` - Optional. Path to a file containing the report, a URL, or the literal keyword `paste`. If omitted, the agent will ask the user to paste the report content inline.
 
 ## Instructions
@@ -179,6 +180,7 @@ Based on the recommendation, offer the user one or more of the following actions
 ### 8. Constraints
 
 You MUST:
+
 - Include the :robot: disclaimer note at the top of the triage summary.
 - Verify every cited file, line, and behavior against the current codebase before classifying a claim as confirmed.
 - Check git history for prior fixes, related CVEs, and parent tickets.
@@ -187,6 +189,7 @@ You MUST:
 - When handing off to `/oss-create-issue`, present the sanitized text for explicit confirmation first.
 
 You MUST NOT:
+
 - Submit any issue, PR, advisory, or public comment as part of this command. Handoffs go through the dedicated commands only after user confirmation.
 - Include exploit payloads, reporter identity, CVE identifiers, or the word "vulnerability" / "exploit" / "RCE" / "CVE" in proposed public issue text.
 - Mark a claim as confirmed without reading the actual code.

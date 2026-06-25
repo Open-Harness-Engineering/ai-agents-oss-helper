@@ -4,11 +4,12 @@ Check the status of a pull request in the current project's repository, includin
 
 ## Usage
 
-```
+```text
 /oss-pr-status [pr]
 ```
 
 **Arguments:**
+
 - `[pr]` - Pull request identifier: number (e.g., `42`), full URL, or omitted to auto-detect from the current branch
 
 ## Instructions
@@ -115,12 +116,14 @@ Based on the status, recommend actions:
 ### 9. Constraints
 
 You MUST:
+
 - Present all information clearly and structured
 - Include CI check details, especially for failures
 - Summarize review feedback accurately
 - Identify all blockers preventing merge
 
 You MUST NOT:
+
 - Merge or close the PR (status check only)
 - Modify the PR in any way
 - Dismiss reviews or re-request reviews

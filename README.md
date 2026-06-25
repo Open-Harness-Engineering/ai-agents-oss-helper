@@ -6,7 +6,7 @@ Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contr
 
 Any project can use the helper by adding an `.oss-ai-helper-rules/` directory to its repository root with three rule files:
 
-```
+```text
 my-project/
 ├── .oss-ai-helper-rules/
 │   ├── project-info.md          # Repository URLs, issue trackers, related repos
@@ -44,6 +44,7 @@ cd ai-agents-oss-helper
 ## How It Works
 
 Commands are generic and project-agnostic. Project-specific configuration is stored in rule files with three files per project:
+
 - **`project-info.md`** - Repository URLs, issue trackers, SonarCloud keys, related repos
 - **`project-standards.md`** - Build tools, commands, code style restrictions
 - **`project-guidelines.md`** - Branch naming, commit formats, PR policies, task labels
@@ -125,6 +126,7 @@ All commands auto-detect the project from the current directory's git remote.
 ```
 
 The command will:
+
 1. Detect the current project
 2. Ask about your experience level
 3. Search for appropriate issues (good first issue, help wanted, etc.)
@@ -142,6 +144,7 @@ The command will:
 ```
 
 The command will:
+
 1. Detect the current project
 2. Load the project's rule files
 3. Fetch the PR metadata and diff
@@ -159,6 +162,7 @@ The command will:
 ```
 
 The command will:
+
 1. Fetch the issue details and comments
 2. Investigate the codebase for relevant code
 3. Check related repos if configured
@@ -201,6 +205,7 @@ For tracked cross-repo work, `/oss-create-multi-repo-issue` searches for duplica
 ```
 
 The command will:
+
 1. Detect the current project and load its rules
 2. Fetch the issue and its comments (GitHub or Jira)
 3. Understand the report and flag any missing information
@@ -268,6 +273,7 @@ This is maintainer-side triage (distinct from the contributor-side `/oss-analyze
 ```
 
 The command will:
+
 1. Detect the current project and validate the alert type
 2. List open alerts (when no `alert=` is provided) with severity, rule, and location
 3. For a specific alert: fetch its details and assign it to you via the GitHub API
@@ -285,6 +291,7 @@ The command will:
 ```
 
 The command will:
+
 1. Verify the Backlog MCP server is available
 2. Detect the current project
 3. Fetch the task details from the backlog repository
@@ -308,6 +315,7 @@ The command will:
 ```
 
 The command will:
+
 1. Detect the current project
 2. Fetch PR metadata, CI check results, and reviews
 3. Present a structured status report
@@ -322,6 +330,7 @@ The command will:
 ```
 
 The command will:
+
 1. Detect the current project
 2. List all your open PRs with CI, review, and merge readiness status
 3. Highlight PRs needing attention (failing CI, changes requested, conflicts)
@@ -350,6 +359,7 @@ The command will:
 ```
 
 The command will:
+
 1. Detect the current project
 2. List all open PRs in the repository (one `gh pr list` call, no per-PR CI fetch)
 3. Present them in a numbered table with author, branch, review state, draft flag, and last update
@@ -382,6 +392,7 @@ This is the counterpart to `/oss-list-pr-status`: that command lists *your own* 
 ```
 
 The command will:
+
 1. Detect the current project
 2. Select the open PRs you haven't reviewed (excluding your own and, by default, drafts and `[DO NOT MERGE]` PRs)
 3. Review each in parallel against the project rules — the same evaluation as `/oss-review-pr`
@@ -407,6 +418,7 @@ This is the batch counterpart to `/oss-list-prs`: where `/oss-list-prs` hands a 
 ```
 
 The command will:
+
 1. Detect the current project and its issue tracker type (GitHub or Jira)
 2. List all issues assigned to you with a single API call
 3. Present them in a numbered table with key details (title, labels, status, priority)
@@ -424,6 +436,7 @@ The command will:
 ```
 
 The command will:
+
 1. Validate the source PR is merged and the target branch exists
 2. Cherry-pick the PR commits onto a new backport branch
 3. Attempt to resolve conflicts automatically, or report them clearly
@@ -443,6 +456,7 @@ The command will:
 ```
 
 The command will:
+
 1. Detect the current project and load its rules
 2. Acquire the report (paste / file / URL) and confirm confidentiality
 3. Extract each technical claim from the report as a discrete bullet
@@ -468,6 +482,7 @@ No content is published anywhere until you explicitly confirm a handoff.
 ```
 
 The command will:
+
 1. Detect the current project and load its rules
 2. Fetch the advisory record from GHSA / NVD / OSV / vendor sources (asking before fetching URLs)
 3. Locate the affected dependency in the project using the project's actual build tool (resolved version, not just manifest)
@@ -495,6 +510,7 @@ Like `/oss-triage-security-report`, this is a local investigative workflow — n
 ```
 
 The command will:
+
 1. Detect the current project and load its rules (including `project-security.md` when present)
 2. Establish a threat / security model — from `project-security.md`, an in-repo `SECURITY.md` / threat-model doc, or by generating a lightweight one when none exists
 3. Determine and state the scan scope, excluding vendored/generated/build output
@@ -523,6 +539,7 @@ Findings are treated as potential undisclosed vulnerabilities and kept confident
 ```
 
 The command will:
+
 1. Resolve the known-projects repository (default `Open-Harness-Engineering/ai-agents-oss-known-projects`)
 2. Fetch the three rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`) for the requested project (or for every project when `all` is used)
 3. Write them under the agent's rules directory (e.g., `~/.claude/rules/<project>/`)
@@ -588,7 +605,7 @@ Since Gemini CLI has no auto-loading `rules/` directory, each generated TOML com
 
 ## Project Structure
 
-```
+```text
 ai-agents-oss-helper/
 ├── install.sh                        # Installation script
 ├── README.md
