@@ -18,7 +18,7 @@ This command does NOT publish any security details to public trackers. It is a l
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
 If `project-security.md` is present, use its **Private reporting channel** verbatim in the follow-up step (step 7) instead of guessing an address.
 

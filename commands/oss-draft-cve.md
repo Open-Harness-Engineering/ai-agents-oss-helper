@@ -21,7 +21,7 @@ This command is drafting-only: it produces the advisory files locally for the ma
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
 If `project-security.md` is present, treat its fields as defaults for this command: **Advisory template (reference)** seeds `template=` (steps 2 and 4); **Advisory section structure** seeds the skeleton (step 5); **Advisory source format** sets the output extension (step 7); **Supported release lines** inform the version mapping (step 6.2); **Publication location** and **Signing key** feed the review checklist (step 8). When the file is absent, gather these interactively as described below.
 

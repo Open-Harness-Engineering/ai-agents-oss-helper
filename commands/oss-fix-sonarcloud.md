@@ -22,7 +22,7 @@ Fix SonarCloud issues in the current project's codebase.
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
 Check the **SonarCloud component key** field in the project's `project-info.md`. If the project has no SonarCloud component key configured (shows `_(none)_`), stop and tell the user: "SonarCloud is not configured for this project."
 
