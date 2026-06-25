@@ -26,7 +26,7 @@ Assign and fix a GitHub security or quality alert (Code Scanning, Dependabot, or
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines) is loaded.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
 Read the **Issue tracker** field from the project's `project-info.md`. If the issue tracker is not `GitHub`, stop and tell the user: "GitHub security alerts are only available for GitHub-hosted projects."
 

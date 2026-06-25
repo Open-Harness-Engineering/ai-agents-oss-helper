@@ -19,9 +19,9 @@ This command is read-only. It helps the operator understand branches, worktrees,
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file from the current checkout. This identifies the current repository, but each workspace repository must still load its own rules independently.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-### 2. Locate Workspace Metadata
+### 2.
 
 Locate `.oss-helper-workspace.json` using this order:
 

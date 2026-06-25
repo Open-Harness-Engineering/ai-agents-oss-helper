@@ -59,9 +59,9 @@ Commands may add non-authoritative cache fields, but they must preserve the fiel
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file from the current checkout to detect the primary project and load its rules. All subsequent steps assume the primary project context is loaded.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-### 2. Parse Arguments
+### 2.
 
 Parse:
 

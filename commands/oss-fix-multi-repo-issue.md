@@ -24,11 +24,9 @@ This command extends `/oss-fix-issue` to workspace-aware work. It must produce a
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file from the current checkout. Then locate and load workspace metadata using the same discovery rules as `/oss-workspace-status`.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-If no workspace exists, stop and tell the user to run `/oss-workspace-init` first.
-
-### 2. Parse the Issue
+### 2.
 
 Extract the canonical issue ID from the argument:
 

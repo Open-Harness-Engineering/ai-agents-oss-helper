@@ -20,11 +20,9 @@ This command decides how cross-repo work is represented in the issue tracker. It
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file from the current checkout. Then locate and load workspace metadata using the same discovery rules as `/oss-workspace-status`.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-If no workspace exists, ask the user whether to run `/oss-workspace-init` first. Do not create a multi-repo issue without an explicit repository set.
-
-### 2. Load Workspace Repositories and Rules
+### 2.
 
 For each workspace repository:
 

@@ -16,7 +16,7 @@ Privately report a security vulnerability to a GitHub repository using GitHub's 
 
 ### 1. Initialize Project Context
 
-**MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
+**MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
 If `project-security.md` declares a **Private reporting channel** that is not GitHub private vulnerability reporting (for example an ASF `security@apache.org` list), prefer guiding the reporter to that channel over the GitHub `/reports` flow — see step 2.
 
