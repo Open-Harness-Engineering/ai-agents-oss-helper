@@ -28,7 +28,7 @@ Generate project rule files for a repository by auto-inspecting it and optionall
 
 **MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-### 2.
+### 2. Load Workspace Repositories and Rules
 
 Determine the target repository from the arguments:
 

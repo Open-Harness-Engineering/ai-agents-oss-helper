@@ -26,7 +26,7 @@ This command extends `/oss-fix-issue` to workspace-aware work. It must produce a
 
 **MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-### 2.
+### 2. Load Workspace Repositories and Rules
 
 Extract the canonical issue ID from the argument:
 
