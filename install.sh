@@ -21,6 +21,8 @@ AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 # Command files to install (relative paths from repo root)
 COMMAND_FILES=(
     "commands/.oss-init.md"
+    "commands/_fragments/_common-init.md"
+    "commands/_fragments/README.md"
     "commands/oss-add-project.md"
     "commands/oss-fix-issue.md"
     "commands/oss-review-pr.md"
