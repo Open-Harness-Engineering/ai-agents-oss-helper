@@ -154,7 +154,7 @@ Each fragment should include:
 |----------|--------|-------------------|-------------|
 | `_common-init.md` | ✅ Implemented | All (30+) | ~1,500 |
 | `_git-history-investigation.md` | 📋 Planned | 6 | ~100 |
-| `_build-workflow.md` | 📋 Planned | 6 | ~240 |
+| `_build-workflow.md` | ✅ Implemented | 7 | ~240 |
 | `_commit-signing.md` | 📋 Planned | 8 | ~80 |
 | `_agent-delegation.md` | 📋 Planned | 6 | ~48 |
 | `_api-patterns.md` | 📋 Planned | 12 | ~180 |
