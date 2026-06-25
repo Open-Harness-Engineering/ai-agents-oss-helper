@@ -61,7 +61,7 @@ Commands may add non-authoritative cache fields, but they must preserve the fiel
 
 **MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-### 2.
+### 2. Load Workspace Repositories and Rules
 
 Parse:
 

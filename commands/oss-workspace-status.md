@@ -21,7 +21,7 @@ This command is read-only. It helps the operator understand branches, worktrees,
 
 **MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-### 2.
+### 2. Load Workspace Repositories and Rules
 
 Locate `.oss-helper-workspace.json` using this order:
 

@@ -22,7 +22,7 @@ This command decides how cross-repo work is represented in the issue tracker. It
 
 **MANDATORY:** Process `.oss-init.md` to load project rules. See `_fragments/_common-init.md` for details.
 
-### 2.
+### 2. Load Workspace Repositories and Rules
 
 For each workspace repository:
 
