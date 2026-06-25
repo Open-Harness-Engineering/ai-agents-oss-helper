@@ -145,18 +145,12 @@ If cherry-pick **fails with conflicts**:
 
 ### 8. Sanity Build (MANDATORY before push)
 
-For **Maven projects**, verify the cherry-picked commits build cleanly on the target branch before pushing. From the **repository root**.
-
-**Before running, ask the user** which build to run (use `AskUserQuestion`):
-
-- **(a) Skip tests** (default for backports — backport correctness is assumed to be validated upstream; the goal is a compile-and-wire sanity check across the full reactor): `mvn clean install -DskipTests`
-- **(b) Run full tests** (slower, useful when the maintenance branch differs significantly from main): `mvn clean install`
-
-Do NOT pick a default silently — wait for the user's choice. Both options run the **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale.
-
-This catches API drift between the source and target branches (e.g., a method used by the backport was renamed on the target branch).
-
-Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only).
+Follow the build workflow from `_fragments/_build-workflow.md`:
+- Read build configuration from `project-standards.md`
+- Run full reactor build (Maven projects only, MANDATORY before push)
+- Ask user for build mode: (a) skip tests (default for backports) or (b) full tests
+- This catches API drift between source and target branches
+- Skip for non-Maven projects
 
 If the build fails:
 

@@ -143,33 +143,11 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
 
 2. **Implement**: Make necessary code changes
 
-3. **Format & Build**: Run the build commands from the project's `project-standards.md`
-   - For projects with module-specific builds (camel-core): run formatting in the module directory first, then test
-   - For other projects: run `mvn verify` from root
-
-4. **Full Build Sanity Check (MANDATORY before commit)**: Regardless of project type, run a full build from the **repository root** before committing. This catches cross-module breakage that a module-only build in step 3 would miss and triggers any project-wide code generation (catalogs, DSL factories, metadata mirrors, schemas, etc.) that downstream modules produce from your changes.
-
-   **Before running, ask the user** which build mode to use (use `AskUserQuestion`):
-   - **(a) Skip tests** (faster, recommended when step 3 already ran tests)
-   - **(b) Run full tests** (slower, catches cross-module integration regressions)
-
-   Do NOT pick a default silently — wait for the user's choice. Then pick the command based on the project's build tool (from `project-standards.md`):
-
-   | Build tool | (a) Skip tests | (b) Full tests |
-   |------------|----------------|----------------|
-   | Maven      | `mvn clean install -DskipTests` | `mvn clean install` |
-   | Gradle     | `./gradlew build -x test` | `./gradlew build` |
-   | Go (make)  | `make build` | `make test` |
-   | yarn       | `yarn build` | `yarn build && yarn test` |
-   | npm        | `npm run build` | `npm run build && npm test` |
-   | Cargo      | `cargo build` | `cargo test` |
-   | none / docs-only | skip this step | skip this step |
-
-   **Critical (Maven):** This is a **full reactor build**. Do NOT add `-pl` or `-am` flags — a scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (e.g. project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
-
-   If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
-
-   After the build succeeds, run `git status` and inspect newly-modified files. All regenerated files that are related to the fix (catalogs, endpoint DSLs, metadata, schemas, etc.) MUST be included in the commit. Revert any unrelated regen artifacts that come from stale upstream state — do NOT commit them.
+3. **Build/Test/Format**: Follow the build workflow from `_fragments/_build-workflow.md`
+   - Read build configuration from `project-standards.md`
+   - Run format and test commands (module-specific or root, as appropriate)
+   - Run full reactor build (Maven projects only, MANDATORY before commit)
+   - Check for regenerated artifacts and include them in commit
 
 5. **Commit**: Use the commit format from the project's `project-guidelines.md`
    - GitHub projects: `Fix #<ISSUE_NUMBER>: <brief description>`

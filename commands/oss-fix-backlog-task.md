@@ -113,21 +113,13 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
 
 2. **Implement**: Make necessary code changes
 
-3. **Format & Build**: Run the build commands from the project's `project-standards.md`
-   - For projects with module-specific builds (camel-core): run formatting in the module directory first, then test
-   - For other projects: run `mvn verify` from root
+3. **Build/Test/Format**: Follow the build workflow from `_fragments/_build-workflow.md`
+   - Read build configuration from `project-standards.md`
+   - Run format and test commands (module-specific or root, as appropriate)
+   - Run full reactor build (Maven projects only, MANDATORY before commit)
+   - Check for regenerated artifacts and include them in commit
 
-4. **Final Sanity Build (MANDATORY before commit)** (Maven projects only): As the last step before committing, run a full-reactor build from the **repository root**.
-
-   **Before running, ask the user** which build to run (use `AskUserQuestion`):
-   - **(a) Skip tests** (faster, recommended when step 3 already ran tests): `mvn clean install -DskipTests`
-   - **(b) Run full tests** (slower, catches cross-module integration regressions): `mvn clean install`
-
-   Do NOT pick a default silently — wait for the user's choice. Both options run the **full reactor build** — do NOT add `-pl` or `-am` flags. A scoped build only covers the changed module and its upstream dependencies, leaving downstream generators (project-wide catalogs, DSL builder factories, metadata mirrors) stale. CI runs the full reactor build and then fails on any uncommitted regen artifacts, so the local check must match.
-
-   This catches cross-module breakage that a module-only build in step 3 would miss. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
-
-5. **Commit**: Use the fix commit format from the project's `project-guidelines.md`, replacing the issue identifier with the backlog task ID
+4. **Commit**: Use the fix commit format from the project's `project-guidelines.md`, replacing the issue identifier with the backlog task ID
 
    **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
    - If the user wants both: `git commit -S -s -m "<COMMIT_MESSAGE>"`

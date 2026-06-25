@@ -21,8 +21,12 @@ AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 # Command files to install (relative paths from repo root)
 COMMAND_FILES=(
     "commands/.oss-init.md"
+<<<<<<< HEAD
     "commands/_fragments/_common-init.md"
     "commands/_fragments/README.md"
+=======
+    "commands/_fragments/_build-workflow.md"
+>>>>>>> f71373d (refactor: Extract build/test/format workflow into reusable fragment)
     "commands/oss-add-project.md"
     "commands/oss-fix-issue.md"
     "commands/oss-review-pr.md"
