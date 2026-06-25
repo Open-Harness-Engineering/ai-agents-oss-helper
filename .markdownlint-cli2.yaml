@@ -2,6 +2,7 @@ config:
   MD004:
     style: "dash"
   MD013: false
+  MD029: false
   MD024:
     siblings_only: true
   MD025: false

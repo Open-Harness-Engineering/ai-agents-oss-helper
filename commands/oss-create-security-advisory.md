@@ -4,11 +4,12 @@ Privately report a security vulnerability to a GitHub repository using GitHub's 
 
 ## Usage
 
-```
+```text
 /oss-create-security-advisory
 ```
 
 **Arguments:**
+
 - None (all information is gathered interactively)
 
 ## Instructions
@@ -24,6 +25,7 @@ If `project-security.md` declares a **Private reporting channel** that is not Gi
 **First, check `project-security.md` (if present).** If it declares a **Private reporting channel** other than GitHub private vulnerability reporting (for example an ASF `security@apache.org` mailing list), do **not** use the GitHub `/reports` flow. Instead, give the user the exact reporting address from that file, draft a private report email body (reuse the Markdown structure from step 5), and remind them of responsible-disclosure expectations. Only continue with the GitHub flow below if no security file exists, the file points to GitHub PVR, or the user explicitly asks for the GitHub path.
 
 Read the **Issue tracker** field from the project's `project-info.md`:
+
 - If the issue tracker is **not** `GitHub`, stop and tell the user: "Private vulnerability reporting is a GitHub-specific feature. This project uses a different issue tracker."
 
 Read the **GitHub repo** field. This will be used as `<OWNER>/<REPO>` for API calls.
@@ -51,6 +53,7 @@ If the repository is private, warn the user: "This repository is private. Privat
 Collect the following from the user:
 
 **Required:**
+
 - **Summary** - A short, descriptive title for the vulnerability (e.g., "SQL injection in query parameter handling")
 - **Description** - Detailed explanation including:
   - What the vulnerability is
@@ -67,6 +70,7 @@ Collect the following from the user:
 **Affected Package(s):**
 
 Ask the user for each affected package:
+
 - **Ecosystem** - One of: `npm`, `pip`, `maven`, `nuget`, `composer`, `go`, `rust`, `rubygems`, `erlang`, `actions`, `pub`, `swift`, `other`
 - **Package name** - The affected package identifier (e.g., `org.example:my-library` for Maven, `my-package` for npm)
 - **Vulnerable version range** - Version constraint using operators (e.g., `< 1.2.0`, `>= 2.0.0, < 2.3.1`)
@@ -78,6 +82,7 @@ If the user is unsure about ecosystem or package name, help them by inspecting t
 Ask the user if they want to add more affected packages. Repeat collection for each.
 
 **Optional:**
+
 - **CWE IDs** - Common Weakness Enumeration identifiers (e.g., `CWE-89` for SQL injection, `CWE-79` for XSS). Suggest relevant CWEs based on the vulnerability description if possible.
 
 ### 5. Format the Description
@@ -111,6 +116,7 @@ If the user provided a free-form description, restructure it into this format. A
 ### 6. Confirm with User
 
 Before submitting, present a full summary:
+
 - Summary (title)
 - Severity
 - Affected package(s) with ecosystem, name, and version range
@@ -118,6 +124,7 @@ Before submitting, present a full summary:
 - Full description
 
 Remind the user:
+
 - This report will be submitted **privately** to the repository maintainers
 - Only the repository's security team and admins will see it
 - The reporter (the user) will be credited and can participate in the discussion
@@ -163,11 +170,13 @@ EOF
 ### 8. Report Result
 
 After successful creation (HTTP 201), extract and display:
+
 - **GHSA ID** - The GitHub Security Advisory identifier (e.g., `GHSA-xxxx-xxxx-xxxx`)
 - **URL** - The advisory URL from the response
 - **State** - Will be `triage` (the maintainers need to review it)
 
 Tell the user:
+
 - The vulnerability has been **privately reported** to the repository maintainers
 - The advisory is in **triage** state — maintainers will review and respond
 - The user will receive GitHub notifications about updates to the advisory
@@ -177,6 +186,7 @@ Tell the user:
 ### 9. Handle Errors
 
 If the API call fails:
+
 - **403 Forbidden** - Private vulnerability reporting is not enabled for this repository. Suggest the user:
   1. Check if the repository has a `SECURITY.md` file with alternative reporting instructions: `gh api repos/<OWNER>/<REPO>/contents/SECURITY.md --jq '.download_url'`
   2. Look for a security policy or contact email in the repository
@@ -188,6 +198,7 @@ If the API call fails:
 ### 10. Constraints
 
 You MUST:
+
 - Confirm all details with the user before submitting the report
 - Validate the severity is one of the accepted values (`critical`, `high`, `medium`, `low`)
 - Validate the ecosystem is one of the accepted values
@@ -197,6 +208,7 @@ You MUST:
 - Provide fallback guidance if the feature is not enabled on the repository
 
 You MUST NOT:
+
 - Submit a report without user confirmation
 - Use the admin endpoint (`POST /repos/{owner}/{repo}/security-advisories`) — that requires admin access
 - Encourage public disclosure before maintainers have responded

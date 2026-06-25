@@ -6,16 +6,18 @@ This command is **planning only**. It analyzes the project and produces a test p
 
 ## Usage
 
-```
+```text
 /oss-qe-create-test-plan <test-plan-name> [additional instructions]
 ```
 
 **Arguments:**
+
 - `<test-plan-name>` - Short name for the test plan (e.g., `operator-basic-tests`, `smoke-tests`, `cli-commands`)
 - `[additional instructions]` - Optional guidance: what to test, scope, target environment, specific concerns
 
 **Examples:**
-```
+
+```text
 /oss-qe-create-test-plan operator-basic-tests Create a test plan for testing the Kubernetes operator lifecycle
 /oss-qe-create-test-plan smoke-tests
 /oss-qe-create-test-plan cli-commands Test all CLI subcommands including negative cases
@@ -30,12 +32,14 @@ This command is **planning only**. It analyzes the project and produces a test p
 ### 2. Parse Input
 
 Extract from the arguments:
+
 - **Test plan name** — the short identifier (e.g., `operator-basic-tests`). This becomes the filename: `<name>.md`.
 - **Additional instructions** — optional scope, environment, or focus guidance from the user.
 
 ### 3. Agent Delegation
 
 If a **qa-test-strategist**, **QE**, **QA**, or **tester** agent is available, delegate the plan creation to it. The specialized agent should receive:
+
 - The project context (project-info, project-standards, project-guidelines)
 - The test plan name and any additional instructions
 - The test plan format reference (step 7)
@@ -59,6 +63,7 @@ ls "${REPO_ROOT}/.oss-ai-helper-rules/test-plans/<name>.md" 2>/dev/null
 ```
 
 If a plan with this name is found:
+
 - Present it to the user (overview, phase count, test count)
 - Ask: **update the existing plan** or **create a fresh one**?
 - If updating, read the existing plan fully and modify in place
@@ -166,6 +171,7 @@ Write `<name>.md` to `PLAN_DIR`. If new common procedures were extracted, write 
 ### 10. Present Summary
 
 After writing the plan, present:
+
 - File path where the plan was saved
 - Number of phases and test cases
 - Whether any common steps were created or referenced
@@ -174,6 +180,7 @@ After writing the plan, present:
 ## Constraints
 
 You MUST:
+
 - Read and process `.oss-init.md` first.
 - Delegate to QE/QA/tester agents when available, not coding agents.
 - Follow the test plan format from step 7 — phases, PASS/FAIL assertions, env vars with defaults, summary matrix.
@@ -185,6 +192,7 @@ You MUST:
 - Check for existing plans with the same name before creating.
 
 You MUST NOT:
+
 - Delegate plan creation to coding agents (backend-specialist, frontend-specialist, java-test-engineer, etc.) unless the user explicitly asks.
 - Hardcode credentials, tokens, internal hostnames, IPs, or organization-specific paths.
 - Write test steps without PASS/FAIL verification.

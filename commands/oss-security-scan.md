@@ -8,11 +8,12 @@ Findings produced by this command are potential undisclosed vulnerabilities in t
 
 ## Usage
 
-```
+```text
 /oss-security-scan [path-or-module] [severity=<min>] [scanners=<auto|off|tool1,tool2>]
 ```
 
 **Arguments:**
+
 - `[path-or-module]` - Optional. A path, module, or glob to scope the scan (e.g. `core/`, `src/main/java/com/acme/web`, `services/auth`). If omitted, the scan targets the whole first-party codebase, with scoping guidance applied (see step 4).
 - `severity=<min>` - Optional. Minimum severity to include in the report: `critical`, `high`, `medium`, `low`, or `info`. Default: `low` (everything except purely informational notes). Findings below the threshold are still counted in the summary but not detailed.
 - `scanners=<auto|off|tool1,tool2>` - Optional. `auto` (default) detects and runs whatever scanners are installed; `off` runs reasoning-based analysis only; a comma-separated list restricts to specific tools (e.g. `scanners=semgrep,gosec`).
@@ -24,6 +25,7 @@ Findings produced by this command are potential undisclosed vulnerabilities in t
 **MANDATORY:** First, read and process the `.oss-init.md` file to detect the current project and load its rules. All subsequent steps assume the project context (project-info, project-standards, project-guidelines, and `project-security.md` when present) is loaded.
 
 If `project-security.md` is present, use it for:
+
 - The **Private reporting channel** — used verbatim in the follow-up step (step 9) instead of guessing an address.
 - The **threat model anchor** — its scope, supported release lines, and any documented security posture inform what counts as in-scope (step 3).
 
@@ -38,6 +40,7 @@ If you have access to agents specialized in **security analysis** (e.g., securit
 > This scan is local and investigative. It looks for vulnerabilities in this project's own code. Any finding is a *potential undisclosed vulnerability* and will be treated as confidential — nothing is sent to public issue trackers, PR descriptions, or chat channels unless you explicitly confirm a handoff, and exploit specifics are stripped from any text proposed for a public artifact.
 
 Confirm with the user:
+
 - Is there any **embargo or coordinated-disclosure** context already in flight for this area? If so, keep all specifics confidential and prefer the private follow-up paths.
 - The scan runs scanners and analysis **statically**. It will not execute proof-of-concept exploits against any running system. Confirm the user is not asking for live exploitation (that is out of scope — see Constraints).
 
@@ -47,9 +50,11 @@ The scan must be anchored to what the project actually defends against. Establis
 
 1. **`project-security.md`** (rule file, if loaded in step 1) — use its scope, posture, and supported release lines.
 2. **In-repo security docs** — check for a threat model or security policy in the repository:
+
    ```bash
    ls SECURITY.md .github/SECURITY.md docs/SECURITY.md THREATMODEL.md docs/threat-model*.md 2>/dev/null
    ```
+
    Read whatever exists. Extract: assets worth protecting, trust boundaries, entry points / attacker-reachable surfaces, and anything explicitly declared **out of scope** (a documented disclaimer means a related finding is *informational*, not a vulnerability).
 3. **Generate a lightweight model (when none exists).** If neither of the above is present, derive a short threat model so the scan has an anchor:
    - If a dedicated threat-model skill/command is available in this environment (for example `threat-model-producer`), prefer it to produce the model.
@@ -93,6 +98,7 @@ Unless `scanners=off`, detect which security tools are installed and run the rel
 | Containers / IaC | `checkov`; `tfsec` | `trivy config .` | (above) |
 
 Guidance:
+
 - **Record which scanners ran and which were skipped** (not installed / not applicable). The report must be honest about coverage — a clean report from "no scanners installed" is not the same as a clean report from a full SAST run.
 - **Capture raw findings** (rule id, file, line, message, severity) but do **not** trust them yet — scanner output is triaged in step 7.
 - **SCA / dependency findings overlap** with `/oss-analyze-third-party-cve` and `/oss-fix-github-alert dependabot`. Note them, but in the follow-up step defer dependency CVEs to those commands rather than duplicating that workflow here. This command's primary focus is **first-party code (SAST)**.
@@ -105,6 +111,7 @@ Independently of the scanners, analyze the in-scope code for the vulnerability c
 Work from **trust boundaries inward**: for each entry point identified in step 3, trace data flow from the untrusted source to any sensitive sink, noting validators/sanitizers/encoders along the way and where the chain breaks.
 
 Vulnerability classes to consider (select those the threat model makes relevant):
+
 - **Injection** — SQL, OS command, LDAP, expression/EL, template (SSTI), XPath, header injection.
 - **Deserialization** of untrusted data; unsafe object mapping; polymorphic type handling.
 - **Path traversal** / arbitrary file read/write; unsafe archive extraction (zip-slip).
@@ -121,10 +128,12 @@ Vulnerability classes to consider (select those the threat model makes relevant)
 - **Concurrency** — TOCTOU / race conditions in security-relevant paths; predictable temp-file creation.
 
 Also run the project-specific checks the **prior security work** implies:
+
 ```bash
 # Has this area been touched by past security fixes? Look for patterns to recheck.
 git log --all --oneline --grep="CVE" --grep="security" --grep="vuln" -i | head -30
 ```
+
 Where a past fix exists, check whether sibling components share the same defect pattern (scope drift is common).
 
 For any candidate finding, confirm the data path by **reading the actual code** and, where it clarifies the logic, writing a tiny standalone reproducer that exercises the *logic in isolation* — never an exploit against a live service.
@@ -134,6 +143,7 @@ For any candidate finding, confirm the data path by **reading the actual code** 
 Merge scanner output (step 5) and reasoning findings (step 6) into a single triaged list. Do **not** pass raw scanner output through to the report.
 
 For each candidate:
+
 - **De-duplicate** — collapse the same defect reported by multiple tools/passes into one finding.
 - **Confirm or drop** — read the cited code and verify the issue is real. Discard false positives (e.g., a `semgrep` taint hit where the input is actually constant, or already sanitized). Tools over-report; say so.
 - **Assess reachability** — is the vulnerable code reachable from an entry point in the threat model under a realistic configuration, or only via a non-default branch / opt-in flag / internal-only call? Record the data-flow reasoning.
@@ -208,17 +218,21 @@ Output a structured report. Include the robot disclaimer at the top. Apply the `
 Based on the verdict, offer one or more actions. Do **NOT** execute any without explicit confirmation. The split below mirrors the other security commands: confidential exploit detail goes through private channels; only sanitized, exploit-free text goes anywhere public.
 
 **For a confirmed, exploitable, not-yet-public finding:**
+
 1. **Triage it further** — hand off to `/oss-triage-security-report` (treating this report as the inbound source) for a deeper per-claim verification before disclosure.
 2. **Report it privately** — hand off to `/oss-create-security-advisory`. If `project-security.md` declares a **Private reporting channel** other than GitHub private vulnerability reporting (e.g. an ASF `security@…` list), give the user that exact address and a private draft instead of the GitHub `/reports` flow.
 
 **For a safe-to-track hardening item (no exploit detail, or already public):**
+
 3. **File a sanitized issue** — hand off to `/oss-create-issue` with text that frames the change as hardening/consistency/refactor and **omits** the attack scenario, payloads, severity wording, and the words "vulnerability"/"exploit"/"RCE"/"CVE". Confirm the sanitized text first.
 4. **Apply a trivial safe fix** — for a low-risk, obviously-correct hardening change, hand off to `/oss-quick-fix` with a sanitized description.
 
 **For a dependency / SCA finding (not first-party code):**
+
 5. **Defer to the dependency workflow** — hand off to `/oss-analyze-third-party-cve <CVE>` or, if Dependabot already raised it, `/oss-fix-github-alert dependabot alert=<NUMBER>`. Do not duplicate that analysis here.
 
 **For the generated threat model (step 3, when one was produced):**
+
 6. **Propose it as a PR** — this is a public-safe document. Offer to write it to `SECURITY.md` / `docs/threat-model.md` and hand off to `/oss-quick-fix`. Never include any finding detail in this document.
 
 In all cases, present the sanitized text and the chosen handoff for explicit confirmation before anything leaves the local workflow.
@@ -226,6 +240,7 @@ In all cases, present the sanitized text and the chosen handoff for explicit con
 ### 10. Constraints
 
 You MUST:
+
 - Read and process `.oss-init.md` first.
 - Include the :robot: disclaimer at the top of the report and treat all findings as confidential potential vulnerabilities.
 - Anchor the scan to a threat / security model, and state which source was used.
@@ -237,6 +252,7 @@ You MUST:
 - Confirm with the user before any handoff that produces an issue, PR, advisory, or comment.
 
 You MUST NOT:
+
 - Publish any finding to a public issue tracker, PR, comment, or chat channel as part of this command — handoffs go through the dedicated commands only after confirmation.
 - Run exploits / proof-of-concept code against any live or test system, even locally. Verification is static and reproducer-based at most.
 - Include exploit payloads or severity / "RCE" / "exploit" / "vulnerability" wording in any text intended for a public issue or PR.

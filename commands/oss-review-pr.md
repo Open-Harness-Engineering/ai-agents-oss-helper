@@ -9,6 +9,7 @@ Review a pull request against the project's rules, standards, and contribution e
 ```
 
 **Arguments:**
+
 - `<pr>` - Pull request number (e.g., `42`) or full GitHub pull request URL
 
 ## Instructions
@@ -149,18 +150,20 @@ EOF
 
 When the fix is clear and concrete, use GitHub suggestion blocks so the author can apply the change with one click:
 
-````
+````text
 ```suggestion
 <corrected code>
 ```
 ````
 
 Use suggestions for:
+
 - Simple code fixes (typos, naming, missing annotations)
 - Style or formatting corrections
 - Small logic adjustments where the intent is unambiguous
 
 Do **not** use suggestions for:
+
 - Large refactors or multi-file changes
 - Changes where multiple valid approaches exist
 - Deletions of entire blocks (use a descriptive comment instead)

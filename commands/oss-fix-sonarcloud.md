@@ -4,14 +4,16 @@ Fix SonarCloud issues in the current project's codebase.
 
 ## Usage
 
-```
+```text
 /oss-fix-sonarcloud <rule> [options]
 ```
 
 **Arguments:**
+
 - `<rule>` - SonarCloud rule ID (e.g., `S3776`, `S6126`, `java:S1192`)
 
 **Options (optional, space-separated after rule):**
+
 - `branch=<name>` - Custom branch name (default from the project's `project-guidelines.md`)
 - `module=<path>` - Limit to specific module (e.g., `components/camel-jms`)
 - `limit=<n>` - Max issues to process (default: all)
@@ -39,6 +41,7 @@ curl "https://sonarcloud.io/api/issues/search?componentKeys=<COMPONENT_KEY>&rule
 ```
 
 The response `issues` array contains:
+
 - `component` - Full file path
 - `line` / `textRange` - Affected location
 - `message` - Description of what's wrong
@@ -54,6 +57,7 @@ curl "https://sonarcloud.io/api/rules/show?key=java:<rule>"
 ```
 
 The response contains:
+
 - `rule.name` - Human-readable rule name
 - `rule.htmlDesc` - Full description with examples
 - `rule.type` - Issue category
@@ -93,9 +97,11 @@ You MUST NOT:
 Read branch naming from the project's `project-guidelines.md`.
 
 1. **Branch**: Create from main
+
    ```bash
    git checkout main && git checkout -b <branch-name>
    ```
+
    Use the SonarCloud branch pattern from the project's `project-guidelines.md` (e.g., `ci-camel-4-sonarcloud-<rule>`), or the custom `branch=<name>` if provided.
 
 2. **For each affected module**:
@@ -116,6 +122,7 @@ Read branch naming from the project's `project-guidelines.md`.
    This catches cross-module breakage that per-module builds in step 2 would miss (e.g., a SonarCloud fix in module A breaks a caller in module B). Run this once, not per module. Skip entirely for non-Maven projects. If the build fails, investigate and fix with an additional per-module commit before pushing — do NOT push on a failing root build.
 
 4. **Push**: After all modules processed and the sanity build passes
+
    ```bash
    git push -u origin <branch-name>
    ```

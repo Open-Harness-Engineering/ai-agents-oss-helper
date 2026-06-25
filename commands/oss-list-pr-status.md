@@ -4,11 +4,12 @@ List all your open pull requests in the current project's repository with a summ
 
 ## Usage
 
-```
+```text
 /oss-list-pr-status
 ```
 
 **Arguments:**
+
 - None
 
 ## Instructions
@@ -45,6 +46,7 @@ gh pr checks <PR_NUMBER> --repo <GITHUB_REPO>
 ```
 
 Classify the overall CI status as:
+
 - **passing** - All checks passed
 - **failing** - One or more checks failed
 - **pending** - One or more checks still running, none failed
@@ -93,12 +95,14 @@ If all PRs are in good shape, report:
 ### 8. Constraints
 
 You MUST:
+
 - Only list PRs authored by the current user
 - Present all PRs in a single summary table
 - Clearly highlight PRs that need attention
 - Reference `/oss-pr-status` for detailed inspection of individual PRs
 
 You MUST NOT:
+
 - Merge, close, or modify any PR
 - Dismiss reviews or re-request reviews
 - Make changes to any code

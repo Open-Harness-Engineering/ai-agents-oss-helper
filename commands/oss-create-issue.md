@@ -4,11 +4,12 @@ Create a new issue in the current project's issue tracker (GitHub or Jira).
 
 ## Usage
 
-```
+```text
 /oss-create-issue <title>
 ```
 
 **Arguments:**
+
 - `<title>` - Brief title for the issue (optional - will prompt if not provided)
 
 ## Instructions
@@ -22,6 +23,7 @@ If the project's **Create-issue supported** field is "no", stop and tell the use
 ### 2. Detect Issue Tracker Type
 
 Read the **Issue tracker** field from the project's `project-info.md`:
+
 - If `GitHub` -> follow the **GitHub path** (steps 3-7)
 - If `Jira` -> follow the **Jira path** (steps 8-13)
 
@@ -32,9 +34,11 @@ Read the **Issue tracker** field from the project's `project-info.md`:
 ### 3. Gather Issue Information (GitHub)
 
 If title not provided, ask the user for:
+
 - **Title** - Brief, descriptive title for the issue
 
 Then ask for:
+
 - **Type** - Bug, enhancement, feature request, documentation, etc.
 - **Description** - Detailed description of the issue
 - **Reproduction steps** (for bugs) - Steps to reproduce the problem
@@ -88,6 +92,7 @@ Structure the issue body using this template:
 ### 6. Confirm with User (GitHub)
 
 Before creating, show the user:
+
 - Title
 - Labels
 - Full body content
@@ -106,6 +111,7 @@ EOF
 ```
 
 After creation, display:
+
 - Issue number
 - Issue URL
 - Confirmation message
@@ -117,9 +123,11 @@ After creation, display:
 ### 8. Gather Issue Information (Jira)
 
 If title not provided, ask the user for:
+
 - **Summary** - Concise one-line title (under 80 chars)
 
 Then ask for:
+
 - **Issue type** - Bug, Improvement, Task, or Wish
 - **Description** - Detailed description of the issue with:
   - What the problem is
@@ -147,6 +155,7 @@ If no duplicates are found, continue.
 ### 10. Confirm with User (Jira)
 
 Before creating, present the issue details:
+
 - Summary
 - Issue type
 - Component(s)
@@ -185,6 +194,7 @@ Do NOT assign the issue (leave it unassigned for anyone to pick up, unless the u
 ### 12. Report Result (Jira)
 
 After creation, display:
+
 - Issue key (e.g., `CAMEL-XXXXX`)
 - Issue URL: `<ISSUE_TRACKER_URL><ISSUE_KEY>`
 - Confirmation message
@@ -198,6 +208,7 @@ If the user is currently working on a PR, mention: "Created `<ISSUE_KEY>` - not 
 ### 13. Constraints
 
 You MUST:
+
 - Confirm all details with the user before creating
 - Use clear, descriptive titles/summaries
 - For GitHub: include relevant labels
@@ -205,6 +216,7 @@ You MUST:
 - Format the body/description properly
 
 You MUST NOT:
+
 - Create issues without user confirmation
 - Use vague or unclear titles
 - Skip gathering necessary information

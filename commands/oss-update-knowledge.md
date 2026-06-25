@@ -4,15 +4,17 @@ Update a project's rule files when project conventions change (e.g., new build t
 
 ## Usage
 
-```
+```text
 /oss-update-knowledge <source>
 ```
 
 **Arguments:**
+
 - `<source>` - Either a textual description of what to update, or a URL to a document containing project conventions
 
 **Examples:**
-```
+
+```text
 /oss-update-knowledge "Build tool changed from Maven to Gradle, new build command is gradle build"
 /oss-update-knowledge https://github.com/org/repo/blob/main/CONTRIBUTING.md
 /oss-update-knowledge "Added SonarCloud, component key is org_repo"
@@ -34,16 +36,19 @@ Determine whether the source argument is a URL or a text description:
 ### 3. Retrieve Information
 
 **If URL:**
+
 1. Fetch the document content using WebFetch or equivalent
 2. Extract relevant project conventions from the document (build tools, branching strategy, commit formats, code style, CI/CD setup, contribution guidelines, etc.)
 3. Summarize the extracted conventions
 
 **If text description:**
+
 1. Use the description directly as the source of changes
 
 ### 4. Read Current Rules
 
 Read the three rule files for the matched project:
+
 - `<project>/project-info.md`
 - `<project>/project-standards.md`
 - `<project>/project-guidelines.md`
@@ -57,6 +62,7 @@ Compare the retrieved information against the current rule file contents. Identi
 3. **Fields unchanged** - Values that already match (no action needed)
 
 For each proposed change, note:
+
 - Which file it affects
 - The current value
 - The new value
@@ -65,7 +71,7 @@ For each proposed change, note:
 
 Present the proposed changes to the user in a clear format:
 
-```
+```text
 Proposed changes to <project>:
 
 project-standards.md:
@@ -97,6 +103,7 @@ Renaming a project directory inside `ai-agents-oss-known-projects` is a breaking
 ### 9. Constraints
 
 You MUST:
+
 - Read all three rule files before proposing changes
 - Show proposed changes to the user before applying them
 - Wait for user confirmation before writing any files
@@ -104,6 +111,7 @@ You MUST:
 - Only modify values that the user has approved
 
 You MUST NOT:
+
 - Apply changes without user confirmation
 - Delete or restructure existing rule files
 - Change values that were not part of the update request

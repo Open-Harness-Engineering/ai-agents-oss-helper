@@ -6,11 +6,12 @@ This command is read-only. It helps the operator understand branches, worktrees,
 
 ## Usage
 
-```
+```text
 /oss-workspace-status [root=<path>] [name=<workspace-name>]
 ```
 
 **Arguments (all optional):**
+
 - `root=<path>` - Workspace root containing `.oss-helper-workspace.json`.
 - `name=<workspace-name>` - Workspace name to find in the global registry, if a registry exists.
 
@@ -61,6 +62,7 @@ For each valid repository path, load its rules independently using `.oss-init.md
 3. Auto-discovered generated rules only if needed and only after telling the user.
 
 Record:
+
 - Rules source.
 - Build command.
 - Test command.
@@ -81,11 +83,13 @@ git -C <PATH> worktree list --porcelain
 ```
 
 Classify the path as:
+
 - `main checkout`
 - `worktree`
 - `unknown`
 
 When the path is a worktree, report:
+
 - Worktree path.
 - Common git directory.
 - Source repository path if it can be inferred from `git worktree list --porcelain`.
@@ -99,10 +103,12 @@ git -C <PATH> status --short
 ```
 
 Classify:
+
 - `clean` - no output.
 - `dirty` - tracked modifications, staged changes, or untracked files.
 
 Show a compact count by category when possible:
+
 - staged
 - modified
 - deleted
@@ -120,6 +126,7 @@ git -C <PATH> rev-parse --abbrev-ref --symbolic-full-name @{u}
 ```
 
 Report:
+
 - Current branch.
 - Upstream branch, if configured.
 - Ahead/behind counts from `git status --short --branch`.
@@ -155,6 +162,7 @@ Produce a table:
 ```
 
 After the table, include:
+
 - Missing or mismatched paths.
 - Worktree details for any worktree rows.
 - Repositories with dirty state.
@@ -164,6 +172,7 @@ After the table, include:
 ### 10. Constraints
 
 You MUST:
+
 - Treat status as read-only.
 - Load rules per repository.
 - Detect worktree state with `git worktree list --porcelain`.
@@ -171,6 +180,7 @@ You MUST:
 - Report open PRs for current branches when GitHub metadata is available.
 
 You MUST NOT:
+
 - Fetch, pull, checkout, stash, reset, clean, commit, push, or create PRs.
 - Assume all repositories have the same tracker or build tool.
 - Hide missing repositories or invalid metadata.

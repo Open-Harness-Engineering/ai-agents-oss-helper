@@ -4,11 +4,12 @@ Analyze an issue from the current project's issue tracker to gain deeper underst
 
 ## Usage
 
-```
+```text
 /oss-analyze-issue <issue>
 ```
 
 **Arguments:**
+
 - `<issue>` - Issue identifier: numeric ID (e.g., `42`), alphanumeric ID (e.g., `CAMEL-20410`), or full URL
 
 ## Instructions
@@ -26,10 +27,12 @@ If you have access to agents specialized in **software architecture or system de
 Extract the issue ID from the argument based on the project's issue tracker type (from the project's `project-info.md`):
 
 **GitHub projects:**
+
 - If full URL: extract the number from the path
 - If number only: use as-is
 
 **Jira projects:**
+
 - If full URL: extract the ID from the path
 - If ID only: use as-is
 
@@ -79,12 +82,15 @@ From the retrieved information, identify:
 Based on keywords and context from the issue:
 
 #### Primary Repository
+
 Search the current codebase for relevant code:
+
 - Error messages mentioned in the issue
 - Component or feature names
 - Related functionality
 
 #### Git History
+
 Investigate the history of affected files to understand context and identify potential causes:
 
 ```bash
@@ -104,6 +110,7 @@ git blame -L <start>,<end> -- <file>
 Check the project's `project-info.md` for the **Related repositories** field. Only investigate related repos when they are listed and the issue might involve them.
 
 For each relevant related repository, clone if needed:
+
 ```bash
 gh repo clone <RELATED_REPO> /tmp/<repo-name>
 ```
@@ -170,6 +177,7 @@ Based on the analysis, recommend:
 ### 9. Constraints
 
 You MUST:
+
 - Include the :robot: disclaimer note at the beginning of every analysis report
 - Read the issue thoroughly before investigating code
 - Search across all relevant repositories when listed in the project's `project-info.md`
@@ -178,6 +186,7 @@ You MUST:
 - Suggest concrete next steps
 
 You MUST NOT:
+
 - Make changes to any code (analysis only)
 - Close or modify any issues
 - Make assumptions without stating them as hypotheses

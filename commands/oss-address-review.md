@@ -9,6 +9,7 @@ Address review feedback on a pull request: read comments, categorize them, fix i
 ```
 
 **Arguments:**
+
 - `[pr]` - Pull request number or full GitHub URL (optional). If omitted, detects the PR for the current branch.
 
 ## Instructions
@@ -25,9 +26,11 @@ If you have access to agents specialized in **coding or implementation** (e.g., 
 
 - If a PR number or URL is provided, use it.
 - If omitted, detect from the current branch:
+
   ```bash
   gh pr view --repo <GITHUB_REPO> --json number --jq '.number'
   ```
+
 - If no PR is found, abort: "No pull request found for the current branch."
 
 ### 3. Gather Review Feedback
@@ -77,6 +80,7 @@ For each unresolved comment, classify as:
 Present all unresolved comments grouped by category (blocking first):
 
 For each comment, show:
+
 - Reviewer name
 - File and line reference
 - Comment text
@@ -111,6 +115,7 @@ Run the build and test commands from the project's `project-standards.md`:
 **For Maven projects only:** As the last step before committing, run a full-reactor build from the **repository root**.
 
 **Before running, ask the user** which build to run (use `AskUserQuestion`):
+
 - **(a) Skip tests** (faster, step 9 already ran tests): `mvn clean install -DskipTests`
 - **(b) Run full tests** (slower, catches cross-module integration regressions): `mvn clean install`
 
@@ -135,6 +140,7 @@ Use the commit format from the project's `project-guidelines.md`.
 #### 11.2 Reply to Comments
 
 For each addressed comment:
+
 - Reply confirming the fix with a brief explanation.
 - For questions, post the drafted reply.
 
@@ -151,6 +157,7 @@ gh pr edit <number> --repo <GITHUB_REPO> --body "..."
 ### 12. Constraints
 
 You MUST:
+
 - Present all findings and proposed actions before making changes
 - Wait for user approval before implementing fixes
 - Reply to every unresolved comment (fix or explain why not)
@@ -158,6 +165,7 @@ You MUST:
 - Follow the build, format, and commit conventions from the project's rule files
 
 You MUST NOT:
+
 - Resolve review conversations — let the reviewer resolve them after checking
 - Ignore blocking comments
 - Make unrelated changes while addressing feedback

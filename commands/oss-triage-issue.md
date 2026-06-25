@@ -3,6 +3,7 @@
 Triage a freshly-filed issue from the project's tracker: understand what is being reported, reproduce it where feasible, search for duplicates and prior fixes, classify it (type, priority, affected component), and recommend a disposition. After triage, guide the maintainer to the right follow-up — request more information, hand off to a fix, refine the issue, or close it as duplicate / invalid / wontfix.
 
 This command is **maintainer-side** triage. It is distinct from:
+
 - `/oss-analyze-issue`, which is **contributor-side** — it helps someone who has already decided to fix an issue understand the code involved.
 - `/oss-triage-security-report`, which stays **security-specific** and keeps all findings confidential. `/oss-triage-issue` is the general-purpose analog for ordinary bug reports, feature requests, and questions.
 
@@ -10,11 +11,12 @@ This command is read-only with respect to the tracker: it does NOT post comments
 
 ## Usage
 
-```
+```text
 /oss-triage-issue <issue>
 ```
 
 **Arguments:**
+
 - `<issue>` - Issue identifier: numeric ID (e.g. `42`), alphanumeric ID (e.g. `CAMEL-20410`), or a full URL.
 
 ## Instructions
@@ -32,10 +34,12 @@ If you have access to agents specialized in **software architecture** or **QA/te
 Extract the issue ID from the argument based on the project's **Issue tracker** type (from `project-info.md`):
 
 **GitHub projects:**
+
 - Full URL (e.g. `https://github.com/org/repo/issues/42`): extract the number from the path.
 - Number only: use as-is.
 
 **Jira projects:**
+
 - Full URL (e.g. `https://issues.apache.org/jira/browse/CAMEL-20410`): extract the ID from the path.
 - ID only (e.g. `CAMEL-20410`): use as-is.
 
@@ -77,12 +81,14 @@ Present this back to the user as a short structured summary and confirm nothing 
 Do not take the report at face value. Attempt to confirm it against the **current** code on `main`.
 
 **For a bug:**
+
 - Locate the implicated code with `Grep` / `Glob` and read it.
 - Trace the path from the reporter's entry point to the symptom.
 - Where the project has a build/test tool (read **Build/Test command** from `project-standards.md`), attempt a **minimal reproduction** — ideally a small failing test or a short standalone snippet that exercises the reported path. Keep it minimal and non-destructive; do not run anything that mutates external systems.
 - If you cannot reproduce, record **why**: already fixed, missing information, environment-specific, reporter error, or works-as-designed.
 
 **For a feature request / enhancement:**
+
 - Confirm the capability does not already exist (search the codebase and docs).
 - Note where it would fit and any obvious design constraints, without committing to a design.
 
@@ -123,6 +129,7 @@ Determine whether the reported defect was already addressed in `main` (and, if t
 ### 8. Classify
 
 Assign:
+
 - **Type** — bug / enhancement / documentation / question / duplicate / invalid.
 - **Severity / priority** — based on impact and reach (data loss / crash / regression vs. cosmetic / edge-case). For Jira, map to the project's priority scheme (Blocker/Critical/Major/Minor/Trivial); for GitHub, to the project's conventions.
 - **Affected component / module** — derived from the implicated path. For Jira, match against the project's component list.
@@ -191,6 +198,7 @@ For GitHub, applying a confirmed action uses `gh issue comment`, `gh issue edit 
 ### 11. Constraints
 
 You MUST:
+
 - Read and process `.oss-init.md` first.
 - Include the :robot: disclaimer at the top of the triage summary.
 - Verify the report against the **current** code before classifying it (read the implicated code; attempt reproduction where the project's tooling allows).
@@ -200,6 +208,7 @@ You MUST:
 - For Jira: make a single read request for the issue and do not poll.
 
 You MUST NOT:
+
 - Post a comment, apply a label, change state, or assign the issue without explicit user confirmation.
 - Mark a report as invalid, duplicate, or wontfix without completing reproduction and duplicate/history checks.
 - Overstate reproduction confidence — distinguish "reproduced" from "matched by static reading only".

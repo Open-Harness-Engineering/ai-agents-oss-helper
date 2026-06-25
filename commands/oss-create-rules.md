@@ -4,16 +4,18 @@ Generate project rule files for a repository by auto-inspecting it and optionall
 
 ## Usage
 
-```
+```text
 /oss-create-rules [repo] [--template <project>]
 ```
 
 **Arguments:**
+
 - `<repo>` (optional) - Target GitHub repo URL or `org/repo` slug. If omitted, uses the current git remote.
 - `--template <project>` (optional) - Slug of an existing project whose installed rules will be used as a structural starting point (e.g., `camel-core`, `wanaku`). If omitted, the command lists installed projects and lets you pick one, or you can proceed without a template.
 
 **Examples:**
-```
+
+```text
 /oss-create-rules                                          # current repo, no template
 /oss-create-rules --template wanaku                        # current repo, use wanaku rules as template
 /oss-create-rules apache/camel-k --template camel-core     # remote repo, use camel-core as template
@@ -31,14 +33,18 @@ Generate project rule files for a repository by auto-inspecting it and optionall
 Determine the target repository from the arguments:
 
 **If a `<repo>` argument is provided:**
+
 - If it is a full URL (e.g., `https://github.com/org/repo`): extract `org/repo`
 - If it is already in `org/repo` format: use as-is
 
 **If no `<repo>` argument is provided:**
+
 - Use the current git remote:
+
   ```bash
   git remote get-url origin
   ```
+
 - Extract `org/repo` from the URL (handle both `https://` and `git@` formats)
 
 Verify the repository exists:
@@ -74,8 +80,10 @@ Stop if the user declines. Continue if they confirm.
 **If `--template <project>` is provided:**
 
 Locate the template project's rule files. Check, in order:
+
 1. Agent's installed rules directory (e.g., `~/.claude/rules/<project>/`)
 2. The `ai-agents-oss-known-projects` repository:
+
    ```bash
    gh api "repos/Open-Harness-Engineering/ai-agents-oss-known-projects/contents/<project>/project-info.md" --jq '.name' 2>/dev/null
    ```
@@ -100,9 +108,10 @@ ls -d ~/.claude/rules/*/project-info.md 2>/dev/null | xargs -I{} dirname {} | xa
 Present the list to the user:
 
 > Available template projects:
+>
 > 1. camel-core
-> 2. wanaku
-> 3. ...
+> 1. wanaku
+> 1. ...
 >
 > Pick a template project (number or name), or type "none" to generate rules from scratch.
 
@@ -215,6 +224,7 @@ Build the three rule files by merging template values (if available) with auto-d
 | Scope-too-large redirect | From template or `/oss-create-issue` |
 
 **Defaults** (used when no template and no CONTRIBUTING.md conventions found):
+
 - Fix branch: `fix/<ISSUE_NUMBER>`
 - Feature branch: `feature/<ISSUE_NUMBER>-<short-slug>`
 - Bugfix branch: `bugfix/<ISSUE_NUMBER>`
@@ -300,6 +310,7 @@ If a template was used, mention it:
 ### 10. Constraints
 
 You MUST:
+
 - Confirm all generated rules with the user before writing
 - Auto-detect values from the target repository where possible
 - Let auto-detected values override template values for repo-specific fields (remote pattern, GitHub repo, build tool)
@@ -308,6 +319,7 @@ You MUST:
 - Use the exact format from existing rule files in `ai-agents-oss-known-projects`
 
 You MUST NOT:
+
 - Write rule files without user confirmation
 - Skip auto-detection and blindly copy template values for repo-specific fields
 - Modify existing rule files in other projects

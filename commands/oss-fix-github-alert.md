@@ -4,14 +4,16 @@ Assign and fix a GitHub security or quality alert (Code Scanning, Dependabot, or
 
 ## Usage
 
-```
+```text
 /oss-fix-github-alert <type> [options]
 ```
 
 **Arguments:**
+
 - `<type>` - Alert source: `code-scanning`, `dependabot`, or `secret-scanning`
 
 **Options (space-separated after `<type>`):**
+
 - `alert=<number>` - Specific alert number to work on. If omitted, the command lists open alerts and stops so the user can pick one.
 - `severity=<level>` - Filter by severity (e.g., `critical`, `high`, `medium`, `low`, `error`, `warning`, `note`)
 - `rule=<rule-id>` - Filter by rule ID (code-scanning only, e.g., `js/sql-injection`)
@@ -39,6 +41,7 @@ If you have access to agents specialized in **coding or implementation** (e.g., 
 Validate `<type>` is one of: `code-scanning`, `dependabot`, `secret-scanning`. If missing or invalid, stop and tell the user the accepted values.
 
 Parse the optional `key=value` arguments. Defaults:
+
 - `state=open`
 - `limit=10`
 - `assignee` = the current GitHub user (`gh api user --jq .login`)
@@ -46,6 +49,7 @@ Parse the optional `key=value` arguments. Defaults:
 ### 3. Determine the API Endpoint
 
 Each alert type uses a different REST API endpoint. References:
+
 - <https://docs.github.com/en/rest/code-scanning>
 - <https://docs.github.com/en/rest/dependabot/alerts>
 - <https://docs.github.com/en/rest/secret-scanning>
@@ -67,6 +71,7 @@ gh api "repos/<OWNER>/<REPO>/<TYPE>/alerts?state=<state>&per_page=<limit>" --pag
 Apply additional client-side filtering for `severity=` and `rule=` (code-scanning only).
 
 **Handle errors:**
+
 - HTTP 404 → tell the user: "`<type>` alerts are not enabled for this project."
 - HTTP 403 → tell the user: "Access denied. GitHub Advanced Security may be required, or your token lacks the `security_events` / `dependabot_alerts` scope."
 
@@ -81,9 +86,11 @@ gh api "repos/<OWNER>/<REPO>/<TYPE>/alerts/<NUMBER>"
 ```
 
 Extract the relevant fields:
+
 - **code-scanning:** `rule.id`, `rule.description`, `rule.help`, `most_recent_instance.location.path`, `most_recent_instance.location.start_line`, `html_url`
 - **dependabot:** `security_advisory.summary`, `security_advisory.severity`, `security_advisory.cve_id`, `dependency.package.name`, `dependency.package.ecosystem`, `dependency.manifest_path`, `security_vulnerability.first_patched_version.identifier`, `html_url`
 - **secret-scanning:** `secret_type_display_name`, `html_url`. Also fetch alert locations:
+
   ```bash
   gh api "repos/<OWNER>/<REPO>/secret-scanning/alerts/<NUMBER>/locations"
   ```
@@ -108,18 +115,23 @@ GitHub's REST API support for the `assignees` field on security alerts is evolvi
 Investigate based on the alert type:
 
 **code-scanning:**
+
 - Read the `rule.help` and `rule.description` fields — they typically include "Recommendation" and example code.
 - Read the affected file at the reported `start_line` to understand the violation in context.
 
 **dependabot:**
+
 - Identify the vulnerable package, manifest path, and the `first_patched_version`.
 - Check whether Dependabot has already opened a PR for this alert:
+
   ```bash
   gh pr list --search "in:title <package>" --state open --author "app/dependabot"
   ```
+
   If a PR already exists, point the user to it and ask whether to continue manually or close.
 
 **secret-scanning:**
+
 - Identify the secret type and the file/commit where it appeared.
 - **WARN the user explicitly:** Removing the secret from the source tree is NOT enough. The secret must be **rotated/revoked at the provider** (e.g., regenerate the API key, invalidate the token). Removing it from git history is also recommended but is a separate, non-trivial operation.
 - **Ask the user to confirm they have rotated the secret** before proceeding with code changes.
@@ -161,6 +173,7 @@ Run the build/test commands from the project's `project-standards.md`. Tests MUS
 ### 12. Constraints
 
 You MUST:
+
 - Process **one alert per invocation** — do not bulk-fix
 - Limit changes to what is necessary for the alert
 - Preserve existing behavior outside the fix
@@ -169,6 +182,7 @@ You MUST:
 - For **dependabot**: prefer dependency upgrades over suppressions
 
 You MUST NOT:
+
 - Suppress code-scanning alerts inline unless the user has explicitly classified them as false positives
 - Skip rotation guidance for secret-scanning alerts
 - Modify code unrelated to the alert
@@ -180,9 +194,11 @@ You MUST NOT:
 Read branch naming and PR policy from the project's `project-guidelines.md`.
 
 1. **Branch:** Create from main.
+
    ```bash
    git checkout main && git pull && git checkout -b <BRANCH_NAME>
    ```
+
    Default branch name: `ci-alert-<type>-<NUMBER>` (e.g., `ci-alert-code-scanning-42`), or use the custom `branch=<name>` if provided.
 
 2. **Implement:** Apply the fix from step 10.
@@ -200,9 +216,11 @@ Read branch naming and PR policy from the project's `project-guidelines.md`.
    This catches cross-module breakage that a module-only build in step 3 would miss. Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only). If the build fails, fix the issue and re-run — do NOT commit on a failing root build.
 
 5. **Commit:** Use the format:
-   ```
+
+   ```text
    Fix <type> alert <NUMBER>: <brief description>
    ```
+
    **Important:** do **not** include `#` before `<NUMBER>` — that would create a GitHub issue cross-reference (and a `Fix #<N>` form would auto-close issue `#N`). Examples:
    - `Fix code-scanning alert 42: escape user input in SQL query`
    - `Fix dependabot alert 18: bump jackson-databind to 2.15.4`
@@ -215,14 +233,17 @@ Read branch naming and PR policy from the project's `project-guidelines.md`.
    - Neither: `git commit -m "<COMMIT_MESSAGE>"`
 
 6. **Push:**
+
    ```bash
    git push -u origin <BRANCH_NAME>
    ```
 
 7. **PR:** If PR creation is `always` in `project-guidelines.md`, create the PR:
+
    ```bash
    gh pr create --title "<COMMIT_MESSAGE>" --body "<description>"
    ```
+
    Include the alert `html_url` in the PR body so reviewers can cross-reference. Do **not** include `Fixes #<number>` style references — security alerts are not GitHub issues.
 
    **Agent attribution:** `<description>` MUST end with a footer identifying your AI agent. If your agent's system prompt already adds such a footer (e.g., Claude Code appends `Generated with [Claude Code]`), do NOT duplicate it. Other agents (Bob Shell, Gemini, OpenCode, Codex) MUST append a footer in the format: `Generated by <Agent Name> via /oss-fix-github-alert`.
@@ -234,6 +255,7 @@ After the PR is merged:
 - **code-scanning** alerts close automatically when the next CodeQL (or third-party) scan confirms the fix.
 - **dependabot** alerts close automatically when the upgraded dependency is detected.
 - **secret-scanning** alerts can be marked as resolved via the API after rotation:
+
   ```bash
   gh api --method PATCH "repos/<OWNER>/<REPO>/secret-scanning/alerts/<NUMBER>" \
     -f state=resolved -f resolution=revoked \

@@ -4,11 +4,12 @@ Cherry-pick a merged pull request onto a maintenance or release branch and open 
 
 ## Usage
 
-```
+```text
 /oss-backport-pr <pr> branch=<target-branch> [remote=<remote-name>]
 ```
 
 **Arguments:**
+
 - `<pr>` - Pull request identifier: number (e.g., `42`) or full URL (e.g., `https://github.com/org/repo/pull/42`)
 - `branch=<target-branch>` - The target branch to backport onto (e.g., `release/1.x`, `camel-4.8.x`)
 - `remote=<remote-name>` - (Optional) The git remote that hosts the target branch and will receive the backport branch push. Defaults to `origin`. Common values: `origin`, `upstream`, `downstream` — useful when the local clone has a personal fork as `origin` and the project repository as `upstream`.
@@ -47,6 +48,7 @@ gh pr view <PR_NUMBER> --repo <GITHUB_REPO> --json number,title,state,mergeCommi
 ```
 
 Validate:
+
 - The PR **must be merged**. If not, **STOP** and inform the user:
   > PR #<NUMBER> is not merged (state: <state>). Only merged PRs can be backported.
 - Extract the merge commit SHA from `mergeCommit.oid`
@@ -107,6 +109,7 @@ If cherry-pick **succeeds**: proceed to step 8.
 If cherry-pick **fails with conflicts**:
 
 1. List the conflicted files:
+
    ```bash
    git diff --name-only --diff-filter=U
    ```
@@ -114,21 +117,25 @@ If cherry-pick **fails with conflicts**:
 2. Attempt to resolve the conflicts by reading the conflicted files, understanding the context of both sides, and applying the changes from the source PR in a way that makes sense for the target branch.
 
 3. After resolving each file, stage it:
+
    ```bash
    git add <file>
    ```
 
 4. Continue the cherry-pick:
+
    ```bash
    git cherry-pick --continue
    ```
 
 5. If conflicts are **too complex to resolve automatically** (e.g., the target branch has diverged significantly and the changes cannot be applied cleanly), abort the cherry-pick and **STOP**:
+
    ```bash
    git cherry-pick --abort
    git checkout -
    git branch -D backport/<PR_NUMBER>-to-<TARGET_BRANCH_SLUG>
    ```
+
    Inform the user:
    > Cherry-pick failed due to conflicts that require manual resolution. Conflicted files:
    > - `<file1>`
@@ -141,6 +148,7 @@ If cherry-pick **fails with conflicts**:
 For **Maven projects**, verify the cherry-picked commits build cleanly on the target branch before pushing. From the **repository root**.
 
 **Before running, ask the user** which build to run (use `AskUserQuestion`):
+
 - **(a) Skip tests** (default for backports — backport correctness is assumed to be validated upstream; the goal is a compile-and-wire sanity check across the full reactor): `mvn clean install -DskipTests`
 - **(b) Run full tests** (slower, useful when the maintenance branch differs significantly from main): `mvn clean install`
 
@@ -151,12 +159,15 @@ This catches API drift between the source and target branches (e.g., a method us
 Skip this step entirely for non-Maven projects (Go via `make`, yarn, docs-only).
 
 If the build fails:
+
 1. Inspect the failure — it usually indicates a missing dependency commit or a signature change on the target branch.
 2. Either cherry-pick the missing prerequisite commits, resolve manually, or abort:
+
    ```bash
    git checkout -
    git branch -D backport/<PR_NUMBER>-to-<TARGET_BRANCH_SLUG>
    ```
+
    and inform the user which prerequisite is missing.
 3. Do NOT push on a failing root build.
 
@@ -215,6 +226,7 @@ Use `/oss-pr-status <NEW_PR_NUMBER>` to monitor the backport PR.
 ### 12. Constraints
 
 You MUST:
+
 - Verify the source PR is merged before attempting the backport
 - Verify the target branch exists
 - Preserve the original commit messages during cherry-pick
@@ -223,6 +235,7 @@ You MUST:
 - Report conflicts clearly if they cannot be resolved
 
 You MUST NOT:
+
 - Backport PRs that are not merged
 - Modify the original PR in any way
 - Force-push to the target branch directly

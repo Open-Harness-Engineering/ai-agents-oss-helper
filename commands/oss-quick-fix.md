@@ -4,15 +4,17 @@ Apply a quick fix to the current project's codebase without requiring a tracked 
 
 ## Usage
 
-```
+```text
 /oss-quick-fix <description>
 ```
 
 **Arguments:**
+
 - `<description>` - A brief description of the quick fix to apply
 
 **Examples:**
-```
+
+```text
 /oss-quick-fix upgrade dependency version in pom.xml
 /oss-quick-fix fix broken link in README
 /oss-quick-fix update GitHub Actions workflow to latest version
@@ -64,9 +66,11 @@ Read the project's `project-standards.md` for project-specific build constraints
 Read branch naming and commit format from the project's `project-guidelines.md`.
 
 1. **Branch**: Create from main with a descriptive name
+
    ```bash
    git checkout main && git pull && git checkout -b quick-fix/<short-slug>
    ```
+
    Use a short slug derived from the description (e.g., `quick-fix/upgrade-quarkus-bom`, `quick-fix/fix-readme-typo`).
 
 2. **Implement**: Make the necessary changes
@@ -95,11 +99,13 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - If the user wants neither: `git commit -m "chore: <brief description>"`
 
 6. **Push**: Push the branch to origin
+
    ```bash
    git push -u origin quick-fix/<short-slug>
    ```
 
 7. **Pull Request**: Create a pull request
+
    ```bash
    gh pr create --title "chore: <brief description>" --body "<short explanation of what was changed and why>"
    ```
@@ -109,6 +115,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
 ### 7. Constraints
 
 You MUST:
+
 - Work on a dedicated branch (never commit to `main`)
 - Create a pull request after pushing
 - Keep changes small and focused
@@ -116,6 +123,7 @@ You MUST:
 - For camel-core: always run `mvn` in the module directory; do NOT parallelize Maven jobs
 
 You MUST NOT:
+
 - Make large or behavioral changes without an issue
 - Refactor unrelated code
 - Skip the build for code changes

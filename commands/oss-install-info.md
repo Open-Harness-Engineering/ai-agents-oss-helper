@@ -4,15 +4,17 @@ Install project rules from the `ai-agents-oss-known-projects` repository into th
 
 ## Usage
 
-```
+```text
 /oss-install-info [project]
 ```
 
 **Arguments:**
+
 - `<project>` (optional) - Project slug to install (e.g., `camel-core`, `wanaku`). Use `auto` to detect the slug from the current git remote, or `all` to install every project in the known-projects repository. If omitted, the command lists the projects available in the known-projects repository.
 
 **Examples:**
-```
+
+```text
 /oss-install-info                # list available projects
 /oss-install-info wanaku         # install rules for wanaku
 /oss-install-info camel-core     # install rules for Apache Camel core
@@ -186,7 +188,7 @@ If that returns `project-security.md`, fetch it the same way as the required fil
 
 Report to the user:
 
-```
+```text
 Installed rules for <project> to <RULES_DIR>/<project>/:
 - project-info.md
 - project-standards.md
@@ -201,12 +203,14 @@ Suggest the next step:
 ### 7. Constraints
 
 You MUST:
+
 - Make minimal API calls — per project: one to validate, three to fetch the required rule files, one to check for the optional `project-security.md` (and one more to fetch it when present), plus one extra to compare versions if a local copy already exists
 - Install the three required rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`), plus the optional `project-security.md` when the project provides it
 - Ask the user before overwriting a local copy that has a different `## Version` SHA; in `all` mode, reuse the first answer for the rest of the run
 - Create each target rules directory if it does not exist
 
 You MUST NOT:
+
 - Modify the known-projects repository itself (this command is read-only against it)
 - Install commands or other helper files (use `install.sh` for that)
 - Install rules for projects other than those covered by the current invocation (single slug, `auto` match, or every project under `all`)

@@ -6,14 +6,16 @@ This command extends `/oss-fix-issue` to workspace-aware work. It must produce a
 
 ## Usage
 
-```
+```text
 /oss-fix-multi-repo-issue <issue> [root=<path>] [repo=<org/repo> ...] [readonly]
 ```
 
 **Arguments:**
+
 - `<issue>` - Issue identifier or full issue URL for the canonical issue.
 
 **Options:**
+
 - `root=<path>` - Workspace root containing `.oss-helper-workspace.json`.
 - `repo=<org/repo>` - Limit or extend the affected repository set. May be repeated.
 - `readonly` - Analyze and plan only. Do not create branches, edit files, commit, push, or open PRs.
@@ -31,10 +33,12 @@ If no workspace exists, stop and tell the user to run `/oss-workspace-init` firs
 Extract the canonical issue ID from the argument:
 
 **GitHub:**
+
 - Full URL: extract `<org>/<repo>` and issue number from the path.
 - Number only: use the primary workspace repository from metadata.
 
 **Jira:**
+
 - Full URL: extract the issue key from the path.
 - Issue key only: use the current project's Jira tracker.
 
@@ -67,6 +71,7 @@ curl -s "<ISSUE_TRACKER_URL>rest/api/2/issue/<ISSUE_ID>?fields=summary,descripti
 ```
 
 Read the issue thoroughly and identify:
+
 - Affected repositories named in the body.
 - Checklist items per repository.
 - Linked child issues.
@@ -131,6 +136,7 @@ Before editing anything, present a plan:
 ```
 
 The plan must state:
+
 - Repositories to change.
 - Repositories inspected but not changed.
 - Expected files/modules.
@@ -234,6 +240,7 @@ If sibling PR URLs are not all known when the first PR is created, update PR bod
 ### 12. Final Report
 
 Report:
+
 - Repositories changed.
 - Branches and worktree paths used.
 - Commits created.
@@ -246,6 +253,7 @@ Report:
 ### 13. Constraints
 
 You MUST:
+
 - Initialize project context and workspace metadata first.
 - Load and respect each repository's own rules.
 - Produce and get approval for a cross-repo impact plan before editing.
@@ -256,6 +264,7 @@ You MUST:
 - Link canonical issue, child issues, sibling PRs, and merge order in PR bodies.
 
 You MUST NOT:
+
 - Treat all repositories as if they share one build tool, tracker, branch pattern, or PR policy.
 - Modify a dirty checkout without surfacing the dirty state and receiving confirmation.
 - Reset, clean, remove, or overwrite user changes.
