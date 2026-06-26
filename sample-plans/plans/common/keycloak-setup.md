@@ -202,6 +202,7 @@ done
 ### 7. Import the Wanaku realm using the CLI
 
 The Wanaku CLI imports a full realm configuration that includes:
+
 - The `wanaku` realm with all settings
 - The `wanaku-service` client (confidential, service account enabled)
 - The `wanaku-mcp-router` client (public, for the router)
