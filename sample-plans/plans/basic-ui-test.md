@@ -40,6 +40,7 @@ export WANAKU_ROUTER_URL="${WANAKU_ROUTER_URL:-http://localhost:8080}"
 ### Remote instance requirements
 
 The router at `WANAKU_ROUTER_URL` must:
+
 - Be running and healthy (`/q/health/ready` returns 200)
 - Have auth disabled (`WANAKU_HTTP_AUTH=none`) or the test user must be authenticated
 - Serve the admin UI at `/admin/`

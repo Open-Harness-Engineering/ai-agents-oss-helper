@@ -113,6 +113,7 @@ Run the build and test commands from the project's `project-standards.md`:
 ### 10. Build/Test/Format
 
 Follow the build workflow from `_fragments/_build-workflow.md`:
+
 - Read build configuration from `project-standards.md`
 - Run format and test commands
 - Run full reactor build (Maven projects only, MANDATORY before commit)

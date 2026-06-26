@@ -146,6 +146,7 @@ If cherry-pick **fails with conflicts**:
 ### 8. Sanity Build (MANDATORY before push)
 
 Follow the build workflow from `_fragments/_build-workflow.md`:
+
 - Read build configuration from `project-standards.md`
 - Run full reactor build (Maven projects only, MANDATORY before push)
 - Ask user for build mode: (a) skip tests (default for backports) or (b) full tests
