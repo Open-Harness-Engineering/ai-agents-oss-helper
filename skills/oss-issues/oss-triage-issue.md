@@ -171,6 +171,7 @@ For GitHub, applying a confirmed action uses `gh issue comment`, `gh issue edit 
 ### 10. Constraints
 
 You MUST:
+
 - Include the :robot: disclaimer at the top of the triage summary.
 - Verify the report against the **current** code before classifying it (read the implicated code; attempt reproduction where the project's tooling allows).
 - Check the tracker for duplicates and git history for prior fixes.

@@ -177,6 +177,7 @@ Print:
 ### 11. Constraints
 
 You MUST:
+
 - Search for duplicates across affected repositories.
 - Ask which tracker owns the canonical issue.
 - Confirm the final issue text before creation.

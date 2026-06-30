@@ -14,6 +14,7 @@ If no QE/QA agent is available, the main agent executes the plan directly.
 ### 1. Parse Input
 
 Extract from the arguments:
+
 - **Test plan identifier** — either a short name (e.g., `operator-basic-tests`) or a file path
 - **Guidance** — optional: which phases to run/skip, environment overrides, specific focus areas
 
@@ -153,6 +154,7 @@ Based on the results, offer one or more actions. Do NOT execute any without expl
 ### 9. Constraints
 
 You MUST:
+
 - Delegate to QE/QA/tester agents when available, not coding agents.
 - Present the plan summary and get user confirmation before execution.
 - Verify prerequisites before starting test execution.

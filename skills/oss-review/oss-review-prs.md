@@ -90,6 +90,7 @@ gh pr review <PR> --repo <GITHUB_REPO> --approve         --body-file <file>
 ### 8. Constraints
 
 You MUST:
+
 - Select candidates with aggregate `gh pr list --search` calls only — never poll per-PR review history.
 - Always exclude PRs authored by the current user, and (by default) PRs they have already reviewed.
 - Review each PR against the project rule files, with the same rigor as the Review PR guideline (`review-pr.md`).

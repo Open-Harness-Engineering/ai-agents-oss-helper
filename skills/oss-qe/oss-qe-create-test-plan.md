@@ -14,6 +14,7 @@ If no QE/QA agent is available, the main agent creates the plan directly.
 ### 1. Parse Input
 
 Extract from the arguments:
+
 - **Test plan name** — the short identifier (e.g., `operator-basic-tests`). This becomes the filename: `<name>.md`.
 - **Additional instructions** — optional scope, environment, or focus guidance from the user.
 
@@ -148,6 +149,7 @@ After writing the plan, present:
 ### 9. Constraints
 
 You MUST:
+
 - Delegate to QE/QA/tester agents when available, not coding agents.
 - Follow the test plan format from step 5 — phases, PASS/FAIL assertions, env vars with defaults, summary matrix.
 - Parameterize all infrastructure values (images, hosts, IPs, namespaces, credentials).

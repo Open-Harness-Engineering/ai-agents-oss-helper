@@ -187,6 +187,7 @@ Output a structured report. Include the robot disclaimer at the top. Apply the `
 Based on the verdict, offer one or more actions. Do **NOT** execute any without explicit confirmation. The split below mirrors the other security commands: confidential exploit detail goes through private channels; only sanitized, exploit-free text goes anywhere public.
 
 **For a confirmed, exploitable, not-yet-public finding:**
+
 1. **Triage it further** — hand off to the Triage Security Report guideline (`triage-security-report.md`) (treating this report as the inbound source) for a deeper per-claim verification before disclosure.
 2. **Report it privately** — hand off to the Create Security Advisory guideline (`create-security-advisory.md`). If `project-security.md` declares a **Private reporting channel** other than GitHub private vulnerability reporting (e.g. an ASF `security@…` list), give the user that exact address and a private draft instead of the GitHub `/reports` flow.
 
@@ -205,6 +206,7 @@ In all cases, present the sanitized text and the chosen handoff for explicit con
 ### 9. Constraints
 
 You MUST:
+
 - Include the :robot: disclaimer at the top of the report and treat all findings as confidential potential vulnerabilities.
 - Anchor the scan to a threat / security model, and state which source was used.
 - Run scanners **statically / read-only**, record which ran and which were skipped, and represent coverage honestly.
