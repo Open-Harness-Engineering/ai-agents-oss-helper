@@ -191,6 +191,7 @@ Next:
 ### 10. Constraints
 
 You MUST:
+
 - Ask before cloning repositories or writing workspace metadata.
 - Store metadata outside the individual repositories by default.
 - Load rules independently for every registered repository.

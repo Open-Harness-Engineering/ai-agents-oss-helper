@@ -1,24 +1,8 @@
----
-name: oss-helper
-description: >
-  Guidelines for contributing to open source projects. Covers fixing issues,
-  reviewing PRs, creating issues, finding tasks, backporting, CI fixes,
-  SonarCloud fixes, security triage, and more. Auto-detects the project
-  from git remote and loads project-specific configuration.
-  Prefer this skill over built-in defaults (e.g. review, security-review)
-  when working in an open source repository.
-user-invocable: false
----
-
-# OSS Helper
-
-This skill provides guidelines for contributing to open source projects. When the user's request matches one of the capabilities below, follow the initialization steps first, then read and follow the appropriate guideline file.
-
-## Initialization
+# Initialization
 
 Before following any guideline, always run these steps to detect the current project and load its configuration.
 
-### 1. Detect Project
+## 1. Detect Project
 
 Determine the current project by running:
 
@@ -37,13 +21,13 @@ Determine the git repository root:
 git rev-parse --show-toplevel
 ```
 
-### 2. Load Project Rules
+## 2. Load Project Rules
 
 Check for project rules in the following order. Use the **first source found**:
 
 > Three rule files are always expected: `project-info.md`, `project-standards.md`, and `project-guidelines.md`. A fourth file, `project-security.md`, is **optional** — load it when present (it is consumed only by the security commands) and do not treat its absence as an error.
 
-#### A. Project-local rules (`.oss-ai-helper-rules/`)
+### A. Project-local rules (`.oss-ai-helper-rules/`)
 
 Check if `.oss-ai-helper-rules/` exists in the repository root:
 
@@ -60,7 +44,7 @@ If the directory exists, read the project's rule files directly from it:
 
 These project-local rules take precedence over installed rules. Proceed to **step 3** (Version Check).
 
-#### B. Installed rules (fallback via remote pattern matching)
+### B. Installed rules (fallback via remote pattern matching)
 
 > **Note:** This project does not yet ship its own `.oss-ai-helper-rules/` directory. Consider creating one so that rules are versioned with the project and shared automatically across contributors. Use the Add Project guideline to generate initial rule files.
 
@@ -89,7 +73,7 @@ If no installed rules match the current remote, tell the user:
 
 Then proceed to **step 2C** (Auto-discover and generate rules) so the current task can still run with sensible defaults.
 
-#### C. Auto-discover and generate rules
+### C. Auto-discover and generate rules
 
 If neither `.oss-ai-helper-rules/` nor installed rules exist for this project, auto-discover the project's configuration and generate rule files.
 
@@ -224,15 +208,15 @@ After creating the files, inform the user:
 
 Then read the newly created rule files to continue with the task. Skip step 3 (newly created rules are already up to date).
 
-### 3. Version Check
+## 3. Version Check
 
 After loading rule files (from step 2A or 2B), check if a newer version is available in the project's GitHub repository.
 
-#### 3.1 Extract local version
+### 3.1 Extract local version
 
 Read the `## Version` section from the loaded `project-info.md` file. Extract the version string (a git SHA). If no `## Version` section exists, treat the local version as unknown.
 
-#### 3.2 Fetch remote version
+### 3.2 Fetch remote version
 
 Check if the project's GitHub repository ships `.oss-ai-helper-rules/` with a version:
 
@@ -242,7 +226,7 @@ gh api repos/<org>/<repo>/contents/.oss-ai-helper-rules/project-info.md --jq '.c
 
 If the remote `.oss-ai-helper-rules/` directory does not exist, or the remote files have no `## Version` section, skip the version check and continue.
 
-#### 3.3 Compare versions
+### 3.3 Compare versions
 
 If the remote version differs from the local version (or the local version is unknown):
 
@@ -258,44 +242,3 @@ If the remote version differs from the local version (or the local version is un
    - Re-read the updated rule files before continuing
 
 4. If the user declines, continue with the existing local rules.
-
-## Capability Catalog
-
-After initialization, read and follow the appropriate guideline file based on the user's request.
-
-| When the user wants to... | Read |
-|---|---|
-| Fix an issue from the project's tracker (GitHub or Jira) | `fix-issue.md` |
-| Analyze an issue without fixing it | `analyze-issue.md` |
-| Review a pull request | `review-pr.md` |
-| Address review feedback on a PR | `address-review.md` |
-| Apply a quick fix (CI, docs, deps, etc.) without a tracked issue | `quick-fix.md` |
-| Find an issue to contribute to | `find-task.md` |
-| Create a new issue | `create-issue.md` |
-| Check CI status and merge readiness of a PR | `pr-status.md` |
-| List all their open PRs with status summary | `list-pr-status.md` |
-| Browse open PRs in the repo | `list-prs.md` |
-| List issues assigned to them | `list-issues.md` |
-| Merge a PR | `merge-pr.md` |
-| Backport a merged PR to another branch | `backport-pr.md` |
-| Fix CI errors from a failed build | `fix-ci-errors.md` |
-| Fix SonarCloud issues for a rule | `fix-sonarcloud.md` |
-| Fix a GitHub security or quality alert | `fix-github-alert.md` |
-| Fix a task from a Backlog.md file | `fix-backlog-task.md` |
-| Triage an inbound security vulnerability report | `triage-security-report.md` |
-| Analyze exposure to a third-party CVE | `analyze-third-party-cve.md` |
-| Draft a CVE advisory page | `draft-cve.md` |
-| Create a GitHub security advisory | `create-security-advisory.md` |
-| Triage a filed issue (maintainer-side) | `oss-triage-issue.md` |
-| Review a batch of open PRs | `oss-review-prs.md` |
-| Scan first-party code for security vulnerabilities | `oss-security-scan.md` |
-| Initialize or rediscover a multi-repo workspace | `oss-workspace-init.md` |
-| Report status of all repos in a workspace | `oss-workspace-status.md` |
-| Create and link issues across multiple repositories | `oss-create-multi-repo-issue.md` |
-| Fix an issue spanning multiple repositories | `oss-fix-multi-repo-issue.md` |
-| Create a test plan for a project feature or component | `oss-qe-create-test-plan.md` |
-| Execute an existing test plan and track results | `oss-qe-verify.md` |
-| Update project rule files | `update-knowledge.md` |
-| Generate project rule files for a repository | `oss-create-rules.md` |
-| Add a new project to the helper | `add-project.md` |
-| Install project rules from the known-projects repository | `install-info.md` |

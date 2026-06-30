@@ -223,6 +223,7 @@ Report:
 ### 12. Constraints
 
 You MUST:
+
 - Load and respect each repository's own rules.
 - Produce and get approval for a cross-repo impact plan before editing.
 - Detect and safely handle git worktrees.

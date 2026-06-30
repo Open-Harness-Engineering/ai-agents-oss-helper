@@ -18,85 +18,105 @@ set -euo pipefail
 BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main}"
 AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 
-# Skill directory (relative path from repo root)
-SKILL_DIR="skills/oss-helper"
+# Shared initialization file (copied into each skill directory during install)
+SHARED_INIT="skills/_shared/init.md"
 
-# All skill files to install (relative paths from repo root)
-SKILL_FILES=(
-    "skills/oss-helper/SKILL.md"
-    "skills/oss-helper/add-project.md"
-    "skills/oss-helper/address-review.md"
-    "skills/oss-helper/analyze-issue.md"
-    "skills/oss-helper/analyze-third-party-cve.md"
-    "skills/oss-helper/backport-pr.md"
-    "skills/oss-helper/create-issue.md"
-    "skills/oss-helper/create-security-advisory.md"
-    "skills/oss-helper/draft-cve.md"
-    "skills/oss-helper/find-task.md"
-    "skills/oss-helper/fix-backlog-task.md"
-    "skills/oss-helper/fix-ci-errors.md"
-    "skills/oss-helper/fix-github-alert.md"
-    "skills/oss-helper/fix-issue.md"
-    "skills/oss-helper/fix-sonarcloud.md"
-    "skills/oss-helper/install-info.md"
-    "skills/oss-helper/list-issues.md"
-    "skills/oss-helper/list-pr-status.md"
-    "skills/oss-helper/list-prs.md"
-    "skills/oss-helper/merge-pr.md"
-    "skills/oss-helper/oss-create-multi-repo-issue.md"
-    "skills/oss-helper/oss-create-rules.md"
-    "skills/oss-helper/oss-fix-multi-repo-issue.md"
-    "skills/oss-helper/oss-qe-create-test-plan.md"
-    "skills/oss-helper/oss-qe-verify.md"
-    "skills/oss-helper/oss-review-prs.md"
-    "skills/oss-helper/oss-security-scan.md"
-    "skills/oss-helper/oss-triage-issue.md"
-    "skills/oss-helper/oss-workspace-init.md"
-    "skills/oss-helper/oss-workspace-status.md"
-    "skills/oss-helper/pr-status.md"
-    "skills/oss-helper/quick-fix.md"
-    "skills/oss-helper/review-pr.md"
-    "skills/oss-helper/triage-security-report.md"
-    "skills/oss-helper/update-knowledge.md"
-)
+# Skill definitions: "skill-dir|SKILL.md + guideline files..."
+# Each skill is a directory under skills/ containing a SKILL.md and guideline files.
+SKILL_DIRS=("oss-issues" "oss-review" "oss-ci" "oss-security" "oss-project" "oss-qe")
 
-# Guideline files that become individual commands for agents without skill support.
-# Each entry: "guideline-filename|oss-command-name|description"
+# Files for each skill (relative paths from repo root)
+declare -A SKILL_FILES
+SKILL_FILES[oss-issues]="
+    skills/oss-issues/SKILL.md
+    skills/oss-issues/fix-issue.md
+    skills/oss-issues/analyze-issue.md
+    skills/oss-issues/create-issue.md
+    skills/oss-issues/list-issues.md
+    skills/oss-issues/find-task.md
+    skills/oss-issues/fix-backlog-task.md
+    skills/oss-issues/oss-triage-issue.md
+    skills/oss-issues/oss-create-multi-repo-issue.md
+    skills/oss-issues/oss-fix-multi-repo-issue.md
+"
+SKILL_FILES[oss-review]="
+    skills/oss-review/SKILL.md
+    skills/oss-review/review-pr.md
+    skills/oss-review/address-review.md
+    skills/oss-review/oss-review-prs.md
+    skills/oss-review/pr-status.md
+    skills/oss-review/list-pr-status.md
+    skills/oss-review/list-prs.md
+    skills/oss-review/merge-pr.md
+    skills/oss-review/backport-pr.md
+"
+SKILL_FILES[oss-ci]="
+    skills/oss-ci/SKILL.md
+    skills/oss-ci/fix-ci-errors.md
+    skills/oss-ci/fix-sonarcloud.md
+    skills/oss-ci/fix-github-alert.md
+    skills/oss-ci/quick-fix.md
+"
+SKILL_FILES[oss-security]="
+    skills/oss-security/SKILL.md
+    skills/oss-security/triage-security-report.md
+    skills/oss-security/analyze-third-party-cve.md
+    skills/oss-security/draft-cve.md
+    skills/oss-security/create-security-advisory.md
+    skills/oss-security/oss-security-scan.md
+"
+SKILL_FILES[oss-project]="
+    skills/oss-project/SKILL.md
+    skills/oss-project/add-project.md
+    skills/oss-project/install-info.md
+    skills/oss-project/oss-create-rules.md
+    skills/oss-project/update-knowledge.md
+    skills/oss-project/oss-workspace-init.md
+    skills/oss-project/oss-workspace-status.md
+"
+SKILL_FILES[oss-qe]="
+    skills/oss-qe/SKILL.md
+    skills/oss-qe/oss-qe-create-test-plan.md
+    skills/oss-qe/oss-qe-verify.md
+"
+
+# Guideline files that become individual commands for all agents.
+# Each entry: "skill-dir|guideline-filename|oss-command-name|description"
 GUIDELINE_COMMANDS=(
-    "add-project.md|oss-add-project|Add a new project to the OSS Helper"
-    "address-review.md|oss-address-review|Address review feedback on a pull request"
-    "analyze-issue.md|oss-analyze-issue|Analyze an issue to understand the problem"
-    "analyze-third-party-cve.md|oss-analyze-third-party-cve|Analyze exposure to a third-party CVE"
-    "backport-pr.md|oss-backport-pr|Cherry-pick a merged PR onto another branch"
-    "create-issue.md|oss-create-issue|Create a new issue in the project's tracker"
-    "create-security-advisory.md|oss-create-security-advisory|Report a security vulnerability via GitHub"
-    "draft-cve.md|oss-draft-cve|Draft a CVE advisory page"
-    "find-task.md|oss-find-task|Find an issue to contribute to"
-    "fix-backlog-task.md|oss-fix-backlog-task|Fix a task from a Backlog.md file"
-    "fix-ci-errors.md|oss-fix-ci-errors|Download CI reports, identify errors, and fix them"
-    "fix-github-alert.md|oss-fix-github-alert|Fix a GitHub security or quality alert"
-    "fix-issue.md|oss-fix-issue|Fix an issue from the project's issue tracker"
-    "fix-sonarcloud.md|oss-fix-sonarcloud|Fix SonarCloud issues for a given rule"
-    "install-info.md|oss-install-info|Install project rules from the known-projects repository"
-    "list-issues.md|oss-list-issues|List issues assigned to you"
-    "oss-create-rules.md|oss-create-rules|Generate project rule files by auto-inspecting a repository"
-    "list-pr-status.md|oss-list-pr-status|List all your open PRs with status summary"
-    "list-prs.md|oss-list-prs|List all open PRs in the repository"
-    "merge-pr.md|oss-merge-pr|Merge a PR after verifying requirements"
-    "pr-status.md|oss-pr-status|Check CI, review state, and merge readiness of a PR"
-    "quick-fix.md|oss-quick-fix|Apply a quick fix without a tracked issue"
-    "review-pr.md|oss-review-pr|Review a pull request"
-    "triage-security-report.md|oss-triage-security-report|Triage an inbound security vulnerability report"
-    "update-knowledge.md|oss-update-knowledge|Update project rule files"
-    "oss-create-multi-repo-issue.md|oss-create-multi-repo-issue|Create and link issues across multiple repositories"
-    "oss-fix-multi-repo-issue.md|oss-fix-multi-repo-issue|Fix an issue spanning multiple repositories"
-    "oss-qe-create-test-plan.md|oss-qe-create-test-plan|Create a test plan for a project feature or component"
-    "oss-qe-verify.md|oss-qe-verify|Execute an existing test plan and track results"
-    "oss-review-prs.md|oss-review-prs|Review a batch of open PRs"
-    "oss-security-scan.md|oss-security-scan|Scan codebase for security vulnerabilities"
-    "oss-triage-issue.md|oss-triage-issue|Triage a filed issue (maintainer-side)"
-    "oss-workspace-init.md|oss-workspace-init|Initialize a multi-repo workspace"
-    "oss-workspace-status.md|oss-workspace-status|Report status of all repos in a workspace"
+    "oss-issues|fix-issue.md|oss-fix-issue|Fix an issue from the project's issue tracker"
+    "oss-issues|analyze-issue.md|oss-analyze-issue|Analyze an issue to understand the problem"
+    "oss-issues|create-issue.md|oss-create-issue|Create a new issue in the project's tracker"
+    "oss-issues|list-issues.md|oss-list-issues|List issues assigned to you"
+    "oss-issues|find-task.md|oss-find-task|Find an issue to contribute to"
+    "oss-issues|fix-backlog-task.md|oss-fix-backlog-task|Fix a task from a Backlog.md file"
+    "oss-issues|oss-triage-issue.md|oss-triage-issue|Triage a filed issue (maintainer-side)"
+    "oss-issues|oss-create-multi-repo-issue.md|oss-create-multi-repo-issue|Create and link issues across multiple repositories"
+    "oss-issues|oss-fix-multi-repo-issue.md|oss-fix-multi-repo-issue|Fix an issue spanning multiple repositories"
+    "oss-review|review-pr.md|oss-review-pr|Review a pull request"
+    "oss-review|address-review.md|oss-address-review|Address review feedback on a pull request"
+    "oss-review|oss-review-prs.md|oss-review-prs|Review a batch of open PRs"
+    "oss-review|pr-status.md|oss-pr-status|Check CI, review state, and merge readiness of a PR"
+    "oss-review|list-pr-status.md|oss-list-pr-status|List all your open PRs with status summary"
+    "oss-review|list-prs.md|oss-list-prs|List all open PRs in the repository"
+    "oss-review|merge-pr.md|oss-merge-pr|Merge a PR after verifying requirements"
+    "oss-review|backport-pr.md|oss-backport-pr|Cherry-pick a merged PR onto another branch"
+    "oss-ci|fix-ci-errors.md|oss-fix-ci-errors|Download CI reports, identify errors, and fix them"
+    "oss-ci|fix-sonarcloud.md|oss-fix-sonarcloud|Fix SonarCloud issues for a given rule"
+    "oss-ci|fix-github-alert.md|oss-fix-github-alert|Fix a GitHub security or quality alert"
+    "oss-ci|quick-fix.md|oss-quick-fix|Apply a quick fix without a tracked issue"
+    "oss-security|triage-security-report.md|oss-triage-security-report|Triage an inbound security vulnerability report"
+    "oss-security|analyze-third-party-cve.md|oss-analyze-third-party-cve|Analyze exposure to a third-party CVE"
+    "oss-security|draft-cve.md|oss-draft-cve|Draft a CVE advisory page"
+    "oss-security|create-security-advisory.md|oss-create-security-advisory|Report a security vulnerability via GitHub"
+    "oss-security|oss-security-scan.md|oss-security-scan|Scan codebase for security vulnerabilities"
+    "oss-project|add-project.md|oss-add-project|Add a new project to the OSS Helper"
+    "oss-project|install-info.md|oss-install-info|Install project rules from the known-projects repository"
+    "oss-project|oss-create-rules.md|oss-create-rules|Generate project rule files by auto-inspecting a repository"
+    "oss-project|update-knowledge.md|oss-update-knowledge|Update project rule files"
+    "oss-project|oss-workspace-init.md|oss-workspace-init|Initialize a multi-repo workspace"
+    "oss-project|oss-workspace-status.md|oss-workspace-status|Report status of all repos in a workspace"
+    "oss-qe|oss-qe-create-test-plan.md|oss-qe-create-test-plan|Create a test plan for a project feature or component"
+    "oss-qe|oss-qe-verify.md|oss-qe-verify|Execute an existing test plan and track results"
 )
 
 # Old rule files to clean up (relative paths under rules/)
@@ -166,8 +186,14 @@ OLD_COMMAND_FILES=(
     "oss-qe-verify.md"
 )
 
+# Old skill directories to clean up (from v3 monolithic skill)
+OLD_SKILL_DIRS=(
+    "oss-helper"
+)
+
 # Old Codex individual skill directories to clean up
 OLD_CODEX_SKILLS=(
+    "oss-helper"
     "oss-add-project"
     "oss-address-review"
     "oss-analyze-issue"
@@ -278,12 +304,13 @@ convert_guideline_to_opencode_md() {
 }
 
 # Generate a thin command file for skill agents (Claude, Bob).
-# The background skill provides all initialization and guideline content;
-# the command just triggers the right guideline.
+# The skill provides all initialization and guideline content;
+# the command just triggers the right skill and guideline.
 generate_skill_agent_command() {
-    local guideline_file="$1"
-    local dest="$2"
-    local description="$3"
+    local skill_name="$1"
+    local guideline_file="$2"
+    local dest="$3"
+    local description="$4"
 
     # Escape quotes and backslashes for YAML
     description="$(printf '%s' "$description" | sed 's/\\/\\\\/g; s/\"/\\\"/g')"
@@ -292,24 +319,18 @@ generate_skill_agent_command() {
         printf -- "---\n"
         printf 'description: "%s"\n' "$description"
         printf -- "---\n\n"
-        printf 'Invoke the oss-helper skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$guideline_file"
+        printf 'Invoke the %s skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$skill_name" "$guideline_file"
     } > "$dest"
 }
 
 # Install for agents that support skills natively (Claude, Bob)
 install_skill_agent() {
     local agent="$1"
-    local skills_dir="$HOME/.$agent/skills/oss-helper"
+    local skills_root="$HOME/.$agent/skills"
     local commands_dir="$HOME/.$agent/commands"
     local rules_dir="$HOME/.$agent/rules"
 
     info "Installing for $agent..."
-
-    # Create target directories
-    if ! mkdir -p "$skills_dir"; then
-        error "Failed to create directory: $skills_dir"
-        return 1
-    fi
 
     if ! mkdir -p "$rules_dir"; then
         error "Failed to create directory: $rules_dir"
@@ -324,22 +345,50 @@ install_skill_agent() {
         done
     fi
 
-    # Install skill files
-    info "  Installing skill..."
-    for file in "${SKILL_FILES[@]}"; do
-        local filename
-        filename="$(basename "$file")"
-        local dest="$skills_dir/$filename"
+    # Clean up old monolithic skill directory
+    for old_skill in "${OLD_SKILL_DIRS[@]}"; do
+        if [[ -d "$skills_root/$old_skill" ]]; then
+            info "  Removing old skill: $old_skill"
+            rm -rf "$skills_root/$old_skill"
+        fi
+    done
 
-        if fetch_file "$file" "$dest"; then
-            info "    Installed: $filename"
+    # Install each skill
+    for skill_dir in "${SKILL_DIRS[@]}"; do
+        local target_dir="$skills_root/$skill_dir"
+
+        if ! mkdir -p "$target_dir"; then
+            error "Failed to create directory: $target_dir"
+            return 1
+        fi
+
+        info "  Installing skill: $skill_dir"
+
+        # Install skill files
+        for file in ${SKILL_FILES[$skill_dir]}; do
+            local filename
+            filename="$(basename "$file")"
+            local dest="$target_dir/$filename"
+
+            if fetch_file "$file" "$dest"; then
+                info "    Installed: $filename"
+            else
+                error "    Failed to install: $filename"
+                return 1
+            fi
+        done
+
+        # Copy shared init.md into each skill directory
+        local init_dest="$target_dir/init.md"
+        if fetch_file "$SHARED_INIT" "$init_dest"; then
+            info "    Installed: init.md (shared)"
         else
-            error "    Failed to install: $filename"
+            error "    Failed to install: init.md"
             return 1
         fi
     done
 
-    # Install individual commands (thin wrappers that invoke the skill)
+    # Install individual commands (thin wrappers that invoke the skills)
     if ! mkdir -p "$commands_dir"; then
         error "Failed to create directory: $commands_dir"
         return 1
@@ -347,11 +396,11 @@ install_skill_agent() {
 
     info "  Installing commands..."
     for entry in "${GUIDELINE_COMMANDS[@]}"; do
-        local guideline_file cmd_name description
-        IFS='|' read -r guideline_file cmd_name description <<< "$entry"
+        local skill_dir guideline_file cmd_name description
+        IFS='|' read -r skill_dir guideline_file cmd_name description <<< "$entry"
 
         local dest="$commands_dir/${cmd_name}.md"
-        generate_skill_agent_command "$guideline_file" "$dest" "$description"
+        generate_skill_agent_command "$skill_dir" "$guideline_file" "$dest" "$description"
         info "    Installed: ${cmd_name}.md"
     done
 
@@ -361,12 +410,12 @@ install_skill_agent() {
         rm -f "$rules_dir/$old_file"
     done
 
-    info "  Skill installed to: $skills_dir"
+    info "  Skills installed to: $skills_root/{${SKILL_DIRS[*]}}"
     info "  Commands installed to: $commands_dir"
     info "  Rules directory: $rules_dir (project rules installed on demand)"
 }
 
-# Install for Gemini CLI (individual TOML commands + SKILL.md as rule)
+# Install for Gemini CLI (individual TOML commands)
 install_gemini() {
     local commands_dir="$HOME/.gemini/commands"
     local rules_dir="$HOME/.gemini/rules"
@@ -393,10 +442,10 @@ install_gemini() {
     # Install individual guideline commands as TOML
     info "  Installing commands..."
     for entry in "${GUIDELINE_COMMANDS[@]}"; do
-        local guideline_file cmd_name description
-        IFS='|' read -r guideline_file cmd_name description <<< "$entry"
+        local skill_dir guideline_file cmd_name description
+        IFS='|' read -r skill_dir guideline_file cmd_name description <<< "$entry"
 
-        local src_path="$SKILL_DIR/$guideline_file"
+        local src_path="skills/$skill_dir/$guideline_file"
         local toml_name="${cmd_name}.toml"
         local dest="$commands_dir/$toml_name"
         local tmp_md
@@ -449,10 +498,10 @@ install_opencode() {
     # Install individual guideline commands with frontmatter
     info "  Installing commands..."
     for entry in "${GUIDELINE_COMMANDS[@]}"; do
-        local guideline_file cmd_name description
-        IFS='|' read -r guideline_file cmd_name description <<< "$entry"
+        local skill_dir guideline_file cmd_name description
+        IFS='|' read -r skill_dir guideline_file cmd_name description <<< "$entry"
 
-        local src_path="$SKILL_DIR/$guideline_file"
+        local src_path="skills/$skill_dir/$guideline_file"
         local dest="$commands_dir/${cmd_name}.md"
         local tmp_md
         tmp_md="$(mktemp)"
@@ -478,25 +527,19 @@ install_opencode() {
     info "  Rules directory: $rules_dir (project rules installed on demand)"
 }
 
-# Install for Codex (single skill directory)
+# Install for Codex (skill directories under ~/.agents/skills/)
 install_codex() {
     local skills_root="$HOME/.agents/skills"
-    local skill_dir="$skills_root/oss-helper"
     local codex_rules_dir="$HOME/.codex/oss-helper/rules"
 
     info "Installing for codex..."
-
-    if ! mkdir -p "$skill_dir"; then
-        error "Failed to create directory: $skill_dir"
-        return 1
-    fi
 
     if ! mkdir -p "$codex_rules_dir"; then
         error "Failed to create directory: $codex_rules_dir"
         return 1
     fi
 
-    # Clean up old individual skill directories
+    # Clean up old skill directories
     info "  Cleaning up old skills..."
     for old_skill in "${OLD_CODEX_SKILLS[@]}"; do
         rm -rf "$skills_root/$old_skill"
@@ -504,22 +547,42 @@ install_codex() {
     # Clean up old init file
     rm -f "$HOME/.codex/oss-helper/.oss-init.md"
 
-    # Install skill files
-    info "  Installing skill..."
-    for file in "${SKILL_FILES[@]}"; do
-        local filename
-        filename="$(basename "$file")"
-        local dest="$skill_dir/$filename"
+    # Install each skill
+    for skill_dir in "${SKILL_DIRS[@]}"; do
+        local target_dir="$skills_root/$skill_dir"
 
-        if fetch_file "$file" "$dest"; then
-            info "    Installed: $filename"
+        if ! mkdir -p "$target_dir"; then
+            error "Failed to create directory: $target_dir"
+            return 1
+        fi
+
+        info "  Installing skill: $skill_dir"
+
+        # Install skill files
+        for file in ${SKILL_FILES[$skill_dir]}; do
+            local filename
+            filename="$(basename "$file")"
+            local dest="$target_dir/$filename"
+
+            if fetch_file "$file" "$dest"; then
+                info "    Installed: $filename"
+            else
+                error "    Failed to install: $filename"
+                return 1
+            fi
+        done
+
+        # Copy shared init.md into each skill directory
+        local init_dest="$target_dir/init.md"
+        if fetch_file "$SHARED_INIT" "$init_dest"; then
+            info "    Installed: init.md (shared)"
         else
-            error "    Failed to install: $filename"
+            error "    Failed to install: init.md"
             return 1
         fi
     done
 
-    info "  Skill installed to: $skill_dir"
+    info "  Skills installed to: $skills_root/{${SKILL_DIRS[*]}}"
     info "  Rules directory: $codex_rules_dir (project rules installed on demand)"
 }
 
@@ -580,9 +643,16 @@ main() {
 
     info "Installation complete!"
     echo ""
-    echo "The OSS Helper skill is installed as background knowledge."
-    echo "Just describe what you want to do (e.g., 'fix issue #42', 'review PR 15')"
-    echo "and the agent will follow the appropriate guidelines automatically."
+    echo "The OSS Helper skills are installed as 6 focused skill groups:"
+    echo "  /oss-issues   - Issue management (fix, analyze, create, triage)"
+    echo "  /oss-review   - PR management (review, merge, backport)"
+    echo "  /oss-ci       - CI/CD and code quality (CI errors, SonarCloud)"
+    echo "  /oss-security - Security (CVE triage, advisories, scanning)"
+    echo "  /oss-project  - Project setup (rules, workspaces)"
+    echo "  /oss-qe       - Quality engineering (test plans)"
+    echo ""
+    echo "You can also use individual commands (e.g., /oss-fix-issue, /oss-review-pr)"
+    echo "or just describe what you want (e.g., 'fix issue #42', 'review PR 15')."
 }
 
 main "$@"

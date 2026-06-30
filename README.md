@@ -1,8 +1,8 @@
 # AI Agents OSS Helper
 
-A skill for AI coding agents (Claude, Bob, Gemini, OpenCode, Codex) that provides guidelines for contributing to open source projects. The skill auto-detects the current project via `git remote get-url origin` and loads project-specific configuration from rule files.
+A collection of skills for AI coding agents (Claude, Bob, Gemini, OpenCode, Codex) that provides guidelines for contributing to open source projects. The skills auto-detect the current project via `git remote get-url origin` and load project-specific configuration from rule files.
 
-For agents that support skills natively (Claude, Bob, Codex), the helper is installed as background knowledge — just describe what you want to do and the agent follows the appropriate guidelines automatically. For other agents (Gemini, OpenCode), individual commands are generated from the same guidelines.
+For agents that support skills natively (Claude, Bob, Codex), the helper is installed as 6 focused, user-invocable skills — just describe what you want to do (or invoke `/oss-*` directly) and the agent follows the appropriate guidelines automatically. For other agents (Gemini, OpenCode), individual commands are generated from the same guidelines.
 
 ## Getting Started
 
@@ -46,13 +46,27 @@ cd ai-agents-oss-helper
 ## How It Works
 
 The helper provides guidelines that are project-agnostic. Project-specific configuration is stored in rule files with three files per project:
+
 - **`project-info.md`** - Repository URLs, issue trackers, SonarCloud keys, related repos
 - **`project-standards.md`** - Build tools, commands, code style restrictions
 - **`project-guidelines.md`** - Branch naming, commit formats, PR policies, task labels
 
+### Skill groups
+
+The 34 guidelines are organized into 6 focused skills:
+
+- **`/oss-issues`** — Issue lifecycle: fix, analyze, create, list, find tasks, triage, cross-repo issues
+- **`/oss-review`** — PR lifecycle: review, address feedback, batch review, status, merge, backport
+- **`/oss-ci`** — CI/CD and code quality: fix CI errors, SonarCloud, GitHub alerts, quick fixes
+- **`/oss-security`** — Security: triage reports, analyze CVEs, draft advisories, scan code
+- **`/oss-project`** — Project setup: add projects, install/generate/update rules, workspaces
+- **`/oss-qe`** — Quality engineering: create and execute test plans
+
+Each skill is user-invocable — you can invoke it directly via `/oss-issues`, `/oss-review`, etc. or the agent can auto-invoke it when your request matches. Individual `/oss-*` commands (e.g. `/oss-fix-issue`) are also available as thin wrappers that delegate to the appropriate skill.
+
 ### Rule loading priority
 
-The skill initializes by loading project rules in this priority order:
+Each skill initializes by loading project rules in this priority order:
 
 1. **Project-local rules** - `.oss-ai-helper-rules/` directory in the repository root. Highest priority, versioned with the project.
 2. **Installed fallback rules** - A subdirectory under the agent's local rules directory (for example `~/.claude/rules/<project>/`) whose `project-info.md` declares a matching `Remote pattern`. Install these on demand with the Install Info guideline.
@@ -68,7 +82,7 @@ Project rules are not bundled with the installer. They live in a separate reposi
 
 The OSS Helper provides guidelines for the following tasks. For agents with skill support (Claude, Bob, Codex), just describe what you want in natural language or use the `/oss-*` command directly. For other agents, use the corresponding command.
 
-| Capability | Gemini/OpenCode command | Description |
+| Capability | Command | Description |
 |---|---|---|
 | Fix an issue | `/oss-fix-issue` | Fix an issue from the project's tracker (GitHub or Jira) |
 | Review a PR | `/oss-review-pr` | Review a pull request against project rules and contribution standards |
@@ -109,7 +123,7 @@ The OSS Helper provides guidelines for the following tasks. For agents with skil
 
 ### Fix an Issue
 
-```
+```text
 # With Claude, Bob, or Codex — just ask naturally:
 fix issue 42
 fix issue CAMEL-20410
@@ -122,7 +136,7 @@ fix https://github.com/wanaku-ai/wanaku/issues/42
 
 ### Find a Task
 
-```
+```text
 # Natural language:
 find me a task to contribute to
 
@@ -132,7 +146,7 @@ find me a task to contribute to
 
 ### Review a Pull Request
 
-```
+```text
 # Natural language:
 review PR 42
 review https://github.com/wanaku-ai/wanaku/pull/42
@@ -143,7 +157,7 @@ review https://github.com/wanaku-ai/wanaku/pull/42
 
 ### Quick Fix
 
-```
+```text
 # Natural language:
 upgrade Quarkus BOM to 3.18.0
 fix broken link in CONTRIBUTING.md
@@ -154,7 +168,7 @@ fix broken link in CONTRIBUTING.md
 
 ### Backport a Merged PR
 
-```
+```text
 # Natural language:
 backport PR 42 to the release/1.x branch
 
@@ -164,7 +178,7 @@ backport PR 42 to the release/1.x branch
 
 ### Install Project Rules
 
-```
+```text
 # Natural language:
 install project rules for camel-core
 
@@ -187,7 +201,7 @@ The default source is [`Open-Harness-Engineering/ai-agents-oss-known-projects`](
 
 ### Claude, Bob
 
-Installed as a background skill at `~/.{agent}/skills/oss-helper/` plus individual `/oss-*` commands in `~/.{agent}/commands/`. You can either describe what you want in natural language (the agent matches it to the skill automatically) or invoke a specific command directly (e.g. `/oss-fix-issue 42`).
+Installed as 6 user-invocable skills at `~/.{agent}/skills/oss-{issues,review,ci,security,project,qe}/` plus individual `/oss-*` commands in `~/.{agent}/commands/`. You can either describe what you want in natural language (the agent matches it to a skill automatically), invoke a skill group (e.g. `/oss-issues`), or invoke a specific command directly (e.g. `/oss-fix-issue 42`).
 
 ### Gemini CLI
 
@@ -199,7 +213,7 @@ Individual markdown commands with frontmatter are generated and installed to `~/
 
 ### Codex
 
-Installed as a single skill directory at `~/.agents/skills/oss-helper/` with all guideline files as supporting files. Project rule files are installed to `~/.codex/oss-helper/rules/`.
+Installed as 6 skill directories at `~/.agents/skills/oss-{issues,review,ci,security,project,qe}/` with all guideline files as supporting files. Project rule files are installed to `~/.codex/oss-helper/rules/`.
 
 ## Project Structure
 
@@ -208,42 +222,54 @@ ai-agents-oss-helper/
 ├── install.sh                              # Installation script
 ├── README.md
 └── skills/
-    └── oss-helper/                         # Single skill with all guidelines
-        ├── SKILL.md                        # Main skill: init logic + capability catalog
-        ├── fix-issue.md                    # Fix an issue
-        ├── review-pr.md                    # Review a PR
-        ├── quick-fix.md                    # Apply a quick fix
-        ├── analyze-issue.md               # Analyze an issue
-        ├── find-task.md                    # Find a task to contribute
-        ├── create-issue.md                # Create a new issue
-        ├── fix-sonarcloud.md              # Fix SonarCloud issues
-        ├── fix-github-alert.md            # Fix a GitHub alert
-        ├── fix-ci-errors.md               # Fix CI errors
-        ├── pr-status.md                   # Check PR status
-        ├── list-pr-status.md              # List your PR statuses
-        ├── list-prs.md                    # List open PRs
-        ├── list-issues.md                 # List assigned issues
-        ├── backport-pr.md                 # Backport a merged PR
-        ├── address-review.md              # Address review feedback
-        ├── merge-pr.md                    # Merge a PR
-        ├── add-project.md                 # Add a new project
-        ├── update-knowledge.md            # Update project rules
-        ├── install-info.md                # Install project rules
-        ├── fix-backlog-task.md            # Fix a backlog task
-        ├── triage-security-report.md      # Triage security report
-        ├── analyze-third-party-cve.md     # Analyze third-party CVE
-        ├── draft-cve.md                   # Draft CVE advisory
-        ├── create-security-advisory.md    # Create security advisory
-        ├── oss-create-multi-repo-issue.md # Create cross-repo issue
-        ├── oss-create-rules.md            # Generate project rules
-        ├── oss-fix-multi-repo-issue.md    # Fix cross-repo issue
+    ├── _shared/
+    │   └── init.md                         # Shared initialization logic
+    ├── oss-issues/                          # Issue management skill
+    │   ├── SKILL.md                        # Skill entry point
+    │   ├── fix-issue.md                    # Fix an issue
+    │   ├── analyze-issue.md               # Analyze an issue
+    │   ├── create-issue.md                # Create a new issue
+    │   ├── list-issues.md                 # List assigned issues
+    │   ├── find-task.md                    # Find a task to contribute
+    │   ├── fix-backlog-task.md            # Fix a backlog task
+    │   ├── oss-triage-issue.md            # Triage a filed issue
+    │   ├── oss-create-multi-repo-issue.md # Create cross-repo issue
+    │   └── oss-fix-multi-repo-issue.md    # Fix cross-repo issue
+    ├── oss-review/                          # PR management skill
+    │   ├── SKILL.md
+    │   ├── review-pr.md                    # Review a PR
+    │   ├── address-review.md              # Address review feedback
+    │   ├── oss-review-prs.md              # Review batch of PRs
+    │   ├── pr-status.md                   # Check PR status
+    │   ├── list-pr-status.md              # List your PR statuses
+    │   ├── list-prs.md                    # List open PRs
+    │   ├── merge-pr.md                    # Merge a PR
+    │   └── backport-pr.md                 # Backport a merged PR
+    ├── oss-ci/                              # CI/CD & quality skill
+    │   ├── SKILL.md
+    │   ├── fix-ci-errors.md               # Fix CI errors
+    │   ├── fix-sonarcloud.md              # Fix SonarCloud issues
+    │   ├── fix-github-alert.md            # Fix a GitHub alert
+    │   └── quick-fix.md                    # Apply a quick fix
+    ├── oss-security/                        # Security skill
+    │   ├── SKILL.md
+    │   ├── triage-security-report.md      # Triage security report
+    │   ├── analyze-third-party-cve.md     # Analyze third-party CVE
+    │   ├── draft-cve.md                   # Draft CVE advisory
+    │   ├── create-security-advisory.md    # Create security advisory
+    │   └── oss-security-scan.md           # Scan codebase
+    ├── oss-project/                         # Project setup skill
+    │   ├── SKILL.md
+    │   ├── add-project.md                 # Add a new project
+    │   ├── install-info.md                # Install project rules
+    │   ├── oss-create-rules.md            # Generate project rules
+    │   ├── update-knowledge.md            # Update project rules
+    │   ├── oss-workspace-init.md          # Initialize workspace
+    │   └── oss-workspace-status.md        # Workspace status
+    └── oss-qe/                              # Quality engineering skill
+        ├── SKILL.md
         ├── oss-qe-create-test-plan.md     # Create test plan
-        ├── oss-qe-verify.md               # Execute test plan
-        ├── oss-review-prs.md              # Review a batch of open PRs
-        ├── oss-security-scan.md           # Scan codebase for vulnerabilities
-        ├── oss-triage-issue.md            # Triage a filed issue
-        ├── oss-workspace-init.md          # Initialize multi-repo workspace
-        └── oss-workspace-status.md        # Report workspace status
+        └── oss-qe-verify.md               # Execute test plan
 ```
 
 Project rule files are no longer bundled with this repository. They live in
@@ -254,7 +280,7 @@ and are installed on demand via the Install Info guideline.
 
 1. Fork the repository
 2. Create a feature branch
-3. Add or modify guideline files in `skills/oss-helper/`
+3. Add or modify guideline files in the appropriate `skills/oss-*/` directory
 4. Update `install.sh` if adding new files
 5. Submit a pull request
 
