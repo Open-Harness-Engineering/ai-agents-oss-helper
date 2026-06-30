@@ -1,6 +1,8 @@
 # AI Agents OSS Helper
 
-Generic commands for AI coding agents (Claude, Bob, Gemini, Codex) to help contribute to open source projects. Commands auto-detect the current project via `git remote get-url origin` and load project-specific configuration from rule files.
+A skill for AI coding agents (Claude, Bob, Gemini, OpenCode, Codex) that provides guidelines for contributing to open source projects. The skill auto-detects the current project via `git remote get-url origin` and loads project-specific configuration from rule files.
+
+For agents that support skills natively (Claude, Bob, Codex), the helper is installed as background knowledge — just describe what you want to do and the agent follows the appropriate guidelines automatically. For other agents (Gemini, OpenCode), individual commands are generated from the same guidelines.
 
 ## Getting Started
 
@@ -15,7 +17,7 @@ my-project/
 └── ...
 ```
 
-Use `/oss-add-project` to generate initial rule files for any project. Once committed, every contributor gets the right configuration automatically — no per-user installation of project-specific rules required.
+Use the Add Project guideline to generate initial rule files for any project. Once committed, every contributor gets the right configuration automatically — no per-user installation of project-specific rules required.
 
 ## Installation
 
@@ -43,510 +45,134 @@ cd ai-agents-oss-helper
 
 ## How It Works
 
-Commands are generic and project-agnostic. Project-specific configuration is stored in rule files with three files per project:
-
+The helper provides guidelines that are project-agnostic. Project-specific configuration is stored in rule files with three files per project:
 - **`project-info.md`** - Repository URLs, issue trackers, SonarCloud keys, related repos
 - **`project-standards.md`** - Build tools, commands, code style restrictions
 - **`project-guidelines.md`** - Branch naming, commit formats, PR policies, task labels
 
 ### Rule loading priority
 
-Every command starts by processing `.oss-init.md`, which loads project rules in this priority order:
+The skill initializes by loading project rules in this priority order:
 
 1. **Project-local rules** - `.oss-ai-helper-rules/` directory in the repository root. Highest priority, versioned with the project.
-2. **Installed fallback rules** - A subdirectory under the agent's local rules directory (for example `~/.claude/rules/<project>/`) whose `project-info.md` declares a matching `Remote pattern`. Install these on demand with [`/oss-install-info`](#install-project-rules).
+2. **Installed fallback rules** - A subdirectory under the agent's local rules directory (for example `~/.claude/rules/<project>/`) whose `project-info.md` declares a matching `Remote pattern`. Install these on demand with the Install Info guideline.
 3. **Auto-discovery** - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files in `.oss-ai-helper-rules/` so they can be committed and shared.
 
 Projects should adopt project-local rules so that configuration travels with the repository and stays in sync across all contributors and agents.
 
 ### Where the rules come from
 
-Project rules are not bundled with the installer. They live in a separate repository, [`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects), and are installed on demand via `/oss-install-info <project>`. This keeps the helper focused on commands and lets projects that prefer not to host AI-agent metadata in their source tree have rules hosted centrally instead.
+Project rules are not bundled with the installer. They live in a separate repository, [`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects), and are installed on demand via the Install Info guideline. This keeps the helper focused on guidelines and lets projects that prefer not to host AI-agent metadata in their source tree have rules hosted centrally instead.
 
-## Available Commands
+## Capabilities
 
-| Command                                   | Description                                                             |
-|-------------------------------------------|-------------------------------------------------------------------------|
-| `/oss-fix-issue <issue>`                  | Fix an issue from the project's tracker (GitHub or Jira)                |
-| `/oss-review-pr <pr>`                     | Review a pull request against project rules and contribution standards   |
-| `/oss-find-task`                          | Find an issue to contribute based on experience level                   |
-| `/oss-create-issue <title>`               | Create a new issue in the project's GitHub repository                   |
-| `/oss-quick-fix <description>`            | Apply a quick fix without a tracked issue (CI, docs, deps, etc.)        |
-| `/oss-analyze-issue <issue>`              | Analyze an issue to understand the problem and investigate the codebase |
-| `/oss-workspace-init [name]`              | Initialize or rediscover a multi-repo workspace from related repositories |
-| `/oss-workspace-status`                   | Show branch, worktree, dirty, PR, rules, and validation state for every workspace repo |
-| `/oss-create-multi-repo-issue [title]`    | Create a canonical cross-repo issue with optional linked child issues   |
-| `/oss-fix-multi-repo-issue <issue>`       | Plan and execute a coordinated fix across workspace repositories        |
-| `/oss-triage-issue <issue>`               | Triage a filed issue (maintainer-side): reproduce, dedupe, check prior fixes, classify, recommend a disposition |
-| `/oss-fix-sonarcloud <rule>`              | Fix SonarCloud issues for a given rule                                  |
-| `/oss-fix-github-alert <type>`            | Assign and fix a GitHub Code Scanning, Dependabot, or Secret Scanning alert |
-| `/oss-add-project <name> <description>`  | Add a new project with the helper                                       |
-| `/oss-update-knowledge <source>`          | Update a project's rule files from a description or URL                 |
-| `/oss-fix-ci-errors [run-id]`             | Download CI build reports, identify errors, and fix them                |
-| `/oss-fix-backlog-task <task> repo=<path>` | Fix a task from a Backlog.md file (requires Backlog MCP server)        |
-| `/oss-pr-status [pr]`                     | Check CI checks, review state, and merge readiness of a pull request   |
-| `/oss-list-pr-status`                     | List all your open PRs with CI, review, and merge readiness summary    |
-| `/oss-list-prs [filters]`                 | List all open PRs in the repo, then pick one to review with `/oss-review-pr` |
-| `/oss-review-prs [filters]`               | Review a batch of open PRs you haven't reviewed yet — one consolidated report, one approval |
-| `/oss-backport-pr <pr> branch=<branch>`  | Cherry-pick a merged PR onto a maintenance/release branch               |
-| `/oss-triage-security-report [source]`    | Triage an inbound security report: verify claims, check prior fixes, recommend disclosure path |
-| `/oss-draft-cve <cve_id> template=<url_or_path> [triage_ref=<path>] [fix_pr=<pr>]` | Draft a project-specific CVE advisory page and matching PGP-signable plaintext body from a reserved CVE ID and a reference advisory |
-| `/oss-list-issues [filters]`                | List all issues assigned to you in the project's tracker (GitHub or Jira) |
-| `/oss-analyze-third-party-cve <cve_id> [coords]` | Analyze whether the project is exposed to a CVE in a third-party dependency; produce an exposure report and propose a sanitized follow-up |
-| `/oss-security-scan [path] [severity=<min>] [scanners=<auto\|off\|list>]` | Proactively scan first-party code for vulnerabilities, anchored to the project's threat model; produce a confidential findings report and propose sanitized follow-ups |
-| `/oss-install-info [project]`               | Install (or list) project rules from the `ai-agents-oss-known-projects` repository |
+The OSS Helper provides guidelines for the following tasks. For agents with skill support (Claude, Bob, Codex), just describe what you want in natural language or use the `/oss-*` command directly. For other agents, use the corresponding command.
 
-All commands auto-detect the project from the current directory's git remote.
+| Capability | Gemini/OpenCode command | Description |
+|---|---|---|
+| Fix an issue | `/oss-fix-issue` | Fix an issue from the project's tracker (GitHub or Jira) |
+| Review a PR | `/oss-review-pr` | Review a pull request against project rules and contribution standards |
+| Find a task | `/oss-find-task` | Find an issue to contribute based on experience level |
+| Create an issue | `/oss-create-issue` | Create a new issue in the project's issue tracker |
+| Quick fix | `/oss-quick-fix` | Apply a quick fix without a tracked issue (CI, docs, deps, etc.) |
+| Analyze an issue | `/oss-analyze-issue` | Analyze an issue to understand the problem and investigate the codebase |
+| Fix SonarCloud issues | `/oss-fix-sonarcloud` | Fix SonarCloud issues for a given rule |
+| Fix GitHub alert | `/oss-fix-github-alert` | Fix a GitHub Code Scanning, Dependabot, or Secret Scanning alert |
+| Add a project | `/oss-add-project` | Add a new project with the helper |
+| Update knowledge | `/oss-update-knowledge` | Update a project's rule files from a description or URL |
+| Fix CI errors | `/oss-fix-ci-errors` | Download CI build reports, identify errors, and fix them |
+| Fix backlog task | `/oss-fix-backlog-task` | Fix a task from a Backlog.md file (requires Backlog MCP server) |
+| PR status | `/oss-pr-status` | Check CI checks, review state, and merge readiness of a PR |
+| List PR status | `/oss-list-pr-status` | List all your open PRs with CI, review, and merge readiness summary |
+| List PRs | `/oss-list-prs` | List all open PRs in the repo for browsing and review selection |
+| List issues | `/oss-list-issues` | List issues assigned to you in the project's tracker |
+| Backport a PR | `/oss-backport-pr` | Cherry-pick a merged PR onto a maintenance/release branch |
+| Address review | `/oss-address-review` | Address review feedback on a PR |
+| Merge a PR | `/oss-merge-pr` | Merge a PR after verifying all requirements are met |
+| Triage security report | `/oss-triage-security-report` | Triage an inbound security vulnerability report |
+| Draft CVE advisory | `/oss-draft-cve` | Draft a project-specific CVE advisory page |
+| Analyze third-party CVE | `/oss-analyze-third-party-cve` | Analyze exposure to a CVE in a third-party dependency |
+| Create security advisory | `/oss-create-security-advisory` | Privately report a security vulnerability via GitHub |
+| Triage an issue | `/oss-triage-issue` | Triage a filed issue: reproduce, dedupe, classify, recommend disposition |
+| Review batch of PRs | `/oss-review-prs` | Review a batch of open PRs you haven't reviewed yet |
+| Security scan | `/oss-security-scan` | Scan first-party code for security vulnerabilities |
+| Generate project rules | `/oss-create-rules` | Generate project rule files for a new or existing repository |
+| Install project rules | `/oss-install-info` | Install project rules from the known-projects repository |
+| Initialize workspace | `/oss-workspace-init` | Initialize or rediscover a multi-repo workspace |
+| Workspace status | `/oss-workspace-status` | Report status of all repos in a workspace |
+| Create multi-repo issue | `/oss-create-multi-repo-issue` | Create and link issues across multiple repositories |
+| Fix multi-repo issue | `/oss-fix-multi-repo-issue` | Fix an issue spanning multiple repositories |
+| Create test plan | `/oss-qe-create-test-plan` | Create a test plan for a project feature or component |
+| Execute test plan | `/oss-qe-verify` | Execute an existing test plan and track results |
 
 ## Usage Examples
 
 ### Fix an Issue
 
-```bash
-# Navigate to any project with .oss-ai-helper-rules/, then:
+```
+# With Claude, Bob, or Codex — just ask naturally:
+fix issue 42
+fix issue CAMEL-20410
+fix https://github.com/wanaku-ai/wanaku/issues/42
 
-# GitHub project - using issue number
+# With Gemini or OpenCode — use the command:
 /oss-fix-issue 42
-
-# GitHub project - using full URL
-/oss-fix-issue https://github.com/wanaku-ai/wanaku/issues/42
-
-# Jira project (camel-core) - using issue ID
 /oss-fix-issue CAMEL-20410
-
-# Jira project - using full URL
-/oss-fix-issue https://issues.apache.org/jira/browse/CAMEL-22326
 ```
 
 ### Find a Task
 
-```bash
-# Interactive - asks about your experience level
+```
+# Natural language:
+find me a task to contribute to
+
+# Command:
 /oss-find-task
 ```
 
-The command will:
-
-1. Detect the current project
-2. Ask about your experience level
-3. Search for appropriate issues (good first issue, help wanted, etc.)
-4. Present a list of options
-5. Guide you to use `/oss-fix-issue` to implement
-
 ### Review a Pull Request
 
-```bash
-# Review by pull request number
+```
+# Natural language:
+review PR 42
+review https://github.com/wanaku-ai/wanaku/pull/42
+
+# Command:
 /oss-review-pr 42
-
-# Review by full URL
-/oss-review-pr https://github.com/wanaku-ai/wanaku/pull/42
-```
-
-The command will:
-
-1. Detect the current project
-2. Load the project's rule files
-3. Fetch the PR metadata and diff
-4. Review the PR against project guidelines, standards, and contribution expectations
-5. Report actionable findings without replacing specialized review tools or static analyzers
-
-### Analyze an Issue
-
-```bash
-# Using issue number
-/oss-analyze-issue 42
-
-# Using full URL
-/oss-analyze-issue https://github.com/wanaku-ai/wanaku/issues/42
-```
-
-The command will:
-
-1. Fetch the issue details and comments
-2. Investigate the codebase for relevant code
-3. Check related repos if configured
-4. Provide a structured analysis report
-5. Suggest next steps (fix, ask for more info, etc.)
-
-### Multi-Repo Workspace Workflows
-
-```bash
-# Initialize a workspace from the current project's Related repositories
-/oss-workspace-init
-
-# Add explicit repositories and choose a workspace root
-/oss-workspace-init my-family repo=org/core repo=org/web root=../my-family-workspace
-
-# Inspect all repositories in the workspace
-/oss-workspace-status
-
-# Create a canonical cross-repo tracking issue
-/oss-create-multi-repo-issue "Add coordinated feature across core and UI"
-
-# Fix an existing cross-repo issue
-/oss-fix-multi-repo-issue https://github.com/org/core/issues/42
-```
-
-The workspace commands provide a durable model for project families made of multiple repositories. `/oss-workspace-init` reads `Related repositories` from `project-info.md`, asks which repositories belong in the workspace, clones or registers them under a deterministic workspace root, loads each repository's own rules, detects normal checkouts versus git worktrees, and writes lightweight metadata in `.oss-helper-workspace.json` outside the individual repositories.
-
-`/oss-workspace-status` is read-only and reports each repository's branch, checkout/worktree type, dirty state, remote tracking state, loaded rule source, open PR for the current branch, and known build/test commands.
-
-For tracked cross-repo work, `/oss-create-multi-repo-issue` searches for duplicates across affected repositories, asks which tracker owns the canonical issue, creates a primary issue with affected repositories and validation expectations, and can create linked child issues after confirmation. `/oss-fix-multi-repo-issue` fetches the canonical issue, inspects the workspace, presents a cross-repo impact plan before editing, prepares branches or worktrees per repository, validates each changed repository from the correct path, and opens linked sibling PRs.
-
-### Triage an Issue
-
-```bash
-# Triage by issue number
-/oss-triage-issue 42
-
-# Using full URL (GitHub or Jira)
-/oss-triage-issue https://github.com/org/repo/issues/42
-```
-
-The command will:
-
-1. Detect the current project and load its rules
-2. Fetch the issue and its comments (GitHub or Jira)
-3. Understand the report and flag any missing information
-4. Attempt to reproduce it against current `main` (or justify why it can't)
-5. Search the tracker for duplicates and git history for prior fixes
-6. Classify it — type, priority, affected component — with labels validated against the tracker
-7. Produce a triage summary with a recommended disposition
-8. Propose a follow-up: hand off to `/oss-fix-issue`, draft a "needs more info" reply, refine via `/oss-create-issue`, or close as duplicate / already-fixed / invalid / wontfix
-
-This is maintainer-side triage (distinct from the contributor-side `/oss-analyze-issue`). Nothing is posted to the tracker — no comments, labels, state changes, or assignments — until you confirm a specific handoff.
-
-### Create an Issue
-
-```bash
-# Interactive - will prompt for details
-/oss-create-issue
-
-# With title provided
-/oss-create-issue "Add support for custom headers in HTTP requests"
 ```
 
 ### Quick Fix
 
-```bash
-# Upgrade a dependency
+```
+# Natural language:
+upgrade Quarkus BOM to 3.18.0
+fix broken link in CONTRIBUTING.md
+
+# Command:
 /oss-quick-fix upgrade Quarkus BOM to 3.18.0
-
-# Fix documentation
-/oss-quick-fix fix broken link in CONTRIBUTING.md
-
-# Update CI
-/oss-quick-fix update GitHub Actions checkout to v4
 ```
-
-### Fix SonarCloud Issues
-
-```bash
-# Fix cognitive complexity issues
-/oss-fix-sonarcloud S3776
-
-# Fix pattern matching for instanceof
-/oss-fix-sonarcloud S6201
-
-# Fix issues in a specific module only
-/oss-fix-sonarcloud S3457 module=components/camel-jms
-
-# Limit number of issues to process
-/oss-fix-sonarcloud S6126 limit=10
-```
-
-### Fix a GitHub Security or Quality Alert
-
-```bash
-# List open Code Scanning alerts in the current project
-/oss-fix-github-alert code-scanning
-
-# Work on a specific Code Scanning alert (assigns it to you, walks the fix)
-/oss-fix-github-alert code-scanning alert=42
-
-# Filter Dependabot alerts by severity
-/oss-fix-github-alert dependabot severity=high
-
-# Work on a Secret Scanning alert (warns about provider-side rotation)
-/oss-fix-github-alert secret-scanning alert=7
-```
-
-The command will:
-
-1. Detect the current project and validate the alert type
-2. List open alerts (when no `alert=` is provided) with severity, rule, and location
-3. For a specific alert: fetch its details and assign it to you via the GitHub API
-4. Walk through analyzing and fixing the alert (root-cause fix, dependency bump, or secret removal)
-5. Create a branch, commit, push, and open a PR linking back to the alert
-
-### Fix a Backlog Task
-
-```bash
-# Fix a backlog task, pointing to the backlog repository
-/oss-fix-backlog-task TASK-001 repo=/home/user/projects/my-backlog
-
-# Another example
-/oss-fix-backlog-task TASK-042 repo=/home/user/work/team-backlog
-```
-
-The command will:
-
-1. Verify the Backlog MCP server is available
-2. Detect the current project
-3. Fetch the task details from the backlog repository
-4. Implement the fix following project standards
-5. Create a branch, commit, push, and open a PR
-6. Update the backlog task with implementation notes and mark it as done
-
-**Note:** Requires the Backlog MCP server to be configured and running.
-
-### Check PR Status
-
-```bash
-# Auto-detect PR from current branch
-/oss-pr-status
-
-# By PR number
-/oss-pr-status 42
-
-# By full URL
-/oss-pr-status https://github.com/org/repo/pull/42
-```
-
-The command will:
-
-1. Detect the current project
-2. Fetch PR metadata, CI check results, and reviews
-3. Present a structured status report
-4. Identify blockers (failing checks, pending reviews, conflicts)
-5. Suggest next steps (e.g., `/oss-fix-ci-errors` for failing CI)
-
-### List All Your PR Statuses
-
-```bash
-# List all your open PRs in the current project
-/oss-list-pr-status
-```
-
-The command will:
-
-1. Detect the current project
-2. List all your open PRs with CI, review, and merge readiness status
-3. Highlight PRs needing attention (failing CI, changes requested, conflicts)
-4. Suggest using `/oss-pr-status <number>` for detailed inspection of individual PRs
-
-### Browse Open PRs to Review
-
-```bash
-# List all open PRs in the current repo (non-draft, limit 20)
-/oss-list-prs
-
-# Filter by author
-/oss-list-prs author=octocat
-
-# Filter by label (quote multi-word labels)
-/oss-list-prs label="needs review"
-
-# Raise the limit
-/oss-list-prs limit=50
-
-# Include draft PRs
-/oss-list-prs include-drafts
-
-# Hide PRs you authored
-/oss-list-prs exclude-mine
-```
-
-The command will:
-
-1. Detect the current project
-2. List all open PRs in the repository (one `gh pr list` call, no per-PR CI fetch)
-3. Present them in a numbered table with author, branch, review state, draft flag, and last update
-4. Ask which PR you want to review
-5. Hand off to `/oss-review-pr <number>` for the actual review
-
-This is the counterpart to `/oss-list-pr-status`: that command lists *your own* PRs for tracking your work, while `/oss-list-prs` lists *all* open PRs in the repo for browsing and review selection.
-
-### Review a Batch of Open PRs
-
-```bash
-# Review every open PR you haven't reviewed yet (non-draft)
-/oss-review-prs
-
-# Dry run — produce the consolidated report, post nothing
-/oss-review-prs post=none
-
-# Post only the actionable reviews (comments / change requests), skip approvals
-/oss-review-prs post=actionable
-
-# Post everything, allowing formal approvals on clean PRs
-/oss-review-prs post=all auto-approve
-
-# Re-review PRs you've already reviewed (e.g. after the author pushed new commits)
-/oss-review-prs include-reviewed
-
-# Scope to one author or label
-/oss-review-prs author=octocat
-/oss-review-prs label="needs review"
-```
-
-The command will:
-
-1. Detect the current project
-2. Select the open PRs you haven't reviewed (excluding your own and, by default, drafts and `[DO NOT MERGE]` PRs)
-3. Review each in parallel against the project rules — the same evaluation as `/oss-review-pr`
-4. Verify CI state and factual claims, then present one consolidated, severity-sorted report
-5. Submit all the reviews after a single approval — never formally approving in your name unless `auto-approve` is set
-
-This is the batch counterpart to `/oss-list-prs`: where `/oss-list-prs` hands a single PR to `/oss-review-pr`, `/oss-review-prs` reviews many at once and gates once.
-
-### List Your Assigned Issues
-
-```bash
-# List all open issues assigned to you
-/oss-list-issues
-
-# Filter by label
-/oss-list-issues label="bug"
-
-# Include closed issues
-/oss-list-issues state=all
-
-# Raise the limit
-/oss-list-issues limit=50
-```
-
-The command will:
-
-1. Detect the current project and its issue tracker type (GitHub or Jira)
-2. List all issues assigned to you with a single API call
-3. Present them in a numbered table with key details (title, labels, status, priority)
-4. Ask which issue you want to work on
-5. Hand off to `/oss-fix-issue` or `/oss-analyze-issue`
 
 ### Backport a Merged PR
 
-```bash
-# Backport PR #42 to a release branch
+```
+# Natural language:
+backport PR 42 to the release/1.x branch
+
+# Command:
 /oss-backport-pr 42 branch=release/1.x
-
-# Backport by URL
-/oss-backport-pr https://github.com/org/repo/pull/42 branch=camel-4.8.x
 ```
-
-The command will:
-
-1. Validate the source PR is merged and the target branch exists
-2. Cherry-pick the PR commits onto a new backport branch
-3. Attempt to resolve conflicts automatically, or report them clearly
-4. Open a backport PR with `[backport <branch>]` title prefix, linking back to the original PR
-
-### Triage a Security Report
-
-```bash
-# Paste the report inline (agent will ask)
-/oss-triage-security-report
-
-# Read the report from a local file
-/oss-triage-security-report ~/reports/incoming-report.txt
-
-# Fetch from a URL (the agent will ask for confirmation first)
-/oss-triage-security-report https://example.com/report.txt
-```
-
-The command will:
-
-1. Detect the current project and load its rules
-2. Acquire the report (paste / file / URL) and confirm confidentiality
-3. Extract each technical claim from the report as a discrete bullet
-4. Verify each claim against the current codebase (file reads, grep, git history)
-5. Check git history for prior fixes, related CVEs, and parent tickets
-6. Produce a structured triage summary with a confirmed/refuted verdict per claim
-7. Recommend a follow-up path (private advisory, sanitized tracking issue, reporter reply, or duplicate pointer)
-8. When a public tracking issue is the right path, propose sanitized issue text with all exploit specifics removed, then hand off to `/oss-create-issue` only after your confirmation
-
-No content is published anywhere until you explicitly confirm a handoff.
-
-### Analyze a Third-Party CVE
-
-```bash
-# Analyze by CVE ID (the command will infer affected dependencies from the advisory)
-/oss-analyze-third-party-cve CVE-2024-12345
-
-# Disambiguate when the advisory covers multiple packages
-/oss-analyze-third-party-cve CVE-2024-12345 org.apache.commons:commons-text
-
-# By GHSA ID
-/oss-analyze-third-party-cve GHSA-abcd-efgh-1234
-```
-
-The command will:
-
-1. Detect the current project and load its rules
-2. Fetch the advisory record from GHSA / NVD / OSV / vendor sources (asking before fetching URLs)
-3. Locate the affected dependency in the project using the project's actual build tool (resolved version, not just manifest)
-4. Map the cited vulnerable APIs / config to project usage with file/line citations and reachability notes
-5. Cross-check prior issues, PRs, commits, and Dependabot alerts referencing the advisory
-6. Produce a structured exposure report with a verdict (`exposed` / `not exposed in current usage` / `not affected` / `inconclusive`) and confidence level
-7. Propose a sanitized follow-up: dependency bump via `/oss-quick-fix`, tracking issue via `/oss-create-issue`, an existing Dependabot alert via `/oss-fix-github-alert`, or a documented "not affected" rationale
-
-Like `/oss-triage-security-report`, this is a local investigative workflow — nothing is published until you explicitly confirm a handoff, and exploit specifics are stripped from any text proposed for downstream public artifacts.
-
-### Scan the Codebase for Vulnerabilities
-
-```bash
-# Scan the whole first-party codebase, anchored to the project's threat model
-/oss-security-scan
-
-# Scope to a module or path
-/oss-security-scan services/auth
-
-# Only report high+ severity, and skip external scanners (reasoning only)
-/oss-security-scan core/ severity=high scanners=off
-
-# Restrict to specific installed scanners
-/oss-security-scan scanners=semgrep,gosec
-```
-
-The command will:
-
-1. Detect the current project and load its rules (including `project-security.md` when present)
-2. Establish a threat / security model — from `project-security.md`, an in-repo `SECURITY.md` / threat-model doc, or by generating a lightweight one when none exists
-3. Determine and state the scan scope, excluding vendored/generated/build output
-4. Detect and run whatever security scanners are installed (SAST/SCA/secrets), recording which ran and which were skipped
-5. Add reasoning-based static analysis, tracing data flow from threat-model entry points to sinks beyond what the tools flag
-6. Triage findings — de-duplicate, drop false positives, assess reachability, assign severity and confidence
-7. Produce a confidential findings report under the :robot: disclaimer
-8. Propose a follow-up per finding: private advisory via `/oss-create-security-advisory`, deeper triage via `/oss-triage-security-report`, a sanitized hardening issue via `/oss-create-issue`, a dependency CVE via `/oss-analyze-third-party-cve` / `/oss-fix-github-alert`, or a trivial fix via `/oss-quick-fix`
-
-Findings are treated as potential undisclosed vulnerabilities and kept confidential — nothing is published until you confirm a handoff, and exploit specifics are stripped from any public-facing text. When a threat model is generated, it is offered as a public-safe PR (via `/oss-quick-fix`), separate from the findings.
 
 ### Install Project Rules
 
-```bash
-# List projects available in the known-projects repository
-/oss-install-info
-
-# Install the rules for a specific project
-/oss-install-info camel-core
-
-# Detect the slug from the current git remote and install the matching project
-/oss-install-info auto
-
-# Install every project in the known-projects repository
-/oss-install-info all
 ```
+# Natural language:
+install project rules for camel-core
 
-The command will:
-
-1. Resolve the known-projects repository (default `Open-Harness-Engineering/ai-agents-oss-known-projects`)
-2. Fetch the three rule files (`project-info.md`, `project-standards.md`, `project-guidelines.md`) for the requested project (or for every project when `all` is used)
-3. Write them under the agent's rules directory (e.g., `~/.claude/rules/<project>/`)
-4. Skip projects where the local `## Version` SHA already matches the remote version
-5. In `all` mode, print a single summary table when finished instead of per-project confirmations
-
-Subsequent OSS Helper commands pick up the newly installed rules through `.oss-init.md` step 2B without any further configuration.
+# Command:
+/oss-install-info camel-core
+/oss-install-info auto           # detect from git remote
+/oss-install-info all            # install all known projects
+```
 
 #### Pointing at a different rules repository
 
@@ -557,99 +183,78 @@ The default source is [`Open-Harness-Engineering/ai-agents-oss-known-projects`](
 | `OSS_KNOWN_PROJECTS_REPO` | `Open-Harness-Engineering/ai-agents-oss-known-projects` | GitHub `org/repo` to read rules from |
 | `OSS_KNOWN_PROJECTS_BRANCH` | `main` | Branch within that repository |
 
-Example:
+## Agent-Specific Notes
 
-```bash
-# Use a private fork on a release branch
-export OSS_KNOWN_PROJECTS_REPO=acme-corp/ai-agents-oss-known-projects
-export OSS_KNOWN_PROJECTS_BRANCH=release/2026.05
-/oss-install-info camel-core
-```
+### Claude, Bob
 
-Both variables are read each time `/oss-install-info` runs, so the override only applies for the current shell session unless you export it persistently.
+Installed as a background skill at `~/.{agent}/skills/oss-helper/` plus individual `/oss-*` commands in `~/.{agent}/commands/`. You can either describe what you want in natural language (the agent matches it to the skill automatically) or invoke a specific command directly (e.g. `/oss-fix-issue 42`).
 
-### Add a New Project
+### Gemini CLI
 
-```bash
-/oss-add-project my-project "Java project at https://github.com/org/my-project, uses Maven, GitHub issues"
-```
+Individual TOML commands are generated from each guideline file and installed to `~/.gemini/commands/`. Each command includes a preamble instructing Gemini to read project rules from `~/.gemini/rules/<project-directory>/`.
 
-## OpenCode Notes
+### OpenCode
 
-OpenCode uses markdown command files. The installer adds frontmatter descriptions and installs commands to:
+Individual markdown commands with frontmatter are generated and installed to `~/.config/opencode/commands/`. Each command includes a preamble for project rule loading from `~/.config/opencode/rules/<project-directory>/`.
 
-- `~/.config/opencode/commands/`
-- `~/.config/opencode/rules/` (project rule files)
+### Codex
 
-## Codex Notes
-
-Codex uses skills. The installer generates skills from each command and installs them to:
-
-- `~/.agents/skills/`
-
-The shared OSS Helper init file is installed to:
-
-- `~/.codex/oss-helper/.oss-init.md`
-
-Project rule files are installed to:
-
-- `~/.codex/oss-helper/rules/`
-
-Invoke any command in Codex by typing `$<skill-name>` (for example, `$oss-fix-issue`).
-
-## Gemini CLI Notes
-
-Gemini CLI uses TOML command files instead of Markdown. The installer automatically converts `.md` commands to `.toml` format at install time, wrapping the prompt content and extracting the description.
-
-Since Gemini CLI has no auto-loading `rules/` directory, each generated TOML command includes a preamble instructing Gemini to read project rule files from `~/.gemini/rules/<project-directory>/`.
+Installed as a single skill directory at `~/.agents/skills/oss-helper/` with all guideline files as supporting files. Project rule files are installed to `~/.codex/oss-helper/rules/`.
 
 ## Project Structure
 
 ```text
 ai-agents-oss-helper/
-├── install.sh                        # Installation script
+├── install.sh                              # Installation script
 ├── README.md
-└── commands/                         # Generic commands (installed to ~/.{agent}/commands/)
-    ├── oss-add-project.md
-    ├── oss-fix-issue.md
-    ├── oss-review-pr.md
-    ├── oss-find-task.md
-    ├── oss-create-issue.md
-    ├── oss-quick-fix.md
-    ├── oss-analyze-issue.md
-    ├── oss-workspace-init.md
-    ├── oss-workspace-status.md
-    ├── oss-create-multi-repo-issue.md
-    ├── oss-fix-multi-repo-issue.md
-    ├── oss-triage-issue.md
-    ├── oss-fix-sonarcloud.md
-    ├── oss-fix-github-alert.md
-    ├── oss-update-knowledge.md
-    ├── oss-fix-ci-errors.md
-    ├── oss-fix-backlog-task.md
-    ├── oss-pr-status.md
-    ├── oss-list-pr-status.md
-    ├── oss-list-prs.md
-    ├── oss-review-prs.md
-    ├── oss-list-issues.md
-    ├── oss-backport-pr.md
-    ├── oss-triage-security-report.md
-    ├── oss-draft-cve.md
-    ├── oss-analyze-third-party-cve.md
-    ├── oss-security-scan.md
-    ├── oss-install-info.md
-    └── .oss-init.md                  # Shared preamble: project detection & rule loading
+└── skills/
+    └── oss-helper/                         # Single skill with all guidelines
+        ├── SKILL.md                        # Main skill: init logic + capability catalog
+        ├── fix-issue.md                    # Fix an issue
+        ├── review-pr.md                    # Review a PR
+        ├── quick-fix.md                    # Apply a quick fix
+        ├── analyze-issue.md               # Analyze an issue
+        ├── find-task.md                    # Find a task to contribute
+        ├── create-issue.md                # Create a new issue
+        ├── fix-sonarcloud.md              # Fix SonarCloud issues
+        ├── fix-github-alert.md            # Fix a GitHub alert
+        ├── fix-ci-errors.md               # Fix CI errors
+        ├── pr-status.md                   # Check PR status
+        ├── list-pr-status.md              # List your PR statuses
+        ├── list-prs.md                    # List open PRs
+        ├── list-issues.md                 # List assigned issues
+        ├── backport-pr.md                 # Backport a merged PR
+        ├── address-review.md              # Address review feedback
+        ├── merge-pr.md                    # Merge a PR
+        ├── add-project.md                 # Add a new project
+        ├── update-knowledge.md            # Update project rules
+        ├── install-info.md                # Install project rules
+        ├── fix-backlog-task.md            # Fix a backlog task
+        ├── triage-security-report.md      # Triage security report
+        ├── analyze-third-party-cve.md     # Analyze third-party CVE
+        ├── draft-cve.md                   # Draft CVE advisory
+        ├── create-security-advisory.md    # Create security advisory
+        ├── oss-create-multi-repo-issue.md # Create cross-repo issue
+        ├── oss-create-rules.md            # Generate project rules
+        ├── oss-fix-multi-repo-issue.md    # Fix cross-repo issue
+        ├── oss-qe-create-test-plan.md     # Create test plan
+        ├── oss-qe-verify.md               # Execute test plan
+        ├── oss-review-prs.md              # Review a batch of open PRs
+        ├── oss-security-scan.md           # Scan codebase for vulnerabilities
+        ├── oss-triage-issue.md            # Triage a filed issue
+        ├── oss-workspace-init.md          # Initialize multi-repo workspace
+        └── oss-workspace-status.md        # Report workspace status
 ```
 
 Project rule files are no longer bundled with this repository. They live in
 [`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects)
-and are installed on demand via `/oss-install-info <project>`.
+and are installed on demand via the Install Info guideline.
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Add or modify commands/rules
+3. Add or modify guideline files in `skills/oss-helper/`
 4. Update `install.sh` if adding new files
 5. Submit a pull request
 
