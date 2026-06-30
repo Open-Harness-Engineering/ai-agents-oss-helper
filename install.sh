@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Install script for AI Agent OSS Helper commands
+# Install script for AI Agent OSS Helper
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/ai-agents-oss-helper/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
 #   ./install.sh              # Install to all agents (claude, bob, gemini, opencode, codex)
 #   ./install.sh claude       # Install to claude only
 #   ./install.sh bob          # Install to bob only
@@ -18,51 +18,86 @@ set -euo pipefail
 BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main}"
 AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 
-# Command files to install (relative paths from repo root)
-COMMAND_FILES=(
-    "commands/.oss-init.md"
-    "commands/_fragments/_common-init.md"
-    "commands/_fragments/_build-workflow.md"
-    "commands/_fragments/README.md"
-    "commands/oss-add-project.md"
-    "commands/oss-fix-issue.md"
-    "commands/oss-review-pr.md"
-    "commands/oss-find-task.md"
-    "commands/oss-create-issue.md"
-    "commands/oss-quick-fix.md"
-    "commands/oss-analyze-issue.md"
-    "commands/oss-workspace-init.md"
-    "commands/oss-workspace-status.md"
-    "commands/oss-create-multi-repo-issue.md"
-    "commands/oss-fix-multi-repo-issue.md"
-    "commands/oss-triage-issue.md"
-    "commands/oss-fix-sonarcloud.md"
-    "commands/oss-fix-github-alert.md"
-    "commands/oss-update-knowledge.md"
-    "commands/oss-fix-ci-errors.md"
-    "commands/oss-fix-backlog-task.md"
-    "commands/oss-pr-status.md"
-    "commands/oss-list-pr-status.md"
-    "commands/oss-list-prs.md"
-    "commands/oss-review-prs.md"
-    "commands/oss-backport-pr.md"
-    "commands/oss-address-review.md"
-    "commands/oss-merge-pr.md"
-    "commands/oss-create-security-advisory.md"
-    "commands/oss-triage-security-report.md"
-    "commands/oss-draft-cve.md"
-    "commands/oss-list-issues.md"
-    "commands/oss-analyze-third-party-cve.md"
-    "commands/oss-security-scan.md"
-    "commands/oss-install-info.md"
-    "commands/oss-create-rules.md"
-    "commands/oss-qe-create-test-plan.md"
-    "commands/oss-qe-verify.md"
+# Skill directory (relative path from repo root)
+SKILL_DIR="skills/oss-helper"
+
+# All skill files to install (relative paths from repo root)
+SKILL_FILES=(
+    "skills/oss-helper/SKILL.md"
+    "skills/oss-helper/add-project.md"
+    "skills/oss-helper/address-review.md"
+    "skills/oss-helper/analyze-issue.md"
+    "skills/oss-helper/analyze-third-party-cve.md"
+    "skills/oss-helper/backport-pr.md"
+    "skills/oss-helper/create-issue.md"
+    "skills/oss-helper/create-security-advisory.md"
+    "skills/oss-helper/draft-cve.md"
+    "skills/oss-helper/find-task.md"
+    "skills/oss-helper/fix-backlog-task.md"
+    "skills/oss-helper/fix-ci-errors.md"
+    "skills/oss-helper/fix-github-alert.md"
+    "skills/oss-helper/fix-issue.md"
+    "skills/oss-helper/fix-sonarcloud.md"
+    "skills/oss-helper/install-info.md"
+    "skills/oss-helper/list-issues.md"
+    "skills/oss-helper/list-pr-status.md"
+    "skills/oss-helper/list-prs.md"
+    "skills/oss-helper/merge-pr.md"
+    "skills/oss-helper/oss-create-multi-repo-issue.md"
+    "skills/oss-helper/oss-create-rules.md"
+    "skills/oss-helper/oss-fix-multi-repo-issue.md"
+    "skills/oss-helper/oss-qe-create-test-plan.md"
+    "skills/oss-helper/oss-qe-verify.md"
+    "skills/oss-helper/oss-review-prs.md"
+    "skills/oss-helper/oss-security-scan.md"
+    "skills/oss-helper/oss-triage-issue.md"
+    "skills/oss-helper/oss-workspace-init.md"
+    "skills/oss-helper/oss-workspace-status.md"
+    "skills/oss-helper/pr-status.md"
+    "skills/oss-helper/quick-fix.md"
+    "skills/oss-helper/review-pr.md"
+    "skills/oss-helper/triage-security-report.md"
+    "skills/oss-helper/update-knowledge.md"
 )
 
-# Project rule files are no longer bundled with the installer. They live in a
-# separate repository (Open-Harness-Engineering/ai-agents-oss-known-projects)
-# and are installed on demand via the /oss-install-info command.
+# Guideline files that become individual commands for agents without skill support.
+# Each entry: "guideline-filename|oss-command-name|description"
+GUIDELINE_COMMANDS=(
+    "add-project.md|oss-add-project|Add a new project to the OSS Helper"
+    "address-review.md|oss-address-review|Address review feedback on a pull request"
+    "analyze-issue.md|oss-analyze-issue|Analyze an issue to understand the problem"
+    "analyze-third-party-cve.md|oss-analyze-third-party-cve|Analyze exposure to a third-party CVE"
+    "backport-pr.md|oss-backport-pr|Cherry-pick a merged PR onto another branch"
+    "create-issue.md|oss-create-issue|Create a new issue in the project's tracker"
+    "create-security-advisory.md|oss-create-security-advisory|Report a security vulnerability via GitHub"
+    "draft-cve.md|oss-draft-cve|Draft a CVE advisory page"
+    "find-task.md|oss-find-task|Find an issue to contribute to"
+    "fix-backlog-task.md|oss-fix-backlog-task|Fix a task from a Backlog.md file"
+    "fix-ci-errors.md|oss-fix-ci-errors|Download CI reports, identify errors, and fix them"
+    "fix-github-alert.md|oss-fix-github-alert|Fix a GitHub security or quality alert"
+    "fix-issue.md|oss-fix-issue|Fix an issue from the project's issue tracker"
+    "fix-sonarcloud.md|oss-fix-sonarcloud|Fix SonarCloud issues for a given rule"
+    "install-info.md|oss-install-info|Install project rules from the known-projects repository"
+    "list-issues.md|oss-list-issues|List issues assigned to you"
+    "oss-create-rules.md|oss-create-rules|Generate project rule files by auto-inspecting a repository"
+    "list-pr-status.md|oss-list-pr-status|List all your open PRs with status summary"
+    "list-prs.md|oss-list-prs|List all open PRs in the repository"
+    "merge-pr.md|oss-merge-pr|Merge a PR after verifying requirements"
+    "pr-status.md|oss-pr-status|Check CI, review state, and merge readiness of a PR"
+    "quick-fix.md|oss-quick-fix|Apply a quick fix without a tracked issue"
+    "review-pr.md|oss-review-pr|Review a pull request"
+    "triage-security-report.md|oss-triage-security-report|Triage an inbound security vulnerability report"
+    "update-knowledge.md|oss-update-knowledge|Update project rule files"
+    "oss-create-multi-repo-issue.md|oss-create-multi-repo-issue|Create and link issues across multiple repositories"
+    "oss-fix-multi-repo-issue.md|oss-fix-multi-repo-issue|Fix an issue spanning multiple repositories"
+    "oss-qe-create-test-plan.md|oss-qe-create-test-plan|Create a test plan for a project feature or component"
+    "oss-qe-verify.md|oss-qe-verify|Execute an existing test plan and track results"
+    "oss-review-prs.md|oss-review-prs|Review a batch of open PRs"
+    "oss-security-scan.md|oss-security-scan|Scan codebase for security vulnerabilities"
+    "oss-triage-issue.md|oss-triage-issue|Triage a filed issue (maintainer-side)"
+    "oss-workspace-init.md|oss-workspace-init|Initialize a multi-repo workspace"
+    "oss-workspace-status.md|oss-workspace-status|Report status of all repos in a workspace"
+)
 
 # Old rule files to clean up (relative paths under rules/)
 OLD_RULE_FILES=(
@@ -71,8 +106,9 @@ OLD_RULE_FILES=(
     "project-guidelines.md"
 )
 
-# Old command files to clean up (basenames only)
+# Old command files to clean up (basenames only, from previous versions)
 OLD_COMMAND_FILES=(
+    # Legacy v1 commands
     "camel-fix-sonarcloud.md"
     "camel-core-fix-jira-issue.md"
     "camel-core-find-task.md"
@@ -92,6 +128,70 @@ OLD_COMMAND_FILES=(
     "camel-integration-capability-quick-fix.md"
     "ai-agents-oss-helper-create-cmd.md"
     "ai-agents-oss-helper-create-issue.md"
+    # v2 commands (migrated to skill in v3)
+    ".oss-init.md"
+    "oss-add-project.md"
+    "oss-address-review.md"
+    "oss-analyze-issue.md"
+    "oss-analyze-third-party-cve.md"
+    "oss-backport-pr.md"
+    "oss-create-issue.md"
+    "oss-create-security-advisory.md"
+    "oss-draft-cve.md"
+    "oss-find-task.md"
+    "oss-fix-backlog-task.md"
+    "oss-fix-ci-errors.md"
+    "oss-fix-github-alert.md"
+    "oss-fix-issue.md"
+    "oss-fix-sonarcloud.md"
+    "oss-install-info.md"
+    "oss-list-issues.md"
+    "oss-list-pr-status.md"
+    "oss-list-prs.md"
+    "oss-merge-pr.md"
+    "oss-pr-status.md"
+    "oss-quick-fix.md"
+    "oss-review-pr.md"
+    "oss-triage-security-report.md"
+    "oss-update-knowledge.md"
+    "oss-create-rules.md"
+    "oss-triage-issue.md"
+    "oss-review-prs.md"
+    "oss-security-scan.md"
+    "oss-workspace-init.md"
+    "oss-workspace-status.md"
+    "oss-create-multi-repo-issue.md"
+    "oss-fix-multi-repo-issue.md"
+    "oss-qe-create-test-plan.md"
+    "oss-qe-verify.md"
+)
+
+# Old Codex individual skill directories to clean up
+OLD_CODEX_SKILLS=(
+    "oss-add-project"
+    "oss-address-review"
+    "oss-analyze-issue"
+    "oss-analyze-third-party-cve"
+    "oss-backport-pr"
+    "oss-create-issue"
+    "oss-create-security-advisory"
+    "oss-draft-cve"
+    "oss-find-task"
+    "oss-fix-backlog-task"
+    "oss-fix-ci-errors"
+    "oss-fix-github-alert"
+    "oss-fix-issue"
+    "oss-fix-sonarcloud"
+    "oss-install-info"
+    "oss-list-issues"
+    "oss-list-pr-status"
+    "oss-list-prs"
+    "oss-merge-pr"
+    "oss-pr-status"
+    "oss-quick-fix"
+    "oss-review-pr"
+    "oss-triage-security-report"
+    "oss-update-knowledge"
 )
 
 # Colors for output
@@ -145,42 +245,25 @@ fetch_file() {
     fi
 }
 
-# Convert a .md command file to Gemini CLI .toml format
-convert_md_to_toml() {
+# Convert a guideline file to Gemini CLI .toml format
+convert_guideline_to_toml() {
     local src="$1"
     local dest="$2"
-    local description
-    description="$(sed -n '3p' "$src")"
+    local description="$3"
     {
         printf 'description = "%s"\n' "$description"
         printf "prompt = '''\n"
-        printf 'Note: Project rule files are installed at ~/.gemini/rules/<project-directory>/ with files: project-info.md, project-standards.md, project-guidelines.md. Read these files to get project-specific configuration after detecting the project.\n\n'
+        printf 'Note: This is an OSS Helper guideline. Before following these instructions, detect the current project via git remote and load project-specific rules from ~/.gemini/rules/<project-directory>/ (project-info.md, project-standards.md, project-guidelines.md).\n\n'
         cat "$src"
         printf "\n'''\n"
     } > "$dest"
 }
 
-# Convert a .md command file to OpenCode markdown with frontmatter
-convert_md_to_opencode_md() {
+# Convert a guideline file to OpenCode markdown with frontmatter
+convert_guideline_to_opencode_md() {
     local src="$1"
     local dest="$2"
-    local first_non_empty
-    local description
-
-    first_non_empty="$(awk 'NF { print; exit }' "$src")"
-    if [[ "$first_non_empty" == "---" ]]; then
-        cp "$src" "$dest"
-        return 0
-    fi
-
-    description="$(awk '
-        /^#/ { next }
-        NF { print; exit }
-    ' "$src")"
-
-    if [[ -z "$description" ]]; then
-        description="OSS Helper command"
-    fi
+    local description="$3"
 
     # Escape quotes and backslashes for YAML
     description="$(printf '%s' "$description" | sed 's/\\/\\\\/g; s/\"/\\\"/g')"
@@ -189,114 +272,107 @@ convert_md_to_opencode_md() {
         printf -- "---\n"
         printf 'description: "%s"\n' "$description"
         printf -- "---\n\n"
+        printf 'Note: This is an OSS Helper guideline. Before following these instructions, detect the current project via git remote and load project-specific rules from ~/.config/opencode/rules/<project-directory>/ (project-info.md, project-standards.md, project-guidelines.md).\n\n'
         cat "$src"
     } > "$dest"
 }
 
-# Convert a .md command file to Codex skill format
-convert_md_to_codex_skill() {
-    local src="$1"
+# Generate a thin command file for skill agents (Claude, Bob).
+# The background skill provides all initialization and guideline content;
+# the command just triggers the right guideline.
+generate_skill_agent_command() {
+    local guideline_file="$1"
     local dest="$2"
-    local name="$3"
-    local description
-
-    description="$(awk '
-        /^#/ { next }
-        NF { print; exit }
-    ' "$src")"
-
-    if [[ -z "$description" ]]; then
-        description="OSS Helper command"
-    fi
+    local description="$3"
 
     # Escape quotes and backslashes for YAML
     description="$(printf '%s' "$description" | sed 's/\\/\\\\/g; s/\"/\\\"/g')"
 
     {
         printf -- "---\n"
-        printf 'name: %s\n' "$name"
         printf 'description: "%s"\n' "$description"
         printf -- "---\n\n"
-        printf 'Before you begin, read and follow the OSS Helper init file at ~/.codex/oss-helper/.oss-init.md.\n\n'
-        printf 'Invoke this skill by typing `$%s`.\n\n' "$name"
-        cat "$src"
+        printf 'Invoke the oss-helper skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$guideline_file"
     } > "$dest"
 }
 
-# Install commands for a specific agent
-install_for_agent() {
+# Install for agents that support skills natively (Claude, Bob)
+install_skill_agent() {
     local agent="$1"
+    local skills_dir="$HOME/.$agent/skills/oss-helper"
     local commands_dir="$HOME/.$agent/commands"
     local rules_dir="$HOME/.$agent/rules"
-
-    if [[ "$agent" == "opencode" ]]; then
-        commands_dir="$HOME/.config/opencode/commands"
-        rules_dir="$HOME/.config/opencode/rules"
-    fi
-
-    if [[ "$agent" == "codex" ]]; then
-        local skills_root="$HOME/.agents/skills"
-        local codex_base="$HOME/.codex/oss-helper"
-        local codex_rules_dir="$codex_base/rules"
-
-        info "Installing for codex..."
-
-        if ! mkdir -p "$skills_root"; then
-            error "Failed to create directory: $skills_root"
-            return 1
-        fi
-
-        if ! mkdir -p "$codex_rules_dir"; then
-            error "Failed to create directory: $codex_rules_dir"
-            return 1
-        fi
-
-        # Install shared init file
-        if ! fetch_file "commands/.oss-init.md" "$codex_base/.oss-init.md"; then
-            error "Failed to install: .oss-init.md"
-            return 1
-        fi
-
-        # Install skills
-        info "  Installing skills..."
-        for file in "${COMMAND_FILES[@]}"; do
-            local filename
-            filename="$(basename "$file")"
-
-            # Skip the shared init file (installed separately)
-            if [[ "$filename" == ".oss-init.md" ]]; then
-                continue
-            fi
-
-            local skill_name="${filename%.md}"
-            local skill_dir="$skills_root/$skill_name"
-            local skill_dest="$skill_dir/SKILL.md"
-            local tmp_md
-
-            rm -rf "$skill_dir"
-            mkdir -p "$skill_dir"
-            tmp_md="$(mktemp)"
-
-            if fetch_file "$file" "$tmp_md"; then
-                convert_md_to_codex_skill "$tmp_md" "$skill_dest" "$skill_name"
-                rm -f "$tmp_md"
-                info "    Installed skill: $skill_name"
-            else
-                rm -f "$tmp_md"
-                error "    Failed to install skill: $skill_name"
-                return 1
-            fi
-        done
-
-        info "  Skills installed to: $skills_root"
-        info "  Rules directory: $codex_rules_dir (project rules installed on demand via /oss-install-info)"
-        info "  Init file installed to: $codex_base/.oss-init.md"
-        return 0
-    fi
 
     info "Installing for $agent..."
 
     # Create target directories
+    if ! mkdir -p "$skills_dir"; then
+        error "Failed to create directory: $skills_dir"
+        return 1
+    fi
+
+    if ! mkdir -p "$rules_dir"; then
+        error "Failed to create directory: $rules_dir"
+        return 1
+    fi
+
+    # Clean up old command files
+    if [[ -d "$commands_dir" ]]; then
+        info "  Cleaning up old commands..."
+        for old_file in "${OLD_COMMAND_FILES[@]}"; do
+            rm -f "$commands_dir/$old_file"
+        done
+    fi
+
+    # Install skill files
+    info "  Installing skill..."
+    for file in "${SKILL_FILES[@]}"; do
+        local filename
+        filename="$(basename "$file")"
+        local dest="$skills_dir/$filename"
+
+        if fetch_file "$file" "$dest"; then
+            info "    Installed: $filename"
+        else
+            error "    Failed to install: $filename"
+            return 1
+        fi
+    done
+
+    # Install individual commands (thin wrappers that invoke the skill)
+    if ! mkdir -p "$commands_dir"; then
+        error "Failed to create directory: $commands_dir"
+        return 1
+    fi
+
+    info "  Installing commands..."
+    for entry in "${GUIDELINE_COMMANDS[@]}"; do
+        local guideline_file cmd_name description
+        IFS='|' read -r guideline_file cmd_name description <<< "$entry"
+
+        local dest="$commands_dir/${cmd_name}.md"
+        generate_skill_agent_command "$guideline_file" "$dest" "$description"
+        info "    Installed: ${cmd_name}.md"
+    done
+
+    # Remove old monolithic rule files (legacy cleanup)
+    info "  Cleaning up old rule files..."
+    for old_file in "${OLD_RULE_FILES[@]}"; do
+        rm -f "$rules_dir/$old_file"
+    done
+
+    info "  Skill installed to: $skills_dir"
+    info "  Commands installed to: $commands_dir"
+    info "  Rules directory: $rules_dir (project rules installed on demand)"
+}
+
+# Install for Gemini CLI (individual TOML commands + SKILL.md as rule)
+install_gemini() {
+    local commands_dir="$HOME/.gemini/commands"
+    local rules_dir="$HOME/.gemini/rules"
+
+    info "Installing for gemini..."
+
     if ! mkdir -p "$commands_dir"; then
         error "Failed to create directory: $commands_dir"
         return 1
@@ -307,63 +383,33 @@ install_for_agent() {
         return 1
     fi
 
-    # Remove old command files
+    # Clean up old command files
     info "  Cleaning up old commands..."
     for old_file in "${OLD_COMMAND_FILES[@]}"; do
         rm -f "$commands_dir/$old_file"
-        # For gemini, also clean up .toml variants of old commands
-        if [[ "$agent" == "gemini" ]]; then
-            rm -f "$commands_dir/${old_file%.md}.toml"
-        fi
+        rm -f "$commands_dir/${old_file%.md}.toml"
     done
 
-    # Install new command files
+    # Install individual guideline commands as TOML
     info "  Installing commands..."
-    for file in "${COMMAND_FILES[@]}"; do
-        local filename
-        filename="$(basename "$file")"
+    for entry in "${GUIDELINE_COMMANDS[@]}"; do
+        local guideline_file cmd_name description
+        IFS='|' read -r guideline_file cmd_name description <<< "$entry"
 
-        if [[ "$agent" == "gemini" ]]; then
-            # Gemini uses TOML commands: fetch .md to temp, convert to .toml
-            local toml_name="${filename%.md}.toml"
-            local dest="$commands_dir/$toml_name"
-            local tmp_md
-            tmp_md="$(mktemp)"
+        local src_path="$SKILL_DIR/$guideline_file"
+        local toml_name="${cmd_name}.toml"
+        local dest="$commands_dir/$toml_name"
+        local tmp_md
+        tmp_md="$(mktemp)"
 
-            if fetch_file "$file" "$tmp_md"; then
-                convert_md_to_toml "$tmp_md" "$dest"
-                rm -f "$tmp_md"
-                # Remove any stale .md copy in gemini commands dir
-                rm -f "$commands_dir/$filename"
-                info "    Installed: $toml_name"
-            else
-                rm -f "$tmp_md"
-                error "    Failed to install: $toml_name"
-                return 1
-            fi
-        elif [[ "$agent" == "opencode" ]]; then
-            # OpenCode uses markdown with frontmatter in ~/.config/opencode/commands
-            local dest="$commands_dir/$filename"
-            local tmp_md
-            tmp_md="$(mktemp)"
-
-            if fetch_file "$file" "$tmp_md"; then
-                convert_md_to_opencode_md "$tmp_md" "$dest"
-                rm -f "$tmp_md"
-                info "    Installed: $filename"
-            else
-                rm -f "$tmp_md"
-                error "    Failed to install: $filename"
-                return 1
-            fi
+        if fetch_file "$src_path" "$tmp_md"; then
+            convert_guideline_to_toml "$tmp_md" "$dest" "$description"
+            rm -f "$tmp_md"
+            info "    Installed: $toml_name"
         else
-            local dest="$commands_dir/$filename"
-            if fetch_file "$file" "$dest"; then
-                info "    Installed: $filename"
-            else
-                error "    Failed to install: $filename"
-                return 1
-            fi
+            rm -f "$tmp_md"
+            error "    Failed to install: $toml_name"
+            return 1
         fi
     done
 
@@ -374,7 +420,127 @@ install_for_agent() {
     done
 
     info "  Commands installed to: $commands_dir"
-    info "  Rules directory: $rules_dir (project rules installed on demand via /oss-install-info)"
+    info "  Rules directory: $rules_dir (project rules installed on demand)"
+}
+
+# Install for OpenCode (individual commands with frontmatter)
+install_opencode() {
+    local commands_dir="$HOME/.config/opencode/commands"
+    local rules_dir="$HOME/.config/opencode/rules"
+
+    info "Installing for opencode..."
+
+    if ! mkdir -p "$commands_dir"; then
+        error "Failed to create directory: $commands_dir"
+        return 1
+    fi
+
+    if ! mkdir -p "$rules_dir"; then
+        error "Failed to create directory: $rules_dir"
+        return 1
+    fi
+
+    # Clean up old command files
+    info "  Cleaning up old commands..."
+    for old_file in "${OLD_COMMAND_FILES[@]}"; do
+        rm -f "$commands_dir/$old_file"
+    done
+
+    # Install individual guideline commands with frontmatter
+    info "  Installing commands..."
+    for entry in "${GUIDELINE_COMMANDS[@]}"; do
+        local guideline_file cmd_name description
+        IFS='|' read -r guideline_file cmd_name description <<< "$entry"
+
+        local src_path="$SKILL_DIR/$guideline_file"
+        local dest="$commands_dir/${cmd_name}.md"
+        local tmp_md
+        tmp_md="$(mktemp)"
+
+        if fetch_file "$src_path" "$tmp_md"; then
+            convert_guideline_to_opencode_md "$tmp_md" "$dest" "$description"
+            rm -f "$tmp_md"
+            info "    Installed: ${cmd_name}.md"
+        else
+            rm -f "$tmp_md"
+            error "    Failed to install: ${cmd_name}.md"
+            return 1
+        fi
+    done
+
+    # Remove old monolithic rule files (legacy cleanup)
+    info "  Cleaning up old rule files..."
+    for old_file in "${OLD_RULE_FILES[@]}"; do
+        rm -f "$rules_dir/$old_file"
+    done
+
+    info "  Commands installed to: $commands_dir"
+    info "  Rules directory: $rules_dir (project rules installed on demand)"
+}
+
+# Install for Codex (single skill directory)
+install_codex() {
+    local skills_root="$HOME/.agents/skills"
+    local skill_dir="$skills_root/oss-helper"
+    local codex_rules_dir="$HOME/.codex/oss-helper/rules"
+
+    info "Installing for codex..."
+
+    if ! mkdir -p "$skill_dir"; then
+        error "Failed to create directory: $skill_dir"
+        return 1
+    fi
+
+    if ! mkdir -p "$codex_rules_dir"; then
+        error "Failed to create directory: $codex_rules_dir"
+        return 1
+    fi
+
+    # Clean up old individual skill directories
+    info "  Cleaning up old skills..."
+    for old_skill in "${OLD_CODEX_SKILLS[@]}"; do
+        rm -rf "$skills_root/$old_skill"
+    done
+    # Clean up old init file
+    rm -f "$HOME/.codex/oss-helper/.oss-init.md"
+
+    # Install skill files
+    info "  Installing skill..."
+    for file in "${SKILL_FILES[@]}"; do
+        local filename
+        filename="$(basename "$file")"
+        local dest="$skill_dir/$filename"
+
+        if fetch_file "$file" "$dest"; then
+            info "    Installed: $filename"
+        else
+            error "    Failed to install: $filename"
+            return 1
+        fi
+    done
+
+    info "  Skill installed to: $skill_dir"
+    info "  Rules directory: $codex_rules_dir (project rules installed on demand)"
+}
+
+# Install for a specific agent
+install_for_agent() {
+    local agent="$1"
+
+    case "$agent" in
+        claude|bob)
+            install_skill_agent "$agent"
+            ;;
+        gemini)
+            install_gemini
+            ;;
+        opencode)
+            install_opencode
+            ;;
+        codex)
+            install_codex
+            ;;
+    esac
 }
 
 # Main
@@ -383,10 +549,8 @@ main() {
 
     # Parse arguments
     if [[ $# -eq 0 ]]; then
-        # No arguments: install for all agents
         agents_to_install=("${AGENTS[@]}")
     else
-        # Validate agent argument
         local valid=false
         for agent in "${AGENTS[@]}"; do
             if [[ "$1" == "$agent" ]]; then
@@ -409,7 +573,6 @@ main() {
     echo "================================"
     echo ""
 
-    # Install for each agent
     for agent in "${agents_to_install[@]}"; do
         install_for_agent "$agent"
         echo ""
@@ -417,14 +580,9 @@ main() {
 
     info "Installation complete!"
     echo ""
-    echo "Available commands:"
-    for file in "${COMMAND_FILES[@]}"; do
-        local filename
-        filename="$(basename "$file" .md)"
-        # Skip hidden preamble files (not user-invocable)
-        [[ "$filename" == .* ]] && continue
-        echo "  /$filename"
-    done
+    echo "The OSS Helper skill is installed as background knowledge."
+    echo "Just describe what you want to do (e.g., 'fix issue #42', 'review PR 15')"
+    echo "and the agent will follow the appropriate guidelines automatically."
 }
 
 main "$@"

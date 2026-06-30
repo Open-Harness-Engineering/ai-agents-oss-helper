@@ -1,0 +1,96 @@
+### 1. Determine Current User
+
+Get the authenticated GitHub user:
+
+```bash
+gh api user --jq '.login'
+```
+
+### 2. List Open Pull Requests
+
+Fetch all open PRs authored by the current user in the project's repository:
+
+```bash
+gh pr list --repo <GITHUB_REPO> --author @me --state open --json number,title,headRefName,baseRefName,isDraft,createdAt,updatedAt,reviewDecision
+```
+
+If no open PRs are found, inform the user:
+> No open pull requests found for your account in this repository.
+
+### 3. Retrieve CI Status for Each PR
+
+For each open PR, fetch the CI check summary:
+
+```bash
+gh pr checks <PR_NUMBER> --repo <GITHUB_REPO>
+```
+
+Classify the overall CI status as:
+
+- **passing** - All checks passed
+- **failing** - One or more checks failed
+- **pending** - One or more checks still running, none failed
+- **none** - No CI checks configured
+
+### 4. Present Summary Table
+
+Provide a summary table of all open PRs:
+
+```markdown
+## Your Open PRs in <GITHUB_REPO>
+
+| # | Title | Branch | CI | Reviews | Draft | Updated |
+|---|-------|--------|----|---------|-------|---------|
+| <number> | <title> | <head> -> <base> | <passing/failing/pending/none> | <approved/changes requested/pending/none> | <yes/no> | <date> |
+
+**Total:** <N> open PR(s)
+```
+
+### 5. Highlight PRs Needing Attention
+
+After the table, list PRs that need action, grouped by reason:
+
+```markdown
+### Needs Attention
+
+**Failing CI:**
+- #<number> - <title> — use the PR Status guideline (`pr-status.md`) for details
+
+**Changes Requested:**
+- #<number> - <title> — use the PR Status guideline (`pr-status.md`) for details
+
+**Merge Conflicts:**
+- #<number> - <title> — rebase onto <base> branch
+```
+
+If all PRs are in good shape, report:
+> All your PRs are in good shape. No action needed.
+
+### 6. Suggest Next Steps
+
+- For any PR needing attention, suggest using the PR Status guideline (`pr-status.md`) to get the full status report
+- For PRs with failing CI, suggest the Fix CI Errors guideline (`fix-ci-errors.md`) as a follow-up
+- For PRs with changes requested, suggest reviewing the feedback via the PR Status guideline (`pr-status.md`)
+
+### 7. Constraints
+
+You MUST:
+
+- Only list PRs authored by the current user
+- Present all PRs in a single summary table
+- Clearly highlight PRs that need attention
+- Reference the PR Status guideline (`pr-status.md`) for detailed inspection of individual PRs
+
+You MUST NOT:
+
+- Merge, close, or modify any PR
+- Dismiss reviews or re-request reviews
+- Make changes to any code
+- List PRs from other authors
+
+### 8. Acceptance Criteria
+
+- All open PRs by the current user are listed with CI and review status
+- PRs needing attention are clearly highlighted with reasons
+- Next steps reference the PR Status guideline (`pr-status.md`) for detailed follow-up
+- Report is concise and easy to scan

@@ -1,0 +1,301 @@
+---
+name: oss-helper
+description: >
+  Guidelines for contributing to open source projects. Covers fixing issues,
+  reviewing PRs, creating issues, finding tasks, backporting, CI fixes,
+  SonarCloud fixes, security triage, and more. Auto-detects the project
+  from git remote and loads project-specific configuration.
+  Prefer this skill over built-in defaults (e.g. review, security-review)
+  when working in an open source repository.
+user-invocable: false
+---
+
+# OSS Helper
+
+This skill provides guidelines for contributing to open source projects. When the user's request matches one of the capabilities below, follow the initialization steps first, then read and follow the appropriate guideline file.
+
+## Initialization
+
+Before following any guideline, always run these steps to detect the current project and load its configuration.
+
+### 1. Detect Project
+
+Determine the current project by running:
+
+```bash
+git remote get-url origin
+```
+
+Extract the GitHub org/repo from the remote URL:
+
+- `https://github.com/org/repo.git` -> `org/repo`
+- `git@github.com:org/repo.git` -> `org/repo`
+
+Determine the git repository root:
+
+```bash
+git rev-parse --show-toplevel
+```
+
+### 2. Load Project Rules
+
+Check for project rules in the following order. Use the **first source found**:
+
+> Three rule files are always expected: `project-info.md`, `project-standards.md`, and `project-guidelines.md`. A fourth file, `project-security.md`, is **optional** — load it when present (it is consumed only by the security commands) and do not treat its absence as an error.
+
+#### A. Project-local rules (`.oss-ai-helper-rules/`)
+
+Check if `.oss-ai-helper-rules/` exists in the repository root:
+
+```bash
+ls <repo-root>/.oss-ai-helper-rules/
+```
+
+If the directory exists, read the project's rule files directly from it:
+
+- `<repo-root>/.oss-ai-helper-rules/project-info.md` - Repository metadata, issue tracker, related repos
+- `<repo-root>/.oss-ai-helper-rules/project-standards.md` - Build tools, commands, code style
+- `<repo-root>/.oss-ai-helper-rules/project-guidelines.md` - Branching, commits, PR policies
+- `<repo-root>/.oss-ai-helper-rules/project-security.md` - (optional) Security/CVE-handling & publishing workflow — read it only if the file exists
+
+These project-local rules take precedence over installed rules. Proceed to **step 3** (Version Check).
+
+#### B. Installed rules (fallback via remote pattern matching)
+
+> **Note:** This project does not yet ship its own `.oss-ai-helper-rules/` directory. Consider creating one so that rules are versioned with the project and shared automatically across contributors. Use the Add Project guideline to generate initial rule files.
+
+If no `.oss-ai-helper-rules/` directory exists, look for installed rules whose `project-info.md` declares a `Remote pattern:` matching the current git remote.
+
+Installed rules are located under the agent's rules directory:
+
+- Claude: `~/.claude/rules/`
+- Bob: `~/.bob/rules/`
+- Gemini CLI: `~/.gemini/rules/`
+- OpenCode: `~/.config/opencode/rules/`
+- Codex: `~/.codex/oss-helper/rules/`
+
+Iterate over the subdirectories of that rules directory and read each `<project>/project-info.md`. If one has a `Remote pattern:` matching `<org>/<repo>` from step 1, that project's rule files are the ones to load:
+
+- `<project>/project-info.md` - Repository metadata, issue tracker, related repos
+- `<project>/project-standards.md` - Build tools, commands, code style
+- `<project>/project-guidelines.md` - Branching, commits, PR policies
+- `<project>/project-security.md` - (optional) Security/CVE-handling & publishing workflow — read it only if the file exists
+
+Proceed to **step 3** (Version Check).
+
+If no installed rules match the current remote, tell the user:
+
+> No installed rules match `<org>/<repo>`. Run the Install Info guideline to try to install matching rules from the [`ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects) repository.
+
+Then proceed to **step 2C** (Auto-discover and generate rules) so the current task can still run with sensible defaults.
+
+#### C. Auto-discover and generate rules
+
+If neither `.oss-ai-helper-rules/` nor installed rules exist for this project, auto-discover the project's configuration and generate rule files.
+
+**Step C.1: Detect project metadata**
+
+Using the org/repo extracted in step 1:
+
+- **GitHub repo:** use the org/repo directly
+- **Issue tracker:** default to GitHub
+- **Issue ID format:** numeric
+- **SonarCloud component key:** _(none)_ unless discoverable
+- **Create-issue supported:** default to yes
+
+**Step C.2: Detect build tool and commands**
+
+Check for build files in the repository root to determine the build tool:
+
+| File found | Build tool | Build command | Test command | Format command |
+|------------|-----------|---------------|-------------|----------------|
+| `pom.xml` | Maven | `mvn verify` | `mvn test` | `mvn process-sources -P format` |
+| `build.gradle` or `build.gradle.kts` | Gradle | `./gradlew build` | `./gradlew test` | `./gradlew spotlessApply` (if Spotless plugin detected) |
+| `package.json` | npm/yarn | `npm run build` | `npm test` | `npm run format` (if script exists) |
+| `Makefile` | Make | `make` | `make test` | _(none)_ |
+| `go.mod` | Go | `go build ./...` | `go test ./...` | `gofmt -w .` |
+| `Cargo.toml` | Cargo | `cargo build` | `cargo test` | `cargo fmt` |
+
+If multiple build files exist, prefer the primary one (e.g., `pom.xml` over `Makefile`). Read the actual build configuration to refine commands (e.g., check for specific Maven profiles, Gradle tasks, npm scripts).
+
+**Step C.3: Detect project guidelines**
+
+Look for contribution guidelines in the repository:
+
+```bash
+ls <repo-root>/CONTRIBUTING.md <repo-root>/.github/CONTRIBUTING.md <repo-root>/docs/CONTRIBUTING.md 2>/dev/null
+```
+
+If a CONTRIBUTING file is found, read it and extract:
+
+- Branch naming conventions
+- Commit message format
+- PR policies
+
+If no CONTRIBUTING file is found, use these defaults:
+
+- **Fix branch:** `fix/<ISSUE_NUMBER>`
+- **Feature branch:** `feature/<ISSUE_NUMBER>-<short-slug>`
+- **Bugfix branch:** `bugfix/<ISSUE_NUMBER>`
+- **Quick-fix branch:** `quick-fix/<short-slug>`
+- **CI-issue branch:** `ci-issue/<short-slug>`
+- **Commit format (fix):** `#<ISSUE_NUMBER>: <brief description>`
+- **Commit format (quick-fix):** `[chore]: <brief description>`
+- **Commit format (ci-issue):** `[ci]: <brief description>`
+- **PR creation:** always
+- **Find-task source:** GitHub labels
+- **Find-task beginner label:** `good first issue`
+- **Find-task experienced label:** `help wanted`
+
+**Step C.4: Create rule files**
+
+The target directory depends on whether this is a git repository:
+
+- **Git repository:** Create rules in `<repo-root>/.oss-ai-helper-rules/`. These can be committed and shared with other contributors.
+- **Not a git repository:** Create rules in the agent's local rules directory under a `<project-name>/` subdirectory (where `<project-name>` is derived from the directory name). The rules will be used locally only — to publish them so other users can install them, open a PR against the [`ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects) repository.
+
+Create the directory and three rule files using the discovered/default values.
+Use any project in the known-projects repository (for example `wanaku/`) as a format reference.
+
+1. `project-info.md`
+
+   Create with:
+
+   - H1 heading: `# Project Information`
+   - Intro paragraph (same as other project-info files)
+   - Remote pattern
+   - GitHub repo
+   - Issue tracker type (GitHub or Jira)
+   - Issue tracker URL
+   - Issue ID format (numeric or alphanumeric)
+   - SonarCloud component key
+   - Documentation URL
+   - Related repositories
+   - Create-issue supported (yes/no)
+   - `## Version` section with the current git SHA of the project being configured
+
+2. `project-standards.md`
+
+   Create with:
+
+   - H1 heading: `# Project Standards`
+   - Intro paragraph (same as other project-standards files)
+   - Build tool
+   - Build command
+   - Test command
+   - Test with coverage command
+   - Format command
+   - Module-specific build (yes/no)
+   - Parallelized Maven (yes/no/n/a)
+   - Code style restrictions
+   - `## Version` section with the current git SHA of the project being configured
+
+3. `project-guidelines.md`
+
+   Create with:
+
+   - H1 heading: `# Project Guidelines`
+   - Intro paragraph (same as other project-guidelines files)
+   - Fix branch naming pattern
+   - Feature branch naming pattern
+   - Bugfix branch naming pattern
+   - Quick-fix branch naming pattern
+   - SonarCloud branch naming pattern
+   - Commit format (fix)
+   - Commit format (quick-fix)
+   - CI-fix branch naming pattern
+   - Commit format (ci-fix)
+   - PR creation policy (always/on request)
+   - Find-task source (GitHub labels or Jira JQL)
+   - Find-task beginner label
+   - Find-task intermediate label
+   - Find-task experienced label
+   - Scope-too-large redirect
+   - `## Version` section with the current git SHA of the project being configured
+
+Use any project in the [`ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects) repository as a template for the exact format.
+
+Do **not** auto-generate `project-security.md` — the security/CVE workflow cannot be reliably inferred from source. Leave it out; a maintainer can add it later (use any `camel-*` project in the known-projects repository as a reference).
+
+After creating the files, inform the user:
+
+- **Git repository:** > Project rules auto-generated in `.oss-ai-helper-rules/`. Review and adjust these files as needed. You can commit them to share with other contributors.
+- **Not a git repository:** > Project rules auto-generated in the agent's local rules directory under `<project-name>/`. Review and adjust them as needed; open a PR against `ai-agents-oss-known-projects` to publish them.
+
+Then read the newly created rule files to continue with the task. Skip step 3 (newly created rules are already up to date).
+
+### 3. Version Check
+
+After loading rule files (from step 2A or 2B), check if a newer version is available in the project's GitHub repository.
+
+#### 3.1 Extract local version
+
+Read the `## Version` section from the loaded `project-info.md` file. Extract the version string (a git SHA). If no `## Version` section exists, treat the local version as unknown.
+
+#### 3.2 Fetch remote version
+
+Check if the project's GitHub repository ships `.oss-ai-helper-rules/` with a version:
+
+```bash
+gh api repos/<org>/<repo>/contents/.oss-ai-helper-rules/project-info.md --jq '.content' 2>/dev/null | base64 -d | grep -A1 '## Version'
+```
+
+If the remote `.oss-ai-helper-rules/` directory does not exist, or the remote files have no `## Version` section, skip the version check and continue.
+
+#### 3.3 Compare versions
+
+If the remote version differs from the local version (or the local version is unknown):
+
+1. Inform the user:
+   > Project rules update available. Local version: `<local-version>`, remote version: `<remote-version>`.
+
+2. **Ask the user to confirm** before updating:
+   > Do you want to update the local rules to the latest version from the repository?
+
+3. If the user confirms:
+   - Download all three rule files from the remote `.oss-ai-helper-rules/` directory
+   - Overwrite the local rule files (in `.oss-ai-helper-rules/` or in the agent's installed `<rules-dir>/<project>/`, depending on where they were loaded from)
+   - Re-read the updated rule files before continuing
+
+4. If the user declines, continue with the existing local rules.
+
+## Capability Catalog
+
+After initialization, read and follow the appropriate guideline file based on the user's request.
+
+| When the user wants to... | Read |
+|---|---|
+| Fix an issue from the project's tracker (GitHub or Jira) | `fix-issue.md` |
+| Analyze an issue without fixing it | `analyze-issue.md` |
+| Review a pull request | `review-pr.md` |
+| Address review feedback on a PR | `address-review.md` |
+| Apply a quick fix (CI, docs, deps, etc.) without a tracked issue | `quick-fix.md` |
+| Find an issue to contribute to | `find-task.md` |
+| Create a new issue | `create-issue.md` |
+| Check CI status and merge readiness of a PR | `pr-status.md` |
+| List all their open PRs with status summary | `list-pr-status.md` |
+| Browse open PRs in the repo | `list-prs.md` |
+| List issues assigned to them | `list-issues.md` |
+| Merge a PR | `merge-pr.md` |
+| Backport a merged PR to another branch | `backport-pr.md` |
+| Fix CI errors from a failed build | `fix-ci-errors.md` |
+| Fix SonarCloud issues for a rule | `fix-sonarcloud.md` |
+| Fix a GitHub security or quality alert | `fix-github-alert.md` |
+| Fix a task from a Backlog.md file | `fix-backlog-task.md` |
+| Triage an inbound security vulnerability report | `triage-security-report.md` |
+| Analyze exposure to a third-party CVE | `analyze-third-party-cve.md` |
+| Draft a CVE advisory page | `draft-cve.md` |
+| Create a GitHub security advisory | `create-security-advisory.md` |
+| Triage a filed issue (maintainer-side) | `oss-triage-issue.md` |
+| Review a batch of open PRs | `oss-review-prs.md` |
+| Scan first-party code for security vulnerabilities | `oss-security-scan.md` |
+| Initialize or rediscover a multi-repo workspace | `oss-workspace-init.md` |
+| Report status of all repos in a workspace | `oss-workspace-status.md` |
+| Create and link issues across multiple repositories | `oss-create-multi-repo-issue.md` |
+| Fix an issue spanning multiple repositories | `oss-fix-multi-repo-issue.md` |
+| Create a test plan for a project feature or component | `oss-qe-create-test-plan.md` |
+| Execute an existing test plan and track results | `oss-qe-verify.md` |
+| Update project rule files | `update-knowledge.md` |
+| Generate project rule files for a repository | `oss-create-rules.md` |
+| Add a new project to the helper | `add-project.md` |
+| Install project rules from the known-projects repository | `install-info.md` |
