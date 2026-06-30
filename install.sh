@@ -4,18 +4,22 @@
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
-#   ./install.sh              # Install to all agents (claude, bob, gemini, opencode, codex)
-#   ./install.sh claude       # Install to claude only
-#   ./install.sh bob          # Install to bob only
-#   ./install.sh gemini       # Install to gemini only
-#   ./install.sh opencode     # Install to opencode only
-#   ./install.sh codex        # Install to codex only
+#
+#   git clone https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git ~/.oss-helper
+#   ~/.oss-helper/install.sh              # Install to all agents (claude, bob, gemini, opencode, codex)
+#   ~/.oss-helper/install.sh claude       # Install to claude only
 #
 
 set -euo pipefail
 
 # Configuration
+REPO_URL="${REPO_URL:-https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git}"
+KNOWN_PROJECTS_ORG_REPO="${OSS_KNOWN_PROJECTS_REPO:-Open-Harness-Engineering/ai-agents-oss-known-projects}"
+KNOWN_PROJECTS_BRANCH="${OSS_KNOWN_PROJECTS_BRANCH:-main}"
+KNOWN_PROJECTS_REPO_URL="https://github.com/${KNOWN_PROJECTS_ORG_REPO}.git"
 BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main}"
+INSTALL_DIR="$HOME/.oss-helper"
+KNOWN_PROJECTS_DIR="$INSTALL_DIR/known-projects"
 AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 
 # Shared initialization file (copied into each skill directory during install)
@@ -83,6 +87,7 @@ SKILL_FILES[oss-project]="
     skills/oss-project/add-project.md
     skills/oss-project/install-info.md
     skills/oss-project/oss-create-rules.md
+    skills/oss-project/self-update.md
     skills/oss-project/update-knowledge.md
     skills/oss-project/oss-workspace-init.md
     skills/oss-project/oss-workspace-status.md
@@ -126,6 +131,7 @@ GUIDELINE_COMMANDS=(
     "oss-project|add-project.md|oss-add-project|Add a new project to the OSS Helper"
     "oss-project|install-info.md|oss-install-info|Install project rules from the known-projects repository"
     "oss-project|oss-create-rules.md|oss-create-rules|Generate project rule files by auto-inspecting a repository"
+    "oss-project|self-update.md|oss-self-update|Update the OSS Helper itself"
     "oss-project|update-knowledge.md|oss-update-knowledge|Update project rule files"
     "oss-project|oss-workspace-init.md|oss-workspace-init|Initialize a multi-repo workspace"
     "oss-project|oss-workspace-status.md|oss-workspace-status|Report status of all repos in a workspace"
@@ -187,6 +193,7 @@ OLD_COMMAND_FILES=(
     "oss-quick-fix.md"
     "oss-review-pr.md"
     "oss-triage-security-report.md"
+    "oss-self-update.md"
     "oss-update-knowledge.md"
     "oss-create-rules.md"
     "oss-triage-issue.md"
@@ -252,37 +259,139 @@ error() {
     echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
-# Determine script location (for local installs)
-get_script_dir() {
+# Ensure the oss-helper repository is available at INSTALL_DIR
+ensure_repo() {
+    local script_dir=""
     if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
-        cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    fi
+
+    if [[ -n "$script_dir" ]] && [[ -d "$script_dir/.git" ]]; then
+        local resolved_script resolved_install
+        resolved_script="$(cd "$script_dir" && pwd -P)"
+        resolved_install="$(cd "$INSTALL_DIR" 2>/dev/null && pwd -P 2>/dev/null || echo "")"
+
+        if [[ "$resolved_script" != "$resolved_install" ]]; then
+            if [[ -L "$INSTALL_DIR" ]]; then
+                rm "$INSTALL_DIR"
+            elif [[ -d "$INSTALL_DIR" ]]; then
+                warn "$INSTALL_DIR already exists. Backing up to ${INSTALL_DIR}.bak"
+                mv "$INSTALL_DIR" "${INSTALL_DIR}.bak"
+            fi
+            ln -s "$script_dir" "$INSTALL_DIR"
+            info "Linked $INSTALL_DIR -> $script_dir"
+        fi
+    elif [[ -d "$INSTALL_DIR/.git" ]] || { [[ -L "$INSTALL_DIR" ]] && [[ -d "$(readlink -f "$INSTALL_DIR" 2>/dev/null)/.git" ]]; }; then
+        info "Updating oss-helper repository..."
+        git -C "$INSTALL_DIR" pull --quiet
     else
-        echo ""
+        info "Cloning oss-helper repository to $INSTALL_DIR..."
+        git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
     fi
 }
 
-# Download or copy a file
+# Ensure the known-projects repository is available
+ensure_known_projects_repo() {
+    if [[ -d "$KNOWN_PROJECTS_DIR/.git" ]]; then
+        info "Updating known-projects repository..."
+        git -C "$KNOWN_PROJECTS_DIR" pull --quiet
+    else
+        info "Cloning known-projects repository to $KNOWN_PROJECTS_DIR..."
+        git clone --depth 1 --branch "$KNOWN_PROJECTS_BRANCH" "$KNOWN_PROJECTS_REPO_URL" "$KNOWN_PROJECTS_DIR"
+    fi
+}
+
+# Copy a file from the install directory
 fetch_file() {
     local src="$1"
     local dest="$2"
-    local script_dir
-    script_dir="$(get_script_dir)"
 
-    # If running locally and file exists, copy it
-    if [[ -n "$script_dir" ]] && [[ -f "$script_dir/$src" ]]; then
-        cp "$script_dir/$src" "$dest"
+    if [[ -f "$INSTALL_DIR/$src" ]]; then
+        cp "$INSTALL_DIR/$src" "$dest"
         return 0
     fi
 
-    # Otherwise, download from remote
+    # Fallback: download from remote
     if command -v curl &> /dev/null; then
         curl -fsSL "$BASE_URL/$src" -o "$dest"
     elif command -v wget &> /dev/null; then
         wget -q "$BASE_URL/$src" -O "$dest"
     else
-        error "Neither curl nor wget found. Cannot download files."
+        error "Source file not found: $INSTALL_DIR/$src and no download tool available."
         return 1
     fi
+}
+
+# Create a symlink to a file in the install directory
+link_file() {
+    local src="$1"
+    local dest="$2"
+    local abs_install_dir
+    abs_install_dir="$(cd "$INSTALL_DIR" && pwd -P)"
+
+    if [[ -f "$abs_install_dir/$src" ]]; then
+        ln -sf "$abs_install_dir/$src" "$dest"
+        return 0
+    fi
+
+    error "Source file not found: $abs_install_dir/$src"
+    return 1
+}
+
+# Create a symlink to a directory
+link_dir() {
+    local src_dir="$1"
+    local dest="$2"
+
+    if [[ -d "$src_dir" ]]; then
+        if [[ -L "$dest" ]] || [[ -e "$dest" ]]; then
+            rm -rf "$dest"
+        fi
+        ln -s "$src_dir" "$dest"
+        return 0
+    fi
+
+    error "Source directory not found: $src_dir"
+    return 1
+}
+
+# Install project rules from the known-projects clone
+install_rules() {
+    local rules_dir="$1"
+    local use_symlinks="${2:-false}"
+
+    if [[ ! -d "$KNOWN_PROJECTS_DIR" ]]; then
+        warn "Known-projects repository not available, skipping rules installation."
+        info "  Rules directory: $rules_dir (project rules can be installed on demand)"
+        return 0
+    fi
+
+    info "  Installing project rules..."
+    local abs_kp_dir
+    abs_kp_dir="$(cd "$KNOWN_PROJECTS_DIR" && pwd -P)"
+
+    for project_dir in "$abs_kp_dir"/*/; do
+        [[ -f "$project_dir/project-info.md" ]] || continue
+        local project
+        project="$(basename "$project_dir")"
+
+        if [[ "$use_symlinks" == "true" ]]; then
+            if link_dir "$project_dir" "$rules_dir/$project"; then
+                info "    Linked: $project/"
+            else
+                error "    Failed to link: $project/"
+                return 1
+            fi
+        else
+            mkdir -p "$rules_dir/$project"
+            for rule_file in project-info.md project-standards.md project-guidelines.md project-security.md; do
+                if [[ -f "$project_dir/$rule_file" ]]; then
+                    cp "$project_dir/$rule_file" "$rules_dir/$project/$rule_file"
+                fi
+            done
+            info "    Installed: $project/"
+        fi
+    done
 }
 
 # Convert a guideline file to Gemini CLI .toml format
@@ -444,7 +553,7 @@ install_skill_agent() {
         fi
     done
 
-    # Install each skill
+    # Install each skill (symlinks for instant updates)
     for skill_dir in "${SKILL_DIRS[@]}"; do
         local target_dir="$skills_root/$skill_dir"
 
@@ -455,26 +564,26 @@ install_skill_agent() {
 
         info "  Installing skill: $skill_dir"
 
-        # Install skill files
+        # Install skill files as symlinks
         for file in ${SKILL_FILES[$skill_dir]}; do
             local filename
             filename="$(basename "$file")"
             local dest="$target_dir/$filename"
 
-            if fetch_file "$file" "$dest"; then
-                info "    Installed: $filename"
+            if link_file "$file" "$dest"; then
+                info "    Linked: $filename"
             else
-                error "    Failed to install: $filename"
+                error "    Failed to link: $filename"
                 return 1
             fi
         done
 
-        # Copy shared init.md into each skill directory
+        # Symlink shared init.md into each skill directory
         local init_dest="$target_dir/init.md"
-        if fetch_file "$SHARED_INIT" "$init_dest"; then
-            info "    Installed: init.md (shared)"
+        if link_file "$SHARED_INIT" "$init_dest"; then
+            info "    Linked: init.md (shared)"
         else
-            error "    Failed to install: init.md"
+            error "    Failed to link: init.md"
             return 1
         fi
     done
@@ -522,10 +631,13 @@ install_skill_agent() {
         rm -f "$rules_dir/$old_file"
     done
 
-    info "  Skills installed to: $skills_root/{${SKILL_DIRS[*]}}"
+    # Install project rules (symlinks)
+    install_rules "$rules_dir" "true"
+
+    info "  Skills linked to: $skills_root/{${SKILL_DIRS[*]}} (symlinks -> $INSTALL_DIR)"
     info "  Commands installed to: $commands_dir"
     info "  Sub-agents installed to: $agents_dir"
-    info "  Rules directory: $rules_dir (project rules installed on demand)"
+    info "  Rules linked to: $rules_dir (symlinks -> $KNOWN_PROJECTS_DIR)"
 }
 
 # Install for Gemini CLI (individual TOML commands)
@@ -607,9 +719,12 @@ install_gemini() {
         fi
     done
 
+    # Install project rules (copies)
+    install_rules "$rules_dir" "false"
+
     info "  Commands installed to: $commands_dir"
     info "  Sub-agents installed to: $agents_dir"
-    info "  Rules directory: $rules_dir (project rules installed on demand)"
+    info "  Rules installed to: $rules_dir"
 }
 
 # Install for OpenCode (individual commands with frontmatter)
@@ -689,9 +804,12 @@ install_opencode() {
         fi
     done
 
+    # Install project rules (copies)
+    install_rules "$rules_dir" "false"
+
     info "  Commands installed to: $commands_dir"
     info "  Sub-agents installed to: $agents_dir"
-    info "  Rules directory: $rules_dir (project rules installed on demand)"
+    info "  Rules installed to: $rules_dir"
 }
 
 # Install for Codex (skill directories under ~/.agents/skills/)
@@ -776,9 +894,12 @@ install_codex() {
         fi
     done
 
+    # Install project rules (copies)
+    install_rules "$codex_rules_dir" "false"
+
     info "  Skills installed to: $skills_root/{${SKILL_DIRS[*]}}"
     info "  Sub-agents installed to: $agents_dir"
-    info "  Rules directory: $codex_rules_dir (project rules installed on demand)"
+    info "  Rules installed to: $codex_rules_dir"
 }
 
 # Install for a specific agent
@@ -829,6 +950,11 @@ main() {
     echo ""
     echo "AI Agent OSS Helper - Installer"
     echo "================================"
+    echo ""
+
+    # Ensure both repositories are available
+    ensure_repo
+    ensure_known_projects_repo
     echo ""
 
     for agent in "${agents_to_install[@]}"; do

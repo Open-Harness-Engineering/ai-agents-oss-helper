@@ -1,13 +1,25 @@
-### 1. Resolve Known-Projects Repository
+### 1. Resolve Known-Projects Source
 
-Use the following values (override via environment if set):
+First, check if a local clone of the known-projects repository exists:
+
+```bash
+test -d ~/.oss-helper/known-projects/.git 2>/dev/null
+```
+
+If the local clone exists, use it as the source for all operations in this guideline. Read files directly from `~/.oss-helper/known-projects/<project>/` instead of making GitHub API calls. To get the latest version, pull first:
+
+```bash
+git -C ~/.oss-helper/known-projects pull --quiet 2>/dev/null
+```
+
+If the local clone does not exist, fall back to the GitHub API using these values (override via environment if set):
 
 | Variable | Default |
 |----------|---------|
 | `OSS_KNOWN_PROJECTS_REPO` | `Open-Harness-Engineering/ai-agents-oss-known-projects` |
 | `OSS_KNOWN_PROJECTS_BRANCH` | `main` |
 
-These determine the GitHub repo and branch that the command reads project rule files from.
+These determine the GitHub repo and branch that the guideline reads project rule files from.
 
 ### 2. Resolve Target Rules Directory
 
