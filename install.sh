@@ -25,6 +25,18 @@ SHARED_INIT="skills/_shared/init.md"
 # Each skill is a directory under skills/ containing a SKILL.md and guideline files.
 SKILL_DIRS=("oss-issues" "oss-review" "oss-ci" "oss-security" "oss-project" "oss-qe")
 
+# Sub-agent definitions (installed for all tools in their native format)
+AGENT_FILES=(
+    "agents/oss-carbon-frontend-specialist.md"
+    "agents/oss-code-reviewer.md"
+    "agents/oss-marketing-specialist.md"
+    "agents/oss-quarkus-backend-specialist.md"
+    "agents/oss-software-architect.md"
+    "agents/oss-technical-writer.md"
+    "agents/oss-test-engineer-java.md"
+    "agents/qa-test-strategist.md"
+)
+
 # Files for each skill (relative paths from repo root)
 declare -A SKILL_FILES
 SKILL_FILES[oss-issues]="
@@ -303,6 +315,83 @@ convert_guideline_to_opencode_md() {
     } > "$dest"
 }
 
+# Extract the body of an agent file (everything after the closing --- of frontmatter)
+extract_agent_body() {
+    local file="$1"
+    awk 'BEGIN{c=0} /^---[[:space:]]*$/{c++; if(c==2){found=1; next}} found{print}' "$file"
+}
+
+# Extract a frontmatter field value (handles quoted and unquoted values)
+extract_fm_field() {
+    local file="$1"
+    local field="$2"
+    awk -v field="$field" '
+        BEGIN{in_fm=0}
+        /^---[[:space:]]*$/{in_fm++; next}
+        in_fm==1 && $0 ~ "^"field":" {
+            sub(/^[^:]+:[[:space:]]*/, "")
+            gsub(/^"|"$/, "")
+            print
+            exit
+        }
+    ' "$file"
+}
+
+# Convert a Claude/Bob agent file to Gemini CLI format
+# Keeps name and description; drops unsupported fields; body unchanged
+convert_agent_to_gemini() {
+    local src="$1"
+    local dest="$2"
+    local name description
+    name="$(extract_fm_field "$src" "name")"
+    description="$(extract_fm_field "$src" "description")"
+
+    {
+        printf -- "---\n"
+        printf 'name: "%s"\n' "$name"
+        printf 'description: "%s"\n' "$description"
+        printf -- "---\n"
+        extract_agent_body "$src"
+    } > "$dest"
+}
+
+# Convert a Claude/Bob agent file to OpenCode format
+# Keeps description; adds mode: subagent; body unchanged
+convert_agent_to_opencode() {
+    local src="$1"
+    local dest="$2"
+    local description
+    description="$(extract_fm_field "$src" "description")"
+
+    {
+        printf -- "---\n"
+        printf 'description: "%s"\n' "$description"
+        printf "mode: subagent\n"
+        printf -- "---\n"
+        extract_agent_body "$src"
+    } > "$dest"
+}
+
+# Convert a Claude/Bob agent file to Codex TOML format
+# Maps name, description, and body → developer_instructions
+convert_agent_to_codex_toml() {
+    local src="$1"
+    local dest="$2"
+    local name description body
+    name="$(extract_fm_field "$src" "name")"
+    description="$(extract_fm_field "$src" "description")"
+    body="$(extract_agent_body "$src")"
+
+    # Escape backslashes and single quotes for TOML multi-line literal strings
+    {
+        printf 'name = "%s"\n' "$name"
+        printf 'description = "%s"\n' "$description"
+        printf "developer_instructions = '''\n"
+        printf '%s\n' "$body"
+        printf "'''\n"
+    } > "$dest"
+}
+
 # Generate a thin command file for skill agents (Claude, Bob).
 # The skill provides all initialization and guideline content;
 # the command just triggers the right skill and guideline.
@@ -404,6 +493,27 @@ install_skill_agent() {
         info "    Installed: ${cmd_name}.md"
     done
 
+    # Install sub-agents
+    local agents_dir="$HOME/.$agent/agents"
+    if ! mkdir -p "$agents_dir"; then
+        error "Failed to create directory: $agents_dir"
+        return 1
+    fi
+
+    info "  Installing sub-agents..."
+    for agent_file in "${AGENT_FILES[@]}"; do
+        local filename
+        filename="$(basename "$agent_file")"
+        local dest="$agents_dir/$filename"
+
+        if fetch_file "$agent_file" "$dest"; then
+            info "    Installed: $filename"
+        else
+            error "    Failed to install: $filename"
+            return 1
+        fi
+    done
+
     # Remove old monolithic rule files (legacy cleanup)
     info "  Cleaning up old rule files..."
     for old_file in "${OLD_RULE_FILES[@]}"; do
@@ -412,6 +522,7 @@ install_skill_agent() {
 
     info "  Skills installed to: $skills_root/{${SKILL_DIRS[*]}}"
     info "  Commands installed to: $commands_dir"
+    info "  Sub-agents installed to: $agents_dir"
     info "  Rules directory: $rules_dir (project rules installed on demand)"
 }
 
@@ -468,7 +579,34 @@ install_gemini() {
         rm -f "$rules_dir/$old_file"
     done
 
+    # Install sub-agents
+    local agents_dir="$HOME/.gemini/agents"
+    if ! mkdir -p "$agents_dir"; then
+        error "Failed to create directory: $agents_dir"
+        return 1
+    fi
+
+    info "  Installing sub-agents..."
+    for agent_file in "${AGENT_FILES[@]}"; do
+        local filename
+        filename="$(basename "$agent_file")"
+        local dest="$agents_dir/$filename"
+        local tmp_md
+        tmp_md="$(mktemp)"
+
+        if fetch_file "$agent_file" "$tmp_md"; then
+            convert_agent_to_gemini "$tmp_md" "$dest"
+            rm -f "$tmp_md"
+            info "    Installed: $filename"
+        else
+            rm -f "$tmp_md"
+            error "    Failed to install: $filename"
+            return 1
+        fi
+    done
+
     info "  Commands installed to: $commands_dir"
+    info "  Sub-agents installed to: $agents_dir"
     info "  Rules directory: $rules_dir (project rules installed on demand)"
 }
 
@@ -523,7 +661,34 @@ install_opencode() {
         rm -f "$rules_dir/$old_file"
     done
 
+    # Install sub-agents
+    local agents_dir="$HOME/.config/opencode/agents"
+    if ! mkdir -p "$agents_dir"; then
+        error "Failed to create directory: $agents_dir"
+        return 1
+    fi
+
+    info "  Installing sub-agents..."
+    for agent_file in "${AGENT_FILES[@]}"; do
+        local filename
+        filename="$(basename "$agent_file")"
+        local dest="$agents_dir/$filename"
+        local tmp_md
+        tmp_md="$(mktemp)"
+
+        if fetch_file "$agent_file" "$tmp_md"; then
+            convert_agent_to_opencode "$tmp_md" "$dest"
+            rm -f "$tmp_md"
+            info "    Installed: $filename"
+        else
+            rm -f "$tmp_md"
+            error "    Failed to install: $filename"
+            return 1
+        fi
+    done
+
     info "  Commands installed to: $commands_dir"
+    info "  Sub-agents installed to: $agents_dir"
     info "  Rules directory: $rules_dir (project rules installed on demand)"
 }
 
@@ -582,7 +747,35 @@ install_codex() {
         fi
     done
 
+    # Install sub-agents
+    local agents_dir="$HOME/.codex/agents"
+    if ! mkdir -p "$agents_dir"; then
+        error "Failed to create directory: $agents_dir"
+        return 1
+    fi
+
+    info "  Installing sub-agents..."
+    for agent_file in "${AGENT_FILES[@]}"; do
+        local filename toml_name
+        filename="$(basename "$agent_file")"
+        toml_name="${filename%.md}.toml"
+        local dest="$agents_dir/$toml_name"
+        local tmp_md
+        tmp_md="$(mktemp)"
+
+        if fetch_file "$agent_file" "$tmp_md"; then
+            convert_agent_to_codex_toml "$tmp_md" "$dest"
+            rm -f "$tmp_md"
+            info "    Installed: $toml_name"
+        else
+            rm -f "$tmp_md"
+            error "    Failed to install: $toml_name"
+            return 1
+        fi
+    done
+
     info "  Skills installed to: $skills_root/{${SKILL_DIRS[*]}}"
+    info "  Sub-agents installed to: $agents_dir"
     info "  Rules directory: $codex_rules_dir (project rules installed on demand)"
 }
 
@@ -653,6 +846,10 @@ main() {
     echo ""
     echo "You can also use individual commands (e.g., /oss-fix-issue, /oss-review-pr)"
     echo "or just describe what you want (e.g., 'fix issue #42', 'review PR 15')."
+    echo ""
+    echo "Sub-agents (all tools):"
+    echo "  Specialized agents for backend, frontend, architecture, testing,"
+    echo "  code review, technical writing, and marketing."
 }
 
 main "$@"
