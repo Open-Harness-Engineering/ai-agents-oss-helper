@@ -75,6 +75,7 @@ SKILL_FILES[oss-security]="
     skills/oss-security/analyze-third-party-cve.md
     skills/oss-security/draft-cve.md
     skills/oss-security/create-security-advisory.md
+    skills/oss-security/update-gh-advisory-db.md
     skills/oss-security/oss-security-scan.md
 "
 SKILL_FILES[oss-project]="
@@ -120,6 +121,7 @@ GUIDELINE_COMMANDS=(
     "oss-security|analyze-third-party-cve.md|oss-analyze-third-party-cve|Analyze exposure to a third-party CVE"
     "oss-security|draft-cve.md|oss-draft-cve|Draft a CVE advisory page"
     "oss-security|create-security-advisory.md|oss-create-security-advisory|Report a security vulnerability via GitHub"
+    "oss-security|update-gh-advisory-db.md|oss-update-gh-advisory-db|Populate GitHub Advisory Database entries for the project's published CVEs"
     "oss-security|oss-security-scan.md|oss-security-scan|Scan codebase for security vulnerabilities"
     "oss-project|add-project.md|oss-add-project|Add a new project to the OSS Helper"
     "oss-project|install-info.md|oss-install-info|Install project rules from the known-projects repository"

@@ -53,12 +53,12 @@ The helper provides guidelines that are project-agnostic. Project-specific confi
 
 ### Skill groups
 
-The 34 guidelines are organized into 6 focused skills:
+The 35 guidelines are organized into 6 focused skills:
 
 - **`/oss-issues`** — Issue lifecycle: fix, analyze, create, list, find tasks, triage, cross-repo issues
 - **`/oss-review`** — PR lifecycle: review, address feedback, batch review, status, merge, backport
 - **`/oss-ci`** — CI/CD and code quality: fix CI errors, SonarCloud, GitHub alerts, quick fixes
-- **`/oss-security`** — Security: triage reports, analyze CVEs, draft advisories, scan code
+- **`/oss-security`** — Security: triage reports, analyze CVEs, draft advisories, sync the GitHub Advisory Database, scan code
 - **`/oss-project`** — Project setup: add projects, install/generate/update rules, workspaces
 - **`/oss-qe`** — Quality engineering: create and execute test plans
 
@@ -107,6 +107,7 @@ The OSS Helper provides guidelines for the following tasks. For agents with skil
 | Draft CVE advisory | `/oss-draft-cve` | Draft a project-specific CVE advisory page |
 | Analyze third-party CVE | `/oss-analyze-third-party-cve` | Analyze exposure to a CVE in a third-party dependency |
 | Create security advisory | `/oss-create-security-advisory` | Privately report a security vulnerability via GitHub |
+| Update GH Advisory Database | `/oss-update-gh-advisory-db` | Populate GitHub Advisory Database entries for the project's published CVEs |
 | Triage an issue | `/oss-triage-issue` | Triage a filed issue: reproduce, dedupe, classify, recommend disposition |
 | Review batch of PRs | `/oss-review-prs` | Review a batch of open PRs you haven't reviewed yet |
 | Security scan | `/oss-security-scan` | Scan first-party code for security vulnerabilities |
@@ -257,6 +258,7 @@ ai-agents-oss-helper/
     │   ├── analyze-third-party-cve.md     # Analyze third-party CVE
     │   ├── draft-cve.md                   # Draft CVE advisory
     │   ├── create-security-advisory.md    # Create security advisory
+    │   ├── update-gh-advisory-db.md       # Sync GitHub Advisory Database
     │   └── oss-security-scan.md           # Scan codebase
     ├── oss-project/                         # Project setup skill
     │   ├── SKILL.md
