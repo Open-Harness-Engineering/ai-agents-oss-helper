@@ -124,14 +124,14 @@ Run each detected scanner against the modified files. Execute scanners **in para
 semgrep scan \
   --config auto \
   --json \
-  --metrics=off \
   --disable-version-check \
+  --timeout 10 \
   --max-target-bytes 1000000 \
   $(cat /tmp/pr-modified-files.txt | tr '\n' ' ') \
   > /tmp/semgrep-results.json 2>/dev/null
 ```
 
-Note: `--config auto` fetches rules from the Semgrep Registry (requires network, ~2s). If a local `.semgrep.yml` exists in the project, prefer `--config .semgrep.yml` instead. Add `--timeout 10` to limit per-file analysis time.
+Note: `--config auto` fetches rules from the Semgrep Registry (requires network, ~2–5s). The `--metrics=off` flag is **incompatible** with `--config auto` — do not combine them. If a local `.semgrep.yml` or `.semgrep/` directory exists in the project, prefer `--config .semgrep.yml` instead (which does work with `--metrics=off`).
 
 **gitleaks** (if available):
 
