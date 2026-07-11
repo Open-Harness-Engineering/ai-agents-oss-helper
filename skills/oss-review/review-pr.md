@@ -1,6 +1,6 @@
 ### Agent Delegation
 
-If you have access to agents specialized in **code review** or **software architecture** (e.g., code review or architecture agents), you should delegate the evaluation (steps 4–5) to one or more of those agents. Provide them with the PR diff, project rules, and git history context. If no specialized agents are available, perform all steps directly.
+If you have access to agents specialized in **code review** or **software architecture** (e.g., code review or architecture agents), you should delegate the evaluation (steps 5–6) to one or more of those agents. Provide them with the PR diff, project rules, git history context, and static analysis results. If no specialized agents are available, perform all steps directly.
 
 ### 1. Parse Input
 
@@ -25,7 +25,19 @@ gh pr diff <PR_NUMBER> --repo <GITHUB_REPO>
 
 If the PR references an issue or ticket, review that context as needed to validate scope and intent.
 
-### 3. Investigate Git History
+### 3. Run Static Analysis on Modified Files
+
+**RECOMMENDED:** Run available static analysis tools against the PR's modified files to enrich the review. See `_fragments/_static-analysis-enrichment.md` for details.
+
+This step detects which scanners are installed (e.g., PMD, Checkstyle, semgrep, ESLint, ruff, shellcheck), runs them scoped to the modified files only, and produces normalized findings annotated with whether they were introduced by the PR or are pre-existing.
+
+- For **Java/Maven projects**, the fragment tries standalone CLI tools first (PMD, Checkstyle), then falls back to Maven plugin execution scoped to affected modules.
+- For **other ecosystems**, the fragment runs the best available file-scoped tool.
+- If **no scanners are available**, this step produces no findings and the review proceeds with rules-only evaluation as before.
+
+The scanner results are used as additional context in step 6 (Evaluate the Pull Request). They are not presented as standalone findings.
+
+### 4. Investigate Git History
 
 Before reviewing the changes, understand the history of the modified files:
 
@@ -41,7 +53,7 @@ git blame -L <start>,<end> -- <file>
 - Check if the PR conflicts with or effectively reverts a prior intentional commit. If so, flag this as a finding.
 - Look for related issues or discussions in the project tracker that provide context on design decisions in the affected area.
 
-### 4. Review Scope
+### 5. Review Scope
 
 Review the pull request specifically against the loaded project rules:
 
@@ -51,11 +63,11 @@ Review the pull request specifically against the loaded project rules:
 
 This command is a rules-and-conventions review. It is **not** a replacement for specialized review tools such as CodeRabbit or Sourcery, and it is **not** a replacement for static analyzers such as SonarCloud.
 
-### 5. Review the Changes (Ask → Narrow → Read → Decide)
+### 6. Review the Changes (Ask → Narrow → Read → Decide)
 
 Use a question-driven review workflow. Do **not** attempt to "review everything" — form specific questions, gather minimal context, then judge.
 
-#### 5.1 ASK — Form Review Questions
+#### 6.1 ASK — Form Review Questions
 
 Read the diff summary (changed files, additions, deletions) and form **2–3 specific review questions** about the changes. Use the change-type templates in [review-questions.md](review-questions.md) to select questions that match the diff signals:
 
@@ -65,14 +77,14 @@ Read the diff summary (changed files, additions, deletions) and form **2–3 spe
 
 Limit yourself to 2–3 high-value questions. More questions dilute focus.
 
-#### 5.2 NARROW — Identify Target Regions
+#### 6.2 NARROW — Identify Target Regions
 
 For each review question, identify the **smallest code region** in the diff that answers it:
 
 - A single hunk, a method signature, a test assertion, a config block.
 - Note the file and line range. Do not expand beyond what the question requires.
 
-#### 5.3 READ — Gather Targeted Context
+#### 6.3 READ — Gather Targeted Context
 
 Read **only** the targeted regions identified above. If a region is ambiguous, use `git blame` or `git log` on that specific region — not the entire file.
 
@@ -84,7 +96,7 @@ Read **only** the targeted regions identified above. If a region is ambiguous, u
 - Flag style issues covered by the project's configured formatter or linter
 - Expand context "just in case" — every extra file read must be justified by a question
 
-#### 5.4 DECIDE — Judge Each Question
+#### 6.4 DECIDE — Judge Each Question
 
 For each review question, reach exactly one verdict:
 
@@ -94,13 +106,21 @@ For each review question, reach exactly one verdict:
 | **Real issue** | The code has a concrete bug, gap, or rule violation | Record as a finding with file + line reference |
 | **Uncertain** | One more targeted check could resolve it | Perform that one check, then decide non-issue or real issue — do not leave it uncertain |
 
-### 6. Present Review Findings
+If static analysis results are available from step 3:
+
+- **Correlate** scanner findings with your own observations from reading the diff
+- **Suppress** findings that contradict project rules in `project-standards.md`
+- **Elevate** scanner findings that confirm or extend a concern you identified independently
+- **Attribute** tool findings clearly (e.g., "PMD flags `UnusedLocalVariable` on line 42")
+- **Prioritize** findings on lines introduced by this PR over pre-existing issues
+
+### 7. Present Review Findings
 
 Present findings locally in **structured review format**, tracing each finding back to the review question that produced it:
 
 For each finding, include:
 
-1. **Review question** — The specific question from step 5.1 that led to this finding
+1. **Review question** — The specific question from step 6.1 that led to this finding
 2. **Code region** — File, line range, and the relevant code snippet
 3. **Verdict** — What was found (bug, missing test, rule violation, risk)
 4. **Severity** — Blocking / non-blocking / suggestion
@@ -118,7 +138,7 @@ Keep the review concise and actionable. Do not pad findings with restated diff c
 
 **Wait for user approval before submitting the review to GitHub.**
 
-### 7. Submit Review to GitHub
+### 8. Submit Review to GitHub
 
 After user approval, submit the review using the GitHub CLI with inline comments.
 
@@ -198,7 +218,7 @@ Findings that are not tied to a specific line (e.g., missing tests, scope drift,
 
 The review body must end with: "_This review was generated by an AI agent and may contain inaccuracies. Please verify all suggestions before applying._"
 
-### 8. Constraints
+### 9. Constraints
 
 You MUST:
 
@@ -206,25 +226,31 @@ You MUST:
 - Prioritize bugs, regressions, missing tests, and rule violations
 - Check git history of modified files to understand prior intent before flagging issues
 - Cite the relevant rule file when a finding depends on project conventions
-- State explicitly that this review does not replace specialized AI review tools or static analysis
+- Run available static analysis tools against modified files (step 3) and incorporate their findings
+- Attribute tool findings clearly — state which scanner produced each finding
+- State which static analysis tools were run, which were unavailable, and any coverage gaps
 - Distinguish clearly between findings and open questions
 - Demonstrate empathy towards the contributor when requesting changes — acknowledge their effort, frame feedback constructively, and avoid dismissive or discouraging language
 
 You MUST NOT:
 
 - Re-implement the pull request instead of reviewing it
-- Present the command as a substitute for CodeRabbit, Sourcery, SonarCloud, or similar tools
+- Present scanner findings as the reviewer's own reasoning — always attribute to the tool
+- Present tool findings as authoritative — they are input to the review, not verdicts
 - Invent project conventions not present in the loaded rule files
 - Ignore the diff and review only the PR title/body
 - Submit the review to GitHub without user approval
 - Use suggestion blocks for large or ambiguous changes
+- Install tools that are not already available in the environment
 
-### 9. Acceptance Criteria
+### 10. Acceptance Criteria
 
 - The PR was reviewed against the project's rule files
+- Available static analysis tools were detected and run against the modified files (or the absence of tools was noted)
+- Scanner findings are incorporated into the review with clear attribution
+- Scanner coverage summary is included (tools run, tools unavailable, coverage gaps)
 - Findings are concrete, prioritized, and actionable
 - Missing tests, regressions, and convention violations are called out when present
-- The review explicitly stays within OSS Helper's scope and does not claim to replace specialized tools
 - Review is submitted to GitHub with inline comments on specific lines where possible
 - Suggestion blocks are used for clear, concrete fixes
 - The review includes the AI-generated disclaimer

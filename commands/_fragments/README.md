@@ -16,6 +16,16 @@ Command fragments extract common patterns that appear in multiple commands into 
   - Handles version checking and auto-discovery
   - Used by: All 30+ commands
 
+### Review Fragments
+
+- **`_static-analysis-enrichment.md`** - Static analysis enrichment for review commands
+  - Detects available static analysis tools (PMD, Checkstyle, semgrep, ESLint, ruff, shellcheck, etc.)
+  - Runs them scoped to PR-modified files only (or affected modules for Maven-based tools)
+  - Normalizes findings and annotates with introduced-vs-pre-existing context
+  - Provides structured results as input to the review evaluation
+  - Java-focused: standalone CLI first, Maven plugin fallback
+  - Used by: oss-review-pr, oss-review-prs
+
 ### Workflow Fragments (Planned)
 
 - **`_git-history-investigation.md`** - Git history investigation patterns
@@ -153,6 +163,7 @@ Each fragment should include:
 | Fragment | Status | Commands Affected | Lines Saved |
 |----------|--------|-------------------|-------------|
 | `_common-init.md` | ✅ Implemented | All (30+) | ~1,500 |
+| `_static-analysis-enrichment.md` | ✅ Implemented | 2 (review commands) | ~350 |
 | `_git-history-investigation.md` | 📋 Planned | 6 | ~100 |
 | `_build-workflow.md` | ✅ Implemented | 7 | ~240 |
 | `_commit-signing.md` | 📋 Planned | 8 | ~80 |

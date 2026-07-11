@@ -1,6 +1,6 @@
 ### Agent Delegation
 
-If you have access to agents specialized in **code review** (e.g., code review agents), you should use them for the per-PR evaluations in step 4. Each agent should receive the PR diff, project rules, and git history context, and return a structured verdict. If no specialized agents are available, perform all evaluations directly.
+If you have access to agents specialized in **code review** (e.g., code review agents), you should use them for the per-PR evaluations in step 4. Each agent should receive the PR diff, project rules, git history context, and static analysis results, and return a structured verdict. If no specialized agents are available, perform all evaluations directly.
 
 ### 1. Parse Arguments
 
@@ -49,7 +49,7 @@ If the candidate count is large (> 15), **state the count and confirm before con
 
 ### 4. Review Each Candidate (in parallel, read-only)
 
-Review the candidates concurrently — this keeps the run fast and keeps each PR's diff out of the main context. For each PR, perform the **same evaluation the Review PR guideline (`review-pr.md`) does** (retrieve metadata + diff, investigate the git history of the modified files, evaluate against the project rule files) and return a structured verdict instead of posting anything:
+Review the candidates concurrently — this keeps the run fast and keeps each PR's diff out of the main context. For each PR, perform the **same evaluation the Review PR guideline (`review-pr.md`) does** (retrieve metadata + diff, run static analysis on modified files per `_fragments/_static-analysis-enrichment.md`, investigate the git history of the modified files, evaluate against the project rule files incorporating scanner findings) and return a structured verdict instead of posting anything:
 
 - Recommended event: `APPROVE` / `COMMENT` / `REQUEST_CHANGES` (per the Review PR guideline mapping).
 - Findings, severity-ordered, with file references.
@@ -93,7 +93,7 @@ You MUST:
 
 - Select candidates with aggregate `gh pr list --search` calls only — never poll per-PR review history.
 - Always exclude PRs authored by the current user, and (by default) PRs they have already reviewed.
-- Review each PR against the project rule files, with the same rigor as the Review PR guideline (`review-pr.md`).
+- Review each PR against the project rule files, with the same rigor as the Review PR guideline (`review-pr.md`), including static analysis enrichment when tools are available.
 - Verify CI state and factual corrections before presenting.
 - Present one consolidated report and obtain a single approval before posting (unless `post=` pre-answers it).
 - Include the attribution + AI-disclaimer footer on every posted review.
@@ -107,6 +107,7 @@ You MUST NOT:
 - Merge any PR, or push to any contributor's branch.
 - Re-implement the PRs instead of reviewing them.
 - Present this command as a substitute for CodeRabbit, Sourcery, SonarCloud, or similar tools.
+- Present scanner findings as the reviewer's own reasoning — always attribute to the tool.
 
 ### 9. Acceptance Criteria
 
