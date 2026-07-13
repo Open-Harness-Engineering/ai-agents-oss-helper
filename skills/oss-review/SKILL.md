@@ -23,6 +23,7 @@ After initialization, read and follow the appropriate guideline file based on th
 | When the user wants to... | Read |
 |---|---|
 | Review a pull request | `review-pr.md` |
+| Review question templates (used by review-pr) | `review-questions.md` |
 | Address review feedback on a PR | `address-review.md` |
 | Review a batch of open PRs | `oss-review-prs.md` |
 | Check CI status and merge readiness of a PR | `pr-status.md` |
