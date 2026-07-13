@@ -1,0 +1,23 @@
+id: autocloseable-without-try-with-resources
+language: java
+severity: warning
+message: >-
+  AutoCloseable resource allocated with 'new' outside of try-with-resources.
+  This risks resource leaks if an exception occurs before the resource is
+  manually closed. Use try-with-resources instead.
+note: >-
+  [CWE-404] Improper Resource Shutdown or Release.
+  Java 7+ try-with-resources ensures close() is called even on exceptions.
+
+rule:
+  kind: local_variable_declaration
+  has:
+    kind: variable_declarator
+    has:
+      kind: object_creation_expression
+      has:
+        kind: type_identifier
+        regex: ^(InputStream|OutputStream|FileInputStream|FileOutputStream|BufferedReader|BufferedWriter|PrintWriter|Scanner|Connection|PreparedStatement|ResultSet|Socket|ServerSocket|ByteArrayOutputStream|ByteArrayInputStream|ObjectInputStream|ObjectOutputStream|DataInputStream|DataOutputStream|InputStreamReader|OutputStreamWriter|FileReader|FileWriter|GZIPInputStream|GZIPOutputStream|ZipInputStream|ZipOutputStream|JarInputStream|JarOutputStream|HttpURLConnection|Channel)$
+  not:
+    inside:
+      kind: resource_specification

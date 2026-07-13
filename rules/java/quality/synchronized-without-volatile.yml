@@ -1,0 +1,20 @@
+id: synchronized-without-volatile
+language: java
+severity: hint
+message: >-
+  Synchronized block detected. Ensure shared fields accessed within synchronized
+  blocks are declared volatile or final, or are only accessed under the same lock.
+  Without proper memory visibility guarantees, changes may not be visible across threads.
+note: >-
+  [CWE-662] Improper Synchronization.
+  The Java Memory Model requires volatile or synchronized access for visibility
+  of changes across threads.
+
+rule:
+  kind: synchronized_statement
+  has:
+    kind: block
+    has:
+      kind: expression_statement
+      has:
+        kind: assignment_expression
