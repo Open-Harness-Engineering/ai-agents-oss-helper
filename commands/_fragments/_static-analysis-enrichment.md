@@ -48,6 +48,20 @@ command -v semgrep    # Multi-language SAST
 command -v gitleaks   # Secret detection (all languages)
 ```
 
+#### AST-based Structural Analysis (Always Check)
+
+```bash
+command -v sg    # ast-grep — structural code pattern matching
+```
+
+If available, also check for rules:
+```bash
+# Check for project-local rules first, then oss-helper rules
+for dir in ./.ast-grep-rules ./rules/java ~/.oss-helper/rules/java; do
+  [[ -d "$dir" ]] && AST_GREP_RULES="$dir" && break
+done
+```
+
 #### Java (Primary — Check All, Use Best Available)
 
 For Java files, the fragment uses a **tiered detection strategy**. Most Java projects use Maven plugins rather than standalone CLIs, so Maven-based execution is the primary fallback:
@@ -152,6 +166,20 @@ gitleaks detect \
 
 rm -rf /tmp/gitleaks-scan
 ```
+
+#### AST-based Analysis
+
+**ast-grep** (if available and rules found):
+
+```bash
+if [[ -n "${AST_GREP_RULES:-}" ]]; then
+  sg scan --rule "$AST_GREP_RULES" --json \
+    $(cat /tmp/pr-modified-files.txt | tr '\n' ' ') \
+    > /tmp/ast-grep-results.json 2>/dev/null
+fi
+```
+
+Note: ast-grep rules are structural pattern matches, not heuristic analysis. Findings from ast-grep are high-confidence for the patterns they cover (security vulnerabilities, code quality antipatterns). However, coverage is limited to the rules available.
 
 #### Java Tools
 
@@ -364,6 +392,16 @@ Parse each scanner's output into a common structure. For each finding, extract:
 | `severity` | Normalized: `error`, `warning`, `info` |
 | `message` | Human-readable description |
 
+**Scanner-specific parsing notes:**
+
+**ast-grep:** JSON output has `{matches: [{ruleId, message, severity, labels: [{source, start, end}]}]}`. Map:
+- `scanner`: `ast-grep`
+- `file`: from `labels[0].source`
+- `line`: from `labels[0].start.line`
+- `rule`: `ruleId`
+- `severity`: map `severity` field
+- `message`: `message` field
+
 **Severity normalization:**
 
 | Scanner term | Normalized |
@@ -423,6 +461,27 @@ The review evaluation step (step 5 of `/oss-review-pr`) incorporates scanner fin
 6. **State coverage honestly** — the review must note which tools ran, which were unavailable, and what categories of issues are therefore not covered.
 
 ## Scanner Reference
+
+### Supported Tools
+
+| Tool | Ecosystem | Output Format | Scoping | Notes |
+|------|-----------|---------------|---------|-------|
+| semgrep | Multi-language | JSON | File-scoped | `--config auto` fetches rules from registry |
+| gitleaks | Multi-language | JSON | File-scoped | Secret detection |
+| ast-grep | Multi-language | JSON | File-scoped | Structural pattern matching via custom rules; high-confidence findings limited to available rule coverage |
+| PMD | Java | JSON / XML | File-scoped (CLI) or module-scoped (Maven) | Standalone CLI preferred |
+| Checkstyle | Java | SARIF | File-scoped (CLI) or module-scoped (Maven) | Standalone JAR preferred |
+| ruff | Python | JSON | File-scoped | Replaces flake8/pylint |
+| bandit | Python | JSON | File-scoped | Security-focused |
+| eslint | JavaScript/TypeScript | JSON | File-scoped | Requires project config |
+| golangci-lint | Go | JSON | `--new-from-rev` | Meta-linter, preferred |
+| staticcheck | Go | JSON | Package-scoped | Fallback |
+| shellcheck | Shell | JSON | File-scoped | — |
+| rubocop | Ruby | JSON | File-scoped | — |
+| detekt | Kotlin | SARIF | File-scoped | Light mode |
+| ktlint | Kotlin | JSON | File-scoped | Style/formatting |
+| hadolint | Dockerfile | JSON | File-scoped | — |
+| cppcheck | C/C++ | XML | File-scoped | Works without build |
 
 ### Tools That Cannot Work in This Model
 
