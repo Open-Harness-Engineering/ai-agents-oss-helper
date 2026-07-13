@@ -55,6 +55,7 @@ command -v sg    # ast-grep — structural code pattern matching
 ```
 
 If available, also check for rules:
+
 ```bash
 # Check for project-local rules first, then oss-helper rules
 for dir in ./.ast-grep-rules ./rules/java ~/.oss-helper/rules/java; do
@@ -395,6 +396,7 @@ Parse each scanner's output into a common structure. For each finding, extract:
 **Scanner-specific parsing notes:**
 
 **ast-grep:** JSON output has `{matches: [{ruleId, message, severity, labels: [{source, start, end}]}]}`. Map:
+
 - `scanner`: `ast-grep`
 - `file`: from `labels[0].source`
 - `line`: from `labels[0].start.line`
