@@ -31,7 +31,7 @@ Select with the GitHub search qualifiers so the whole selection is a small numbe
 | Condition | Search fragment |
 |-----------|-----------------|
 | Drafts excluded (default) | `-is:draft` |
-| Exclude your own PRs (always — you cannot review them) | `-author:@me` |
+| Exclude your own PRs (only in interactive mode, not in loop reviews) | _(skip in loop mode)_ |
 | Exclude PRs you already reviewed (default; unless `include-reviewed`) | `-reviewed-by:@me` |
 | `author=<user>` provided | `author:<user>` |
 | `label=<label>` provided | `label:"<label>"` |
