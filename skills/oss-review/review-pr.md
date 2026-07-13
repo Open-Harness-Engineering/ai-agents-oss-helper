@@ -27,15 +27,69 @@ If the PR references an issue or ticket, review that context as needed to valida
 
 ### 3. Run Static Analysis on Modified Files
 
-**RECOMMENDED:** Run available static analysis tools against the PR's modified files to enrich the review. See `_fragments/_static-analysis-enrichment.md` for details.
+**REQUIRED.** Run available static analysis tools against the PR's modified files before evaluating the PR. See `_fragments/_static-analysis-enrichment.md` for the full scanner reference, but **execute the steps below inline** — do not skip this step or defer to the fragment file.
 
-This step detects which scanners are installed (e.g., PMD, Checkstyle, semgrep, ESLint, ruff, shellcheck), runs them scoped to the modified files only, and produces normalized findings annotated with whether they were introduced by the PR or are pre-existing.
+#### 3a. Extract modified file paths
 
-- For **Java/Maven projects**, the fragment tries standalone CLI tools first (PMD, Checkstyle), then falls back to Maven plugin execution scoped to affected modules.
-- For **other ecosystems**, the fragment runs the best available file-scoped tool.
-- If **no scanners are available**, this step produces no findings and the review proceeds with rules-only evaluation as before.
+```bash
+gh pr view <PR_NUMBER> --repo <GITHUB_REPO> --json files --jq '.files[].path' > /tmp/pr-modified-files.txt
+```
 
-The scanner results are used as additional context in step 6 (Evaluate the Pull Request). They are not presented as standalone findings.
+#### 3b. Detect available scanners
+
+```bash
+echo "=== Scanner Detection ==="
+for tool in semgrep gitleaks sg pmd ruff bandit eslint golangci-lint staticcheck shellcheck rubocop hadolint cppcheck; do
+  command -v $tool >/dev/null 2>&1 && echo "FOUND: $tool" || echo "MISSING: $tool"
+done
+```
+
+#### 3c. Check for ast-grep rules
+
+```bash
+for dir in ./.ast-grep-rules ./rules/java ~/.oss-helper/rules/java; do
+  [ -d "$dir" ] && echo "AST_GREP_RULES=$dir" && break
+done
+```
+
+#### 3d. Identify language-specific files
+
+```bash
+grep '\.java$' /tmp/pr-modified-files.txt > /tmp/pr-java-files.txt 2>/dev/null
+grep -E '\.py$' /tmp/pr-modified-files.txt > /tmp/pr-python-files.txt 2>/dev/null
+grep -E '\.(js|jsx|ts|tsx)$' /tmp/pr-modified-files.txt > /tmp/pr-js-files.txt 2>/dev/null
+grep -E '\.go$' /tmp/pr-modified-files.txt > /tmp/pr-go-files.txt 2>/dev/null
+grep -E '\.(sh|bash)$' /tmp/pr-modified-files.txt > /tmp/pr-shell-files.txt 2>/dev/null
+```
+
+#### 3e. Run each detected scanner (30-second total time budget)
+
+Run **only** the scanners detected as FOUND above, scoped to the modified files:
+
+- **ast-grep** (if `sg` found and rules exist): `sg scan --rule "$AST_GREP_RULES" --json $(cat /tmp/pr-modified-files.txt | tr '\n' ' ') 2>/dev/null`
+- **semgrep** (if found): `semgrep scan --config auto --json --disable-version-check --timeout 10 $(cat /tmp/pr-modified-files.txt | tr '\n' ' ') 2>/dev/null`
+- **gitleaks** (if found): copy modified files to a temp dir, run `gitleaks detect --no-git -s <dir> --report-format json`
+- **PMD CLI** (if found, Java files present): `pmd check --file-list /tmp/pr-java-files.txt -R <project-ruleset-or-quickstart> -f json --no-progress 2>/dev/null`
+- **Maven PMD/Checkstyle** (fallback if no CLI, Java project with pom.xml): run scoped to affected modules with `-pl <modules> -fn -q`, max 3 modules
+- **ruff** (if found, Python files): `cat /tmp/pr-python-files.txt | xargs ruff check --output-format json 2>/dev/null`
+- **bandit** (if found, Python files): `cat /tmp/pr-python-files.txt | xargs bandit -f json 2>/dev/null`
+- **eslint** (if found, JS/TS files, project config exists): `cat /tmp/pr-js-files.txt | xargs eslint -f json 2>/dev/null`
+- **golangci-lint** (if found, Go files): `golangci-lint run --new-from-rev=$(git merge-base HEAD <base>) --out-format json 2>/dev/null`
+- **shellcheck** (if found, shell files): `cat /tmp/pr-shell-files.txt | xargs shellcheck -f json1 2>/dev/null`
+
+If a scanner fails or times out, note the failure and continue with other scanners.
+
+#### 3f. Normalize and annotate findings
+
+For each finding, extract: `scanner | file | line | rule | severity | message`. Then check against the PR diff to tag each finding as **introduced** (line added/modified by this PR) or **pre-existing**.
+
+#### 3g. Produce Scanner Coverage summary
+
+Record which scanners ran, which were skipped (not installed), and coverage gaps (e.g., "SpotBugs requires compilation — see CI"). This summary is included in the review output (step 7).
+
+**If no scanners are available at all**, state: "No static analysis tools available. Checked: semgrep, gitleaks, sg, pmd, ruff, bandit, eslint, golangci-lint, shellcheck." and proceed with the rules-only evaluation.
+
+The scanner results feed into step 6 (Evaluate the Pull Request) as additional context.
 
 ### 4. Investigate Git History
 

@@ -49,10 +49,29 @@ If the candidate count is large (> 15), **state the count and confirm before con
 
 ### 4. Review Each Candidate (in parallel, read-only)
 
-Review the candidates concurrently — this keeps the run fast and keeps each PR's diff out of the main context. For each PR, perform the **same evaluation the Review PR guideline (`review-pr.md`) does** (retrieve metadata + diff, run static analysis on modified files per `_fragments/_static-analysis-enrichment.md`, investigate the git history of the modified files, evaluate against the project rule files incorporating scanner findings) and return a structured verdict instead of posting anything:
+Review the candidates concurrently — this keeps the run fast and keeps each PR's diff out of the main context. For each PR:
+
+#### 4a. Run Static Analysis (before delegation)
+
+**REQUIRED.** Before delegating to a sub-agent, run static analysis yourself (the orchestrator) for each PR. Sub-agents receive a condensed prompt and cannot read skill files or fragments, so scanner detection and execution must happen here.
+
+For each candidate PR, execute the static analysis steps from `review-pr.md` step 3:
+
+1. Extract modified file paths: `gh pr view <PR> --repo <GITHUB_REPO> --json files --jq '.files[].path' > /tmp/pr-<PR>-files.txt`
+2. Detect scanners: `for tool in semgrep gitleaks sg pmd ruff bandit eslint golangci-lint shellcheck; do command -v $tool >/dev/null 2>&1 && echo "FOUND: $tool" || echo "MISSING: $tool"; done`
+3. Check for ast-grep rules: `for dir in ./.ast-grep-rules ./rules/java ~/.oss-helper/rules/java; do [ -d "$dir" ] && AST_GREP_RULES="$dir" && break; done`
+4. Run each detected scanner scoped to the PR's modified files (30s budget per PR)
+5. Collect raw scanner output
+
+If no scanners are available, record: "No static analysis tools available" and proceed.
+
+#### 4b. Delegate Review (with scanner results)
+
+Pass the scanner results (or "no scanners available" note) to each sub-agent as part of the review context. Each sub-agent should perform the **same evaluation the Review PR guideline (`review-pr.md`) does** (retrieve metadata + diff, investigate the git history of the modified files, evaluate against the project rule files incorporating the provided scanner findings) and return a structured verdict instead of posting anything:
 
 - Recommended event: `APPROVE` / `COMMENT` / `REQUEST_CHANGES` (per the Review PR guideline mapping).
 - Findings, severity-ordered, with file references.
+- Scanner coverage summary: which tools ran, which were unavailable, coverage gaps.
 - A short checklist: tests, docs/upgrade-guide, commit convention, generated files, public-API / backward-compat, security, CI status.
 - Any claim that could not be verified.
 
