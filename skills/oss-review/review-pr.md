@@ -51,30 +51,70 @@ Review the pull request specifically against the loaded project rules:
 
 This command is a rules-and-conventions review. It is **not** a replacement for specialized review tools such as CodeRabbit or Sourcery, and it is **not** a replacement for static analyzers such as SonarCloud.
 
-### 5. Evaluate the Pull Request
+### 5. Review the Changes (Ask → Narrow → Read → Decide)
 
-Check for issues such as:
+Use a question-driven review workflow. Do **not** attempt to "review everything" — form specific questions, gather minimal context, then judge.
 
-- Missing or insufficient tests for the changed behavior
-- Changes that appear inconsistent with the project's build, test, or formatting requirements
-- Commit conventions that do not follow `project-guidelines.md`
-- Scope drift: unrelated changes mixed into the PR
-- Missing issue linkage or context when the project conventions expect it
-- Contribution-process problems (for example, PR body lacks required context)
-- Behavioral regressions or obvious risks visible from the diff
+#### 5.1 ASK — Form Review Questions
+
+Read the diff summary (changed files, additions, deletions) and form **2–3 specific review questions** about the changes. Use the change-type templates in [review-questions.md](review-questions.md) to select questions that match the diff signals:
+
+- Scan the diff for detection signals (new public API, exception handling changes, dependency bumps, concurrency primitives, config changes, test-only changes, security-sensitive files).
+- For each signal detected, pick the corresponding review questions from the template.
+- If no template matches, form questions from the diff itself: _"Does this change handle X correctly?"_, _"Is the new behavior tested?"_, _"Could this regress Y?"_
+
+Limit yourself to 2–3 high-value questions. More questions dilute focus.
+
+#### 5.2 NARROW — Identify Target Regions
+
+For each review question, identify the **smallest code region** in the diff that answers it:
+
+- A single hunk, a method signature, a test assertion, a config block.
+- Note the file and line range. Do not expand beyond what the question requires.
+
+#### 5.3 READ — Gather Targeted Context
+
+Read **only** the targeted regions identified above. If a region is ambiguous, use `git blame` or `git log` on that specific region — not the entire file.
+
+**Anti-patterns — do NOT:**
+
+- Read entire files when only a few lines changed
+- Browse related files without a specific question demanding it
+- Repeat static-analysis findings without adding new insight
+- Flag style issues covered by the project's configured formatter or linter
+- Expand context "just in case" — every extra file read must be justified by a question
+
+#### 5.4 DECIDE — Judge Each Question
+
+For each review question, reach exactly one verdict:
+
+| Verdict | Meaning | Action |
+|---------|---------|--------|
+| **Non-issue** | The code handles it correctly | No finding — do not mention it |
+| **Real issue** | The code has a concrete bug, gap, or rule violation | Record as a finding with file + line reference |
+| **Uncertain** | One more targeted check could resolve it | Perform that one check, then decide non-issue or real issue — do not leave it uncertain |
 
 ### 6. Present Review Findings
 
-Present findings locally in **code review format**:
+Present findings locally in **structured review format**, tracing each finding back to the review question that produced it:
 
-1. List findings first, ordered by severity
-2. Include file references whenever the diff makes that possible
-3. Clearly separate:
-   - **Confirmed issues** - Directly supported by the diff or rule files
-   - **Questions / assumptions** - Areas where the PR may be correct but context is missing
-4. If no significant issues are found, state that explicitly
+For each finding, include:
 
-Keep the review concise and actionable. Focus on concrete risks, regressions, rule violations, and missing validation.
+1. **Review question** — The specific question from step 5.1 that led to this finding
+2. **Code region** — File, line range, and the relevant code snippet
+3. **Verdict** — What was found (bug, missing test, rule violation, risk)
+4. **Severity** — Blocking / non-blocking / suggestion
+5. **Evidence** — Why this is an issue (diff excerpt, rule reference, git history)
+
+Order findings by severity (blocking first).
+
+Clearly separate:
+- **Confirmed issues** — Directly supported by the diff, rule files, or git history
+- **Questions / assumptions** — Areas where the PR may be correct but context is missing
+
+If all review questions resolved as non-issues, state that explicitly: _"All review questions resolved — no issues found."_
+
+Keep the review concise and actionable. Do not pad findings with restated diff content.
 
 **Wait for user approval before submitting the review to GitHub.**
 
