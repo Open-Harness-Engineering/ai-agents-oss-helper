@@ -296,6 +296,7 @@ You MUST NOT:
 - Submit the review to GitHub without user approval
 - Use suggestion blocks for large or ambiguous changes
 - Install tools that are not already available in the environment
+- Suggest follow-up PRs or tickets for issues visible in the current diff — if a problem is worth raising, request it be addressed in this PR or drop it
 
 ### 10. Acceptance Criteria
 
