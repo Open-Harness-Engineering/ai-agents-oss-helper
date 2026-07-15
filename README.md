@@ -53,14 +53,14 @@ The helper provides guidelines that are project-agnostic. Project-specific confi
 
 ### Skill groups
 
-The 35 guidelines are organized into 6 focused skills:
+The 36 guidelines are organized into 6 focused skills:
 
 - **`/oss-issues`** — Issue lifecycle: fix, analyze, create, list, find tasks, triage, cross-repo issues
 - **`/oss-review`** — PR lifecycle: review, address feedback, batch review, status, merge, backport
 - **`/oss-ci`** — CI/CD and code quality: fix CI errors, SonarCloud, GitHub alerts, quick fixes
 - **`/oss-security`** — Security: triage reports, analyze CVEs, draft advisories, sync the GitHub Advisory Database, scan code
 - **`/oss-project`** — Project setup: add projects, install/generate/update rules, workspaces
-- **`/oss-qe`** — Quality engineering: create and execute test plans
+- **`/oss-qe`** — Quality engineering: create and execute test plans, deep module audits
 
 Each skill is user-invocable — you can invoke it directly via `/oss-issues`, `/oss-review`, etc. or the agent can auto-invoke it when your request matches. Individual `/oss-*` commands (e.g. `/oss-fix-issue`) are also available as thin wrappers that delegate to the appropriate skill.
 
@@ -119,6 +119,7 @@ The OSS Helper provides guidelines for the following tasks. For agents with skil
 | Fix multi-repo issue | `/oss-fix-multi-repo-issue` | Fix an issue spanning multiple repositories |
 | Create test plan | `/oss-qe-create-test-plan` | Create a test plan for a project feature or component |
 | Execute test plan | `/oss-qe-verify` | Execute an existing test plan and track results |
+| Audit a module family | `/oss-qe-module-audit` | Deep-audit a module family for bugs, antipatterns, inconsistencies, missing features, and ideas |
 
 ## Usage Examples
 
@@ -271,7 +272,8 @@ ai-agents-oss-helper/
     └── oss-qe/                              # Quality engineering skill
         ├── SKILL.md
         ├── oss-qe-create-test-plan.md     # Create test plan
-        └── oss-qe-verify.md               # Execute test plan
+        ├── oss-qe-verify.md               # Execute test plan
+        └── oss-qe-module-audit.md         # Deep module-family audit
 ```
 
 Project rule files are no longer bundled with this repository. They live in

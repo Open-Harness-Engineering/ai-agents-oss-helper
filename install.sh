@@ -91,6 +91,7 @@ SKILL_FILES[oss-qe]="
     skills/oss-qe/SKILL.md
     skills/oss-qe/oss-qe-create-test-plan.md
     skills/oss-qe/oss-qe-verify.md
+    skills/oss-qe/oss-qe-module-audit.md
 "
 
 # Guideline files that become individual commands for all agents.
@@ -131,6 +132,7 @@ GUIDELINE_COMMANDS=(
     "oss-project|oss-workspace-status.md|oss-workspace-status|Report status of all repos in a workspace"
     "oss-qe|oss-qe-create-test-plan.md|oss-qe-create-test-plan|Create a test plan for a project feature or component"
     "oss-qe|oss-qe-verify.md|oss-qe-verify|Execute an existing test plan and track results"
+    "oss-qe|oss-qe-module-audit.md|oss-qe-module-audit|Deep-audit a module family for bugs, antipatterns, inconsistencies, missing features, and ideas"
 )
 
 # Old rule files to clean up (relative paths under rules/)
