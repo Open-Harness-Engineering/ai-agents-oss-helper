@@ -109,6 +109,7 @@ For each finding, include:
 Order findings by severity (blocking first).
 
 Clearly separate:
+
 - **Confirmed issues** — Directly supported by the diff, rule files, or git history
 - **Questions / assumptions** — Areas where the PR may be correct but context is missing
 
