@@ -1,9 +1,11 @@
 ---
 description: >
   Quality engineering and test management for open source projects.
-  Covers creating test plans for project features or components and
-  executing existing test plans with result tracking. Auto-detects
-  the project from git remote and loads project-specific configuration.
+  Covers creating test plans for project features or components,
+  executing existing test plans with result tracking, and deep-auditing
+  a module family for bugs, antipatterns, inconsistencies, missing
+  features, and new ideas. Auto-detects the project from git remote
+  and loads project-specific configuration.
 ---
 
 # OSS QE
@@ -22,3 +24,4 @@ After initialization, read and follow the appropriate guideline file based on th
 |---|---|
 | Create a test plan for a project feature or component | `oss-qe-create-test-plan.md` |
 | Execute an existing test plan and track results | `oss-qe-verify.md` |
+| Audit a module or component family for bugs, antipatterns, inconsistencies, missing features, and new ideas | `oss-qe-module-audit.md` |
