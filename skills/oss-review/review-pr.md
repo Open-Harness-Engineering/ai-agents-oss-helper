@@ -1,6 +1,6 @@
 ### Agent Delegation
 
-If you have access to agents specialized in **code review** or **software architecture** (e.g., code review or architecture agents), you should delegate the evaluation (steps 4–5) to one or more of those agents. Provide them with the PR diff, project rules, and git history context. If no specialized agents are available, perform all steps directly.
+If you have access to agents specialized in **code review** or **software architecture** (e.g., code review or architecture agents), you should delegate the evaluation (steps 5–6) to one or more of those agents. Provide them with the PR diff, project rules, git history context, and static analysis results. If no specialized agents are available, perform all steps directly.
 
 ### 1. Parse Input
 
@@ -25,7 +25,73 @@ gh pr diff <PR_NUMBER> --repo <GITHUB_REPO>
 
 If the PR references an issue or ticket, review that context as needed to validate scope and intent.
 
-### 3. Investigate Git History
+### 3. Run Static Analysis on Modified Files
+
+**REQUIRED.** Run available static analysis tools against the PR's modified files before evaluating the PR. See `_fragments/_static-analysis-enrichment.md` for the full scanner reference, but **execute the steps below inline** — do not skip this step or defer to the fragment file.
+
+#### 3a. Extract modified file paths
+
+```bash
+gh pr view <PR_NUMBER> --repo <GITHUB_REPO> --json files --jq '.files[].path' > /tmp/pr-modified-files.txt
+```
+
+#### 3b. Detect available scanners
+
+```bash
+echo "=== Scanner Detection ==="
+for tool in semgrep gitleaks sg pmd ruff bandit eslint golangci-lint staticcheck shellcheck rubocop hadolint cppcheck; do
+  command -v $tool >/dev/null 2>&1 && echo "FOUND: $tool" || echo "MISSING: $tool"
+done
+```
+
+#### 3c. Check for ast-grep rules
+
+```bash
+for dir in ./.ast-grep-rules ./rules/java ~/.oss-helper/rules/java; do
+  [ -d "$dir" ] && echo "AST_GREP_RULES=$dir" && break
+done
+```
+
+#### 3d. Identify language-specific files
+
+```bash
+grep '\.java$' /tmp/pr-modified-files.txt > /tmp/pr-java-files.txt 2>/dev/null
+grep -E '\.py$' /tmp/pr-modified-files.txt > /tmp/pr-python-files.txt 2>/dev/null
+grep -E '\.(js|jsx|ts|tsx)$' /tmp/pr-modified-files.txt > /tmp/pr-js-files.txt 2>/dev/null
+grep -E '\.go$' /tmp/pr-modified-files.txt > /tmp/pr-go-files.txt 2>/dev/null
+grep -E '\.(sh|bash)$' /tmp/pr-modified-files.txt > /tmp/pr-shell-files.txt 2>/dev/null
+```
+
+#### 3e. Run each detected scanner (30-second total time budget)
+
+Run **only** the scanners detected as FOUND above, scoped to the modified files:
+
+- **ast-grep** (if `sg` found and rules exist): `sg scan --rule "$AST_GREP_RULES" --json $(cat /tmp/pr-modified-files.txt | tr '\n' ' ') 2>/dev/null`
+- **semgrep** (if found): `semgrep scan --config auto --json --disable-version-check --timeout 10 $(cat /tmp/pr-modified-files.txt | tr '\n' ' ') 2>/dev/null`
+- **gitleaks** (if found): copy modified files to a temp dir, run `gitleaks detect --no-git -s <dir> --report-format json`
+- **PMD CLI** (if found, Java files present): `pmd check --file-list /tmp/pr-java-files.txt -R <project-ruleset-or-quickstart> -f json --no-progress 2>/dev/null`
+- **Maven PMD/Checkstyle** (fallback if no CLI, Java project with pom.xml): run scoped to affected modules with `-pl <modules> -fn -q`, max 3 modules
+- **ruff** (if found, Python files): `cat /tmp/pr-python-files.txt | xargs ruff check --output-format json 2>/dev/null`
+- **bandit** (if found, Python files): `cat /tmp/pr-python-files.txt | xargs bandit -f json 2>/dev/null`
+- **eslint** (if found, JS/TS files, project config exists): `cat /tmp/pr-js-files.txt | xargs eslint -f json 2>/dev/null`
+- **golangci-lint** (if found, Go files): `golangci-lint run --new-from-rev=$(git merge-base HEAD <base>) --out-format json 2>/dev/null`
+- **shellcheck** (if found, shell files): `cat /tmp/pr-shell-files.txt | xargs shellcheck -f json1 2>/dev/null`
+
+If a scanner fails or times out, note the failure and continue with other scanners.
+
+#### 3f. Normalize and annotate findings
+
+For each finding, extract: `scanner | file | line | rule | severity | message`. Then check against the PR diff to tag each finding as **introduced** (line added/modified by this PR) or **pre-existing**.
+
+#### 3g. Produce Scanner Coverage summary
+
+Record which scanners ran, which were skipped (not installed), and coverage gaps (e.g., "SpotBugs requires compilation — see CI"). This summary is included in the review output (step 7).
+
+**If no scanners are available at all**, state: "No static analysis tools available. Checked: semgrep, gitleaks, sg, pmd, ruff, bandit, eslint, golangci-lint, shellcheck." and proceed with the rules-only evaluation.
+
+The scanner results feed into step 6 (Evaluate the Pull Request) as additional context.
+
+### 4. Investigate Git History
 
 Before reviewing the changes, understand the history of the modified files:
 
@@ -41,7 +107,7 @@ git blame -L <start>,<end> -- <file>
 - Check if the PR conflicts with or effectively reverts a prior intentional commit. If so, flag this as a finding.
 - Look for related issues or discussions in the project tracker that provide context on design decisions in the affected area.
 
-### 4. Review Scope
+### 5. Review Scope
 
 Review the pull request specifically against the loaded project rules:
 
@@ -51,11 +117,11 @@ Review the pull request specifically against the loaded project rules:
 
 This command is a rules-and-conventions review. It is **not** a replacement for specialized review tools such as CodeRabbit or Sourcery, and it is **not** a replacement for static analyzers such as SonarCloud.
 
-### 5. Review the Changes (Ask → Narrow → Read → Decide)
+### 6. Review the Changes (Ask → Narrow → Read → Decide)
 
 Use a question-driven review workflow. Do **not** attempt to "review everything" — form specific questions, gather minimal context, then judge.
 
-#### 5.1 ASK — Form Review Questions
+#### 6.1 ASK — Form Review Questions
 
 Read the diff summary (changed files, additions, deletions) and form **2–3 specific review questions** about the changes. Use the change-type templates in [review-questions.md](review-questions.md) to select questions that match the diff signals:
 
@@ -65,14 +131,14 @@ Read the diff summary (changed files, additions, deletions) and form **2–3 spe
 
 Limit yourself to 2–3 high-value questions. More questions dilute focus.
 
-#### 5.2 NARROW — Identify Target Regions
+#### 6.2 NARROW — Identify Target Regions
 
 For each review question, identify the **smallest code region** in the diff that answers it:
 
 - A single hunk, a method signature, a test assertion, a config block.
 - Note the file and line range. Do not expand beyond what the question requires.
 
-#### 5.3 READ — Gather Targeted Context
+#### 6.3 READ — Gather Targeted Context
 
 Read **only** the targeted regions identified above. If a region is ambiguous, use `git blame` or `git log` on that specific region — not the entire file.
 
@@ -84,7 +150,7 @@ Read **only** the targeted regions identified above. If a region is ambiguous, u
 - Flag style issues covered by the project's configured formatter or linter
 - Expand context "just in case" — every extra file read must be justified by a question
 
-#### 5.4 DECIDE — Judge Each Question
+#### 6.4 DECIDE — Judge Each Question
 
 For each review question, reach exactly one verdict:
 
@@ -94,13 +160,21 @@ For each review question, reach exactly one verdict:
 | **Real issue** | The code has a concrete bug, gap, or rule violation | Record as a finding with file + line reference |
 | **Uncertain** | One more targeted check could resolve it | Perform that one check, then decide non-issue or real issue — do not leave it uncertain |
 
-### 6. Present Review Findings
+If static analysis results are available from step 3:
+
+- **Correlate** scanner findings with your own observations from reading the diff
+- **Suppress** findings that contradict project rules in `project-standards.md`
+- **Elevate** scanner findings that confirm or extend a concern you identified independently
+- **Attribute** tool findings clearly (e.g., "PMD flags `UnusedLocalVariable` on line 42")
+- **Prioritize** findings on lines introduced by this PR over pre-existing issues
+
+### 7. Present Review Findings
 
 Present findings locally in **structured review format**, tracing each finding back to the review question that produced it:
 
 For each finding, include:
 
-1. **Review question** — The specific question from step 5.1 that led to this finding
+1. **Review question** — The specific question from step 6.1 that led to this finding
 2. **Code region** — File, line range, and the relevant code snippet
 3. **Verdict** — What was found (bug, missing test, rule violation, risk)
 4. **Severity** — Blocking / non-blocking / suggestion
@@ -119,7 +193,7 @@ Keep the review concise and actionable. Do not pad findings with restated diff c
 
 **Wait for user approval before submitting the review to GitHub.**
 
-### 7. Submit Review to GitHub
+### 8. Submit Review to GitHub
 
 After user approval, submit the review using the GitHub CLI with inline comments.
 
@@ -199,7 +273,7 @@ Findings that are not tied to a specific line (e.g., missing tests, scope drift,
 
 The review body must end with: "_This review was generated by an AI agent and may contain inaccuracies. Please verify all suggestions before applying._"
 
-### 8. Constraints
+### 9. Constraints
 
 You MUST:
 
@@ -207,25 +281,32 @@ You MUST:
 - Prioritize bugs, regressions, missing tests, and rule violations
 - Check git history of modified files to understand prior intent before flagging issues
 - Cite the relevant rule file when a finding depends on project conventions
-- State explicitly that this review does not replace specialized AI review tools or static analysis
+- Run available static analysis tools against modified files (step 3) and incorporate their findings
+- Attribute tool findings clearly — state which scanner produced each finding
+- State which static analysis tools were run, which were unavailable, and any coverage gaps
 - Distinguish clearly between findings and open questions
 - Demonstrate empathy towards the contributor when requesting changes — acknowledge their effort, frame feedback constructively, and avoid dismissive or discouraging language
 
 You MUST NOT:
 
 - Re-implement the pull request instead of reviewing it
-- Present the command as a substitute for CodeRabbit, Sourcery, SonarCloud, or similar tools
+- Present scanner findings as the reviewer's own reasoning — always attribute to the tool
+- Present tool findings as authoritative — they are input to the review, not verdicts
 - Invent project conventions not present in the loaded rule files
 - Ignore the diff and review only the PR title/body
 - Submit the review to GitHub without user approval
 - Use suggestion blocks for large or ambiguous changes
+- Install tools that are not already available in the environment
+- Suggest follow-up PRs or tickets for issues visible in the current diff — if a problem is worth raising, request it be addressed in this PR or drop it
 
-### 9. Acceptance Criteria
+### 10. Acceptance Criteria
 
 - The PR was reviewed against the project's rule files
+- Available static analysis tools were detected and run against the modified files (or the absence of tools was noted)
+- Scanner findings are incorporated into the review with clear attribution
+- Scanner coverage summary is included (tools run, tools unavailable, coverage gaps)
 - Findings are concrete, prioritized, and actionable
 - Missing tests, regressions, and convention violations are called out when present
-- The review explicitly stays within OSS Helper's scope and does not claim to replace specialized tools
 - Review is submitted to GitHub with inline comments on specific lines where possible
 - Suggestion blocks are used for clear, concrete fixes
 - The review includes the AI-generated disclaimer

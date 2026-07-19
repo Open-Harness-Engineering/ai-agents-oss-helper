@@ -1,6 +1,6 @@
 ### Agent Delegation
 
-If you have access to agents specialized in **code review** (e.g., code review agents), you should use them for the per-PR evaluations in step 4. Each agent should receive the PR diff, project rules, and git history context, and return a structured verdict. If no specialized agents are available, perform all evaluations directly.
+If you have access to agents specialized in **code review** (e.g., code review agents), you should use them for the per-PR evaluations in step 4. Each agent should receive the PR diff, project rules, git history context, and static analysis results, and return a structured verdict. If no specialized agents are available, perform all evaluations directly.
 
 ### 1. Parse Arguments
 
@@ -14,7 +14,7 @@ Parse the optional arguments into local variables. Use these defaults when an ar
 | `include-reviewed` | false (PRs you already reviewed are skipped) |
 | `include-drafts` | false (drafts are excluded) |
 | `post` | `ask` |
-| `auto-approve` | false (clean PRs are never auto-approved) |
+| `auto-approve` | true (clean PRs with no suggestions are approved) |
 
 ### 2. Determine the Current User
 
@@ -31,7 +31,7 @@ Select with the GitHub search qualifiers so the whole selection is a small numbe
 | Condition | Search fragment |
 |-----------|-----------------|
 | Drafts excluded (default) | `-is:draft` |
-| Exclude your own PRs (always — you cannot review them) | `-author:@me` |
+| Exclude your own PRs (only in interactive mode, not in loop reviews) | _(skip in loop mode)_ |
 | Exclude PRs you already reviewed (default; unless `include-reviewed`) | `-reviewed-by:@me` |
 | `author=<user>` provided | `author:<user>` |
 | `label=<label>` provided | `label:"<label>"` |
@@ -49,10 +49,29 @@ If the candidate count is large (> 15), **state the count and confirm before con
 
 ### 4. Review Each Candidate (in parallel, read-only)
 
-Review the candidates concurrently — this keeps the run fast and keeps each PR's diff out of the main context. For each PR, perform the **same evaluation the Review PR guideline (`review-pr.md`) does** (retrieve metadata + diff, investigate the git history of the modified files, evaluate against the project rule files) and return a structured verdict instead of posting anything:
+Review the candidates concurrently — this keeps the run fast and keeps each PR's diff out of the main context. For each PR:
+
+#### 4a. Run Static Analysis (before delegation)
+
+**REQUIRED.** Before delegating to a sub-agent, run static analysis yourself (the orchestrator) for each PR. Sub-agents receive a condensed prompt and cannot read skill files or fragments, so scanner detection and execution must happen here.
+
+For each candidate PR, execute the static analysis steps from `review-pr.md` step 3:
+
+1. Extract modified file paths: `gh pr view <PR> --repo <GITHUB_REPO> --json files --jq '.files[].path' > /tmp/pr-<PR>-files.txt`
+2. Detect scanners: `for tool in semgrep gitleaks sg pmd ruff bandit eslint golangci-lint shellcheck; do command -v $tool >/dev/null 2>&1 && echo "FOUND: $tool" || echo "MISSING: $tool"; done`
+3. Check for ast-grep rules: `for dir in ./.ast-grep-rules ./rules/java ~/.oss-helper/rules/java; do [ -d "$dir" ] && AST_GREP_RULES="$dir" && break; done`
+4. Run each detected scanner scoped to the PR's modified files (30s budget per PR)
+5. Collect raw scanner output
+
+If no scanners are available, record: "No static analysis tools available" and proceed.
+
+#### 4b. Delegate Review (with scanner results)
+
+Pass the scanner results (or "no scanners available" note) to each sub-agent as part of the review context. Each sub-agent should perform the **same evaluation the Review PR guideline (`review-pr.md`) does** (retrieve metadata + diff, investigate the git history of the modified files, evaluate against the project rule files incorporating the provided scanner findings) and return a structured verdict instead of posting anything:
 
 - Recommended event: `APPROVE` / `COMMENT` / `REQUEST_CHANGES` (per the Review PR guideline mapping).
 - Findings, severity-ordered, with file references.
+- Scanner coverage summary: which tools ran, which were unavailable, coverage gaps.
 - A short checklist: tests, docs/upgrade-guide, commit convention, generated files, public-API / backward-compat, security, CI status.
 - Any claim that could not be verified.
 
@@ -81,7 +100,7 @@ gh pr review <PR> --repo <GITHUB_REPO> --approve         --body-file <file>
 ```
 
 - Use **review-body** comments, with `file:line` references in prose. Inline-position comments are fragile in a batch; only use them when highly confident of the diff position (and never duplicate an existing reviewer's inline note).
-- Map events: clean → `APPROVE` **only if `auto-approve`**, otherwise `COMMENT`; questions / suggestions → `COMMENT`; blocking issues → `REQUEST_CHANGES`.
+- Map events: clean (no suggestions) → `APPROVE`; questions / suggestions → `COMMENT`; blocking issues → `REQUEST_CHANGES`.
 - Submit **sequentially** (not in parallel) to space the calls and avoid GitHub secondary rate limits.
 - Every review body MUST end with an attribution + AI-disclaimer footer identifying the agent and the operator, e.g.:
   > _Reviewed with <agent> on behalf of <operator>. This review was generated by an AI agent and may contain inaccuracies; please verify all suggestions before applying._
@@ -93,7 +112,7 @@ You MUST:
 
 - Select candidates with aggregate `gh pr list --search` calls only — never poll per-PR review history.
 - Always exclude PRs authored by the current user, and (by default) PRs they have already reviewed.
-- Review each PR against the project rule files, with the same rigor as the Review PR guideline (`review-pr.md`).
+- Review each PR against the project rule files, with the same rigor as the Review PR guideline (`review-pr.md`), including static analysis enrichment when tools are available.
 - Verify CI state and factual corrections before presenting.
 - Present one consolidated report and obtain a single approval before posting (unless `post=` pre-answers it).
 - Include the attribution + AI-disclaimer footer on every posted review.
@@ -102,11 +121,12 @@ You MUST:
 You MUST NOT:
 
 - Post any review, comment, label, or state change before approval.
-- Formally `APPROVE` a PR in the operator's name unless `auto-approve` is set.
+- Suggest follow-up PRs or tickets for issues visible in the current diff — if a problem is worth raising, request it be addressed in this PR or drop it.
 - Review or approve a PR authored by the operator.
 - Merge any PR, or push to any contributor's branch.
 - Re-implement the PRs instead of reviewing them.
 - Present this command as a substitute for CodeRabbit, Sourcery, SonarCloud, or similar tools.
+- Present scanner findings as the reviewer's own reasoning — always attribute to the tool.
 
 ### 9. Acceptance Criteria
 
@@ -114,5 +134,5 @@ You MUST NOT:
 - Each candidate is reviewed against the project rule files with a recommended event and concrete, prioritized findings.
 - Load-bearing claims (CI state, factual corrections) are verified before presenting.
 - A single consolidated report is presented, and nothing is posted without approval (or an explicit `post=` value).
-- Posted reviews use the correct event, carry the attribution + AI disclaimer, and clean PRs are not auto-approved unless `auto-approve` was passed.
+- Posted reviews use the correct event and carry the attribution + AI disclaimer. Clean PRs with no suggestions receive `APPROVE`.
 - Skipped PRs and any batch-threshold confirmation are surfaced to the user.

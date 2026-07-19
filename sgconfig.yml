@@ -1,0 +1,3 @@
+ruleDirs:
+  - rules/java/security
+  - rules/java/quality

@@ -1,0 +1,28 @@
+id: mutable-collection-return
+language: java
+severity: hint
+message: >-
+  Public method directly returns a mutable collection field (List, Map, Set).
+  This exposes internal state - callers can modify the collection. Wrap with
+  Collections.unmodifiableList/Map/Set() or return a defensive copy.
+note: >-
+  Returning mutable internal collections breaks encapsulation and can cause
+  subtle concurrency bugs and unexpected mutation.
+
+rule:
+  kind: method_declaration
+  all:
+    - has:
+        kind: modifiers
+        regex: public
+    - has:
+        kind: generic_type
+        has:
+          kind: type_identifier
+          regex: ^(List|Map|Set|ArrayList|HashMap|HashSet|LinkedList|TreeMap|TreeSet|LinkedHashMap|LinkedHashSet)$
+    - has:
+        kind: block
+        has:
+          kind: return_statement
+          has:
+            kind: identifier

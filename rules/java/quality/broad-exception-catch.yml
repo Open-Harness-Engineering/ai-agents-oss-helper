@@ -1,0 +1,16 @@
+id: broad-exception-catch
+language: java
+severity: warning
+message: >-
+  Catching broad exception types (Exception, Throwable, RuntimeException) masks
+  specific errors and makes debugging harder. Catch specific exception types
+  instead, or re-throw after logging.
+note: >-
+  Overly broad catch clauses hide bugs by treating all failures identically.
+  Prefer catching specific checked exceptions.
+
+rule:
+  kind: catch_clause
+  has:
+    kind: catch_formal_parameter
+    regex: ^(Exception|Throwable|RuntimeException)\b

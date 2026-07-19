@@ -1,0 +1,34 @@
+id: empty-catch-block
+language: java
+severity: warning
+message: >-
+  Empty catch block silently swallows exceptions. Add handling, logging,
+  or at minimum a comment explaining why the exception is intentionally ignored.
+note: >-
+  [CWE-391] Unchecked Error Condition.
+  Empty catch blocks make debugging extremely difficult because failures
+  are silently discarded.
+
+rule:
+  kind: catch_clause
+  has:
+    kind: block
+    all:
+      - not:
+          has:
+            kind: expression_statement
+      - not:
+          has:
+            kind: local_variable_declaration
+      - not:
+          has:
+            kind: return_statement
+      - not:
+          has:
+            kind: throw_statement
+      - not:
+          has:
+            kind: line_comment
+      - not:
+          has:
+            kind: block_comment

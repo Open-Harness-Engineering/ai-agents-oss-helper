@@ -27,3 +27,4 @@ After initialization, read and follow the appropriate guideline file based on th
 | Update project rule files | `update-knowledge.md` |
 | Initialize or rediscover a multi-repo workspace | `oss-workspace-init.md` |
 | Report status of all repos in a workspace | `oss-workspace-status.md` |
+| Update the OSS Helper itself | `self-update.md` |
