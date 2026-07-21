@@ -104,6 +104,8 @@ To work on this issue, use:
 the Fix Issue guideline (`fix-issue.md`)
 ```
 
+Note: the Fix Issue guideline applies the ownership guard in `_fragments/_issue-ownership.md` before claiming the issue. If a comment shows another contributor has already taken it, that guideline will decline it — so prefer suggesting issues that are unassigned (or the operator's own) and not already claimed in the comments.
+
 ### 7. Constraints
 
 You MUST:

@@ -116,6 +116,9 @@ Provide a structured analysis report to the user:
 ### Summary
 <Brief description of the issue>
 
+### Ownership Status
+<Apply the ownership check in `_fragments/_issue-ownership.md` against the fetched assignee and comments. State whether the issue is free to work on, or already claimed — by whom (assignee or comment author) and where. If claimed, warn that the Fix Issue guideline will decline it.>
+
 ### Problem Understanding
 <What the issue is about, including any inferred details>
 
