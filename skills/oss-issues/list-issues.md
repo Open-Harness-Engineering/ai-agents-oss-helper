@@ -144,6 +144,8 @@ To analyze this issue first, use:
 the Analyze Issue guideline (`analyze-issue.md`)
 ```
 
+Note: these are issues assigned to the operator, but assignment alone does not mean the issue is free to work on. The Fix Issue guideline applies the ownership guard in `_fragments/_issue-ownership.md`, which also checks the comments — an issue assigned to the operator may still have been claimed there by another contributor, in which case it will be declined. This listing does not fetch per-issue comments (single API call), so the guard runs at fix time.
+
 ### 7. Constraints
 
 You MUST:

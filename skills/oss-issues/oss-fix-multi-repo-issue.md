@@ -41,8 +41,10 @@ gh issue view <ISSUE_NUMBER> --repo <ORG_REPO> --json number,title,body,state,la
 **Jira:**
 
 ```bash
-curl -s "<ISSUE_TRACKER_URL>rest/api/2/issue/<ISSUE_ID>?fields=summary,description,status,priority,issuetype,components,labels,fixVersions,comment"
+curl -s "<ISSUE_TRACKER_URL>rest/api/2/issue/<ISSUE_ID>?fields=summary,description,status,priority,issuetype,components,labels,fixVersions,assignee,comment"
 ```
+
+**Ownership guard (STOP if claimed):** before preparing branches or implementing anything, apply the ownership check in `_fragments/_issue-ownership.md` to the fetched assignee and comments. If the canonical issue is assigned to someone else, or a comment from another contributor has claimed it (or a sibling PR/branch by another contributor is already open), STOP — do not transition, branch, or implement. Leave the issue untouched and report who has claimed it.
 
 Read the issue thoroughly and identify:
 
