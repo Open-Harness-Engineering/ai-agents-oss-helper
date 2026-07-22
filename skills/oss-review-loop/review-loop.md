@@ -58,7 +58,15 @@ Run these commands NOW, before reading any further:
 ```bash
 # 1. Detect fork repo and state branch from local config
 #    (loop-config.json exists in the worktree from previous runs or setup)
-FORK_REPO=$(git remote get-url origin 2>/dev/null | sed -E 's#.*github.com[:/]##; s#\.git$##')
+#    State is stored on the FORK, not upstream — use the 'fork' remote if it exists
+FORK_REPO=$(git remote get-url fork 2>/dev/null | sed -E 's#.*github.com[:/]##; s#\.git$##')
+if [[ -z "$FORK_REPO" ]]; then
+  # Fallback: try 'gnodet' remote, then 'origin'
+  for remote in gnodet origin; do
+    FORK_REPO=$(git remote get-url "$remote" 2>/dev/null | sed -E 's#.*github.com[:/]##; s#\.git$##')
+    [[ -n "$FORK_REPO" ]] && break
+  done
+fi
 STATE_BRANCH=$(python3 -c "import json; print(json.load(open('loop-config.json'))['state_branch'])" 2>/dev/null || echo "")
 
 # 2. Pull latest state from the fork (skip if no config yet — first run)
