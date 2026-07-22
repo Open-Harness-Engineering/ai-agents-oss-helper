@@ -51,10 +51,16 @@ Main loop (orchestrator)
 Run these commands NOW, before reading any further:
 
 ```bash
-# 1. Pull latest state from the fork
-~/.claude/scripts/pull-state.sh $FORK_REPO $STATE_BRANCH .
+# 1. Detect fork repo and state branch from local config
+FORK_REPO=$(git remote get-url origin 2>/dev/null | sed -E 's#.*github.com[:/]##; s#\.git$##')
+STATE_BRANCH=$(python3 -c "import json; print(json.load(open('loop-config.json'))['state_branch'])" 2>/dev/null || echo "")
 
-# 2. BLOCK here until a CI failure is detected
+# 2. Pull latest state from the fork (skip if no config yet — first run)
+if [[ -n "$STATE_BRANCH" ]]; then
+  ~/.claude/scripts/pull-state.sh "$FORK_REPO" "$STATE_BRANCH" .
+fi
+
+# 3. BLOCK here until a CI failure is detected
 #    This command will NOT return for minutes or hours. That is correct.
 #    Do NOT interrupt it. Do NOT set a short timeout. Let it block.
 ~/.claude/scripts/wait-for-ci-failure.sh
