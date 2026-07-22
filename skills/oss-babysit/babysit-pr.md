@@ -165,14 +165,24 @@ Based on the signal(s), take action:
 
 #### PUSHED
 
-New commits were pushed (possibly by us after a fix). Check the new CI
-status — don't take action yet, wait for CI to complete. The next
-`wait-for-pr-update.sh` call will return `CI_FAILED` or `CI_GREEN`.
+New commits were pushed (possibly by us after a fix).
+
+> **🛑 Do NOT poll CI status.** Do NOT run `gh run list` or `gh pr checks`
+> in a loop. Go directly to step 1 — the blocking `wait-for-pr-update.sh`
+> script will detect when CI completes and return `CI_FAILED` or `CI_GREEN`.
+> Polling CI yourself wastes tokens.
+
+**Action:** Go to step 1 immediately. Do nothing else.
 
 ### 3. Loop Back
 
-After handling signals, go back to step 1. The script blocks again until
-the next activity.
+After handling signals, go DIRECTLY to step 1. Run `wait-for-pr-update.sh`
+again. The script blocks (zero cost) until the next event.
+
+> **🛑 Do NOT poll, check, or query GitHub between signals.**
+> Every check between `wait-for-pr-update.sh` calls is wasted tokens.
+> The script handles ALL detection — CI results, new comments, merges,
+> pushes. Trust it.
 
 **Do NOT end with `[GOAL_COMPLETE]` unless the PR is merged.**
 **Do NOT end with `[GOAL_BLOCKED]` unless the PR is closed.**
@@ -195,5 +205,7 @@ You MUST NOT:
 - Ignore review comments (address or explain why not)
 - Undraft while CI is failing
 - Spam reviewers (request review only once after CI goes green, not on every push)
+- Poll CI status in a loop (`gh run list`, `gh pr checks`, `sleep && check`) — the blocking script detects CI completion
+- Run `gh run watch` — use `wait-for-pr-update.sh` instead
 - End with `[GOAL_COMPLETE]` unless PR is merged
 - End with `[GOAL_BLOCKED]` unless PR is closed (waiting for review is NOT blocked)
