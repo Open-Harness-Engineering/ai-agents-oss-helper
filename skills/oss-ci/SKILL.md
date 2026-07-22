@@ -24,3 +24,4 @@ After initialization, read and follow the appropriate guideline file based on th
 | Fix SonarCloud issues for a rule | `fix-sonarcloud.md` |
 | Fix a GitHub security or quality alert | `fix-github-alert.md` |
 | Apply a quick fix (CI, docs, deps, etc.) without a tracked issue | `quick-fix.md` |
+| Produce the smallest possible code change for a CI failure | `minimal-fix.md` |

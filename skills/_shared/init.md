@@ -242,3 +242,28 @@ If the remote version differs from the local version (or the local version is un
    - Re-read the updated rule files before continuing
 
 4. If the user declines, continue with the existing local rules.
+
+## 4. OSS Helper Auto-Update
+
+Pull the latest skills from the remote repository on every invocation.
+
+### 4.1 Locate the skills repository
+
+```bash
+OSS_HELPER_DIR=""
+for dir in ~/.oss-helper "$HOME/.claude/oss-helper"; do
+  if [[ -d "$dir/.git" ]] || { [[ -L "$dir" ]] && [[ -d "$(readlink -f "$dir" 2>/dev/null)/.git" ]]; }; then
+    OSS_HELPER_DIR="$dir"
+    break
+  fi
+done
+```
+
+If `OSS_HELPER_DIR` is empty, skip this step — skills were not installed via
+git clone.
+
+### 4.2 Fetch and pull
+
+```bash
+git -C "$OSS_HELPER_DIR" pull --quiet 2>/dev/null
+```

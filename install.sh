@@ -23,7 +23,7 @@ SHARED_INIT="skills/_shared/init.md"
 
 # Skill definitions: "skill-dir|SKILL.md + guideline files..."
 # Each skill is a directory under skills/ containing a SKILL.md and guideline files.
-SKILL_DIRS=("oss-issues" "oss-review" "oss-ci" "oss-security" "oss-project" "oss-qe")
+SKILL_DIRS=("oss-issues" "oss-review" "oss-ci" "oss-security" "oss-project" "oss-qe" "oss-loop-core" "oss-ci-sweeper" "oss-review-loop" "oss-babysit" "oss-issue-loop")
 
 # Sub-agent definitions (installed for all tools in their native format)
 AGENT_FILES=(
@@ -527,6 +527,43 @@ install_skill_agent() {
     info "  Skills installed to: $skills_root/{${SKILL_DIRS[*]}}"
     info "  Commands installed to: $commands_dir"
     info "  Sub-agents installed to: $agents_dir"
+
+    # Install scripts (for loop preconditions, state management, triage)
+    local scripts_dir="$HOME/.$agent/scripts"
+    if mkdir -p "$scripts_dir"; then
+        local script_files=(
+            "scripts/check-pr-work.sh"
+            "scripts/check-review-replies.py"
+            "scripts/ci-sweeper-precondition.sh"
+            "scripts/detect-feedback.py"
+            "scripts/init-state-branch.sh"
+            "scripts/pull-state.sh"
+            "scripts/push-state.sh"
+            "scripts/triage-issues.py"
+            "scripts/triage-prs.py"
+            "scripts/update-state.py"
+            "scripts/wait-for-ci-failure.sh"
+            "scripts/wait-for-pr-update.sh"
+            "scripts/wait-for-pr-work.sh"
+        )
+        info "  Installing scripts..."
+        for script_file in "${script_files[@]}"; do
+            local filename
+            filename="$(basename "$script_file")"
+            local dest="$scripts_dir/$filename"
+            if [[ -f "$INSTALL_DIR/$script_file" ]]; then
+                if [[ "$use_symlinks" == "true" ]]; then
+                    ln -sf "$(cd "$INSTALL_DIR" && pwd -P)/$script_file" "$dest"
+                else
+                    cp "$INSTALL_DIR/$script_file" "$dest"
+                fi
+                chmod +x "$dest"
+                info "    Installed: $filename"
+            fi
+        done
+        info "  Scripts installed to: $scripts_dir"
+    fi
+
     info "  Rules directory: $rules_dir (project rules installed on demand)"
 }
 
