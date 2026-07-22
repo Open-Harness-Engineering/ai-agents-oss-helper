@@ -73,11 +73,11 @@ fi
 ~/.claude/scripts/wait-for-ci-failure.sh
 ```
 
-> **🛑 WHILE THIS SCRIPT IS RUNNING, DO NOTHING ELSE.**
+> **🛑 Block waiting for this script to finish. Do NOT run any other command.**
 >
-> Do NOT run any other bash commands in parallel. Do NOT check CI status.
-> Do NOT run `gh run list`. The script IS the check. Wait for it to exit,
-> then read its output.
+> This script will run for minutes or hours. That is expected.
+> Do NOT run any bash command while it is running — not `gh`, not `cat`,
+> not `date`, nothing. Just wait. When it exits, read the output and act.
 
 **This command blocks.** It sits in a `while true` loop, polling the GitHub
 Actions API with ETag conditional requests (304 = free, no rate limit hit).

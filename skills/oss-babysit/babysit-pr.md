@@ -57,15 +57,11 @@ Run the blocking poll script and **wait for it to finish**:
 ~/.claude/scripts/wait-for-pr-update.sh --pr $PR_NUMBER --repo $REPO --timeout 3600
 ```
 
-> **🛑 WHILE THIS SCRIPT IS RUNNING, DO NOTHING ELSE.**
+> **🛑 Block waiting for this script to finish. Do NOT run any other command.**
 >
-> Do NOT run any other bash commands. Do NOT check CI status. Do NOT
-> check for comments. Do NOT read PR state. Do NOT run `gh` commands.
-> The script IS the check — it polls GitHub via ETag and returns ONLY
-> when something changes. Running parallel commands wastes tokens and
-> defeats the purpose.
->
-> **Wait for this single bash command to exit.** Then read its output.
+> This script will run for minutes or hours. That is expected.
+> Do NOT run any bash command while it is running — not `gh`, not `cat`,
+> not `date`, nothing. Just wait. When it exits, read the output and act.
 
 This command blocks for up to 1 hour. If nothing changes, it exits 1 — loop
 back to step 1 and block again. Do NOT treat a timeout as completion or failure.
