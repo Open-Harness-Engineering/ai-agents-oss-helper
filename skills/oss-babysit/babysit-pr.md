@@ -54,8 +54,11 @@ If the PR is closed, report and stop (`[GOAL_BLOCKED]`).
 Run the blocking poll script. It returns when something changes on the PR:
 
 ```bash
-~/.claude/scripts/wait-for-pr-update.sh --pr $PR_NUMBER --repo $REPO
+~/.claude/scripts/wait-for-pr-update.sh --pr $PR_NUMBER --repo $REPO --timeout 3600
 ```
+
+This command blocks for up to 1 hour. If nothing changes, it exits 1 — loop
+back to step 1 and block again. Do NOT treat a timeout as completion or failure.
 
 The script outputs one or more signals:
 - `MERGED` — PR was merged → we're done
@@ -172,8 +175,8 @@ After handling signals, go back to step 1. The script blocks again until
 the next activity.
 
 **Do NOT end with `[GOAL_COMPLETE]` unless the PR is merged.**
-**Do NOT end with `[GOAL_BLOCKED]` unless the PR is closed or you cannot
-proceed without human input.**
+**Do NOT end with `[GOAL_BLOCKED]` unless the PR is closed.**
+**Waiting for human review is NOT "blocked" — it is normal. Keep waiting.**
 
 ## Constraints
 
@@ -193,3 +196,4 @@ You MUST NOT:
 - Undraft while CI is failing
 - Spam reviewers (request review only once after CI goes green, not on every push)
 - End with `[GOAL_COMPLETE]` unless PR is merged
+- End with `[GOAL_BLOCKED]` unless PR is closed (waiting for review is NOT blocked)

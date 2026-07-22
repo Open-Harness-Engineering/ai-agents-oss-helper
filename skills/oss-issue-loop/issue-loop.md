@@ -44,30 +44,39 @@ and worktree.
 
 ## Execution Steps
 
-### 0. Pre-flight — Wait for Issue Activity
+### 0. MANDATORY — Wait for Issue Activity
 
-Run the blocking precondition script. It polls GitHub Events API using
-ETag-based conditional requests until issue activity is detected.
+> **🛑 STOP. Do NOT skip this step. Do NOT proceed to step 1.**
+>
+> You MUST run the blocking precondition script FIRST. It polls GitHub using
+> zero-cost ETag requests and BLOCKS until repo activity is detected.
 
-**With `/goal` (recommended):**
-
-```bash
-~/.claude/scripts/pull-state.sh $FORK_REPO $STATE_BRANCH .
-~/.claude/scripts/wait-for-pr-work.sh state.json
-```
-
-The `wait-for-pr-work.sh` script detects general repo activity, which
-includes issue creation. For issue-specific polling, the script exits
-on any repo event, and step 2 does the actual issue filtering.
-
-**With `/loop` (ForgeBot):**
+Run these commands NOW, before reading any further:
 
 ```bash
-~/.claude/scripts/pull-state.sh $FORK_REPO $STATE_BRANCH .
-~/.claude/scripts/wait-for-pr-work.sh --timeout 300 state.json
+# 1. Detect fork repo and state branch from local config
+FORK_REPO=$(git remote get-url fork 2>/dev/null | sed -E 's#.*github.com[:/]##; s#\.git$##')
+if [[ -z "$FORK_REPO" ]]; then
+  for remote in gnodet origin; do
+    FORK_REPO=$(git remote get-url "$remote" 2>/dev/null | sed -E 's#.*github.com[:/]##; s#\.git$##')
+    [[ -n "$FORK_REPO" ]] && break
+  done
+fi
+STATE_BRANCH=$(python3 -c "import json; print(json.load(open('loop-config.json'))['state_branch'])" 2>/dev/null || echo "")
+
+# 2. Pull latest state from the fork
+if [[ -n "$STATE_BRANCH" ]]; then
+  ~/.claude/scripts/pull-state.sh "$FORK_REPO" "$STATE_BRANCH" .
+fi
+
+# 3. BLOCK here until repo activity is detected
+~/.claude/scripts/wait-for-pr-work.sh --timeout 3600 state.json
 ```
 
-If exit 1 (timeout), skip this iteration.
+**Do NOT proceed past this point until the script returns exit 0.**
+
+If it exits with code 1:
+- **Output nothing.** Exit immediately.
 
 ### 1. Initialize
 
