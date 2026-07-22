@@ -40,49 +40,53 @@ Main loop (orchestrator)
 
 ## Execution Steps
 
-### 0. Pre-flight — Wait for Activity
+### 0. MANDATORY — Block Until Activity Detected
 
-Run the blocking precondition script. It polls the GitHub Events API using
-ETag-based conditional requests (free on 304 Not Modified) and only returns
-when actionable PRs are detected — or when the timeout expires.
+> **🛑 STOP. Do NOT skip this step. Do NOT proceed to step 1.**
+>
+> You MUST run the blocking precondition script FIRST, BEFORE doing anything
+> else. This script polls GitHub using zero-cost ETag requests and BLOCKS
+> until there is actual PR activity. Without it, you burn tokens checking
+> for work that doesn't exist.
+>
+> **If you skip this step and go straight to `gh pr list`, you are doing it
+> wrong.** The whole point of this loop is to sleep cheaply and only wake up
+> when there's work.
 
-This means **zero LLM tokens are consumed while waiting**. The script blocks
-the session, not the model.
-
-**With `/goal` (recommended for Claude Code — immediate reactivity):**
+Run these commands NOW, before reading any further:
 
 ```bash
+# 1. Pull latest state from the fork
 ~/.claude/scripts/pull-state.sh $FORK_REPO $STATE_BRANCH .
+
+# 2. BLOCK here until GitHub activity is detected
+#    This command will NOT return for minutes or hours. That is correct.
+#    Do NOT interrupt it. Do NOT set a short timeout. Let it block.
 ~/.claude/scripts/wait-for-pr-work.sh state.json
 ```
 
-No timeout — the script blocks indefinitely until PRs are detected.
-After each review cycle, this step runs again and blocks until the next
-activity. The `/goal` keeps the session alive across cycles.
+**This command blocks.** It sits in a `while true` loop, polling the GitHub
+Events API with ETag conditional requests (304 = free, no rate limit hit).
+It will return ONLY when:
+- New PR activity is detected (exit 0 → proceed to step 1)
+- The kill switch is set in state.json (exit 1 → stop, do nothing)
 
-**With `/loop` (recommended for ForgeBot — persistence across restarts):**
+**Expected behavior:** After you run this command, nothing happens for a long
+time. That is correct. The script is sleeping and polling. You are saving
+tokens by not doing anything until there's actual work.
 
+**With ForgeBot `/loop`:** Use `--timeout` matching the loop interval:
 ```bash
-~/.claude/scripts/pull-state.sh $FORK_REPO $STATE_BRANCH .
 ~/.claude/scripts/wait-for-pr-work.sh --timeout 900 state.json
 ```
+Exit 1 on timeout = skip this tick, report nothing, exit immediately.
 
-Timeout matches the `/loop` interval. Exit 1 on timeout = skip this tick.
+**Do NOT proceed past this point until `wait-for-pr-work.sh` returns exit 0.**
 
-> **`/goal` vs `/loop` — which to use?**
->
-> | | `/goal` | `/loop 15m` | ForgeBot `/loop` |
-> |---|---|---|---|
-> | **Reactivity** | Immediate | Up to 15m delay | Up to 15m delay |
-> | **Persistence** | ❌ Dies with session | ❌ Dies with session | ✅ Survives restart |
-> | **Best for** | Claude Code users | — | ForgeBot deployments |
->
-> With blocking ETag scripts, `/goal` is the natural fit for Claude Code:
-> the script *is* the timer. `/loop` adds an unnecessary second layer of
-> waiting. Use `/loop` only with ForgeBot (which persists loops in DB).
-
-If the script exits with code 1 (timeout, no work, or kill switch), **skip
-this iteration entirely** (or wait for `/goal` to re-invoke).
+If it exits with code 1 (timeout, no work, or kill switch):
+- **Output nothing.** Do not say "no PRs found" or "queue empty."
+- **Do not run `gh pr list`.** The script already checked.
+- **Exit immediately.** The loop will fire again later.
 
 If it exits with code 0, proceed:
 

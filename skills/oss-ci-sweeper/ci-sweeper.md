@@ -35,37 +35,53 @@ Main loop (orchestrator)
 
 ## Execution Steps
 
-### 0. Pre-flight — Wait for CI Failure
+### 0. MANDATORY — Block Until CI Failure Detected
 
-Run the blocking precondition script. It polls the GitHub Events API using
-ETag-based conditional requests (free on 304 Not Modified) and only returns
-when a CI failure is detected on a watched branch — or when the timeout expires.
+> **🛑 STOP. Do NOT skip this step. Do NOT proceed to step 1.**
+>
+> You MUST run the blocking precondition script FIRST, BEFORE doing anything
+> else. This script polls GitHub using zero-cost ETag requests and BLOCKS
+> until a CI failure is detected on a watched branch. Without it, you burn
+> tokens checking CI that is already green.
+>
+> **If you skip this step and go straight to `gh run list`, you are doing it
+> wrong.** The whole point of this loop is to sleep cheaply and only wake up
+> when CI is red.
 
-This means **zero LLM tokens are consumed while waiting**. The script blocks
-the session, not the model.
-
-**With `/goal` (recommended for Claude Code — immediate reactivity):**
+Run these commands NOW, before reading any further:
 
 ```bash
+# 1. Pull latest state from the fork
 ~/.claude/scripts/pull-state.sh $FORK_REPO $STATE_BRANCH .
+
+# 2. BLOCK here until a CI failure is detected
+#    This command will NOT return for minutes or hours. That is correct.
+#    Do NOT interrupt it. Do NOT set a short timeout. Let it block.
 ~/.claude/scripts/wait-for-ci-failure.sh
 ```
 
-No timeout — blocks indefinitely until a CI failure is detected.
+**This command blocks.** It sits in a `while true` loop, polling the GitHub
+Actions API with ETag conditional requests (304 = free, no rate limit hit).
+It will return ONLY when:
+- A CI failure is detected on a watched branch (exit 0 → proceed to step 1)
+- The kill switch is set in state.json (exit 1 → stop, do nothing)
 
-**With `/loop` (recommended for ForgeBot — persistence across restarts):**
+**Expected behavior:** After you run this command, nothing happens for a long
+time. That is correct. The script is sleeping and polling. You are saving
+tokens by not doing anything until CI breaks.
 
+**With ForgeBot `/loop`:** Use `--timeout` matching the loop interval:
 ```bash
-~/.claude/scripts/pull-state.sh $FORK_REPO $STATE_BRANCH .
 ~/.claude/scripts/wait-for-ci-failure.sh --timeout 900
 ```
+Exit 1 on timeout = skip this tick, report nothing, exit immediately.
 
-Timeout matches the `/loop` interval. Exit 1 on timeout = skip this tick.
+**Do NOT proceed past this point until `wait-for-ci-failure.sh` returns exit 0.**
 
-> See the `/goal` vs `/loop` comparison in `review-loop.md` step 0.
-
-If the script exits with code 1 (timeout, all green, or kill switch), all
-watched branches are green — **skip this iteration entirely**.
+If it exits with code 1 (timeout, all green, or kill switch):
+- **Output nothing.** Do not say "all branches green" or "no failures."
+- **Do not run `gh run list`.** The script already checked.
+- **Exit immediately.** The loop will fire again later.
 
 If it exits with code 0, proceed:
 
