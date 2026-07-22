@@ -51,11 +51,21 @@ If the PR is closed, report and stop (`[GOAL_BLOCKED]`).
 
 ### 1. Main Loop — Wait for Activity
 
-Run the blocking poll script. It returns when something changes on the PR:
+Run the blocking poll script and **wait for it to finish**:
 
 ```bash
 ~/.claude/scripts/wait-for-pr-update.sh --pr $PR_NUMBER --repo $REPO --timeout 3600
 ```
+
+> **🛑 WHILE THIS SCRIPT IS RUNNING, DO NOTHING ELSE.**
+>
+> Do NOT run any other bash commands. Do NOT check CI status. Do NOT
+> check for comments. Do NOT read PR state. Do NOT run `gh` commands.
+> The script IS the check — it polls GitHub via ETag and returns ONLY
+> when something changes. Running parallel commands wastes tokens and
+> defeats the purpose.
+>
+> **Wait for this single bash command to exit.** Then read its output.
 
 This command blocks for up to 1 hour. If nothing changes, it exits 1 — loop
 back to step 1 and block again. Do NOT treat a timeout as completion or failure.
@@ -192,6 +202,7 @@ again. The script blocks (zero cost) until the next event.
 
 You MUST:
 - Wait for the blocking script between actions (zero-cost idle)
+- Do NOTHING while a blocking script is running — no parallel bash commands, no status checks
 - Fix CI failures before undrafting
 - Address all review comments before pushing
 - Include the issue reference in fix commits (e.g. "fix: address review feedback on #1234")

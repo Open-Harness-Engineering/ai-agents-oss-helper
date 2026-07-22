@@ -80,6 +80,12 @@ fi
 ~/.claude/scripts/wait-for-pr-work.sh state.json
 ```
 
+> **🛑 WHILE THIS SCRIPT IS RUNNING, DO NOTHING ELSE.**
+>
+> Do NOT run any other bash commands in parallel. Do NOT check PR status.
+> Do NOT run `gh pr list`. The script IS the check. Wait for it to exit,
+> then read its output.
+
 **This command blocks.** It sits in a `while true` loop, polling the GitHub
 Events API with ETag conditional requests (304 = free, no rate limit hit).
 It will return ONLY when:
