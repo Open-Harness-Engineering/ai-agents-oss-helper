@@ -85,7 +85,7 @@ tokens by not doing anything until CI breaks.
 
 **With ForgeBot `/loop`:** Use `--timeout` matching the loop interval:
 ```bash
-~/.claude/scripts/wait-for-ci-failure.sh --timeout 900
+~/.claude/scripts/wait-for-ci-failure.sh --timeout 3600
 ```
 Exit 1 on timeout = skip this tick, report nothing, exit immediately.
 

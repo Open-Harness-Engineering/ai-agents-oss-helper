@@ -92,7 +92,7 @@ tokens by not doing anything until there's actual work.
 
 **With ForgeBot `/loop`:** Use `--timeout` matching the loop interval:
 ```bash
-~/.claude/scripts/wait-for-pr-work.sh --timeout 900 state.json
+~/.claude/scripts/wait-for-pr-work.sh --timeout 3600 state.json
 ```
 Exit 1 on timeout = skip this tick, report nothing, exit immediately.
 
