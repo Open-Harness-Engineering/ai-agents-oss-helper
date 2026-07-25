@@ -37,62 +37,84 @@ AGENT_FILES=(
     "agents/qa-test-strategist.md"
 )
 
-# Files for each skill (relative paths from repo root)
-declare -A SKILL_FILES
-SKILL_FILES[oss-issues]="
-    skills/oss-issues/SKILL.md
-    skills/oss-issues/fix-issue.md
-    skills/oss-issues/analyze-issue.md
-    skills/oss-issues/create-issue.md
-    skills/oss-issues/list-issues.md
-    skills/oss-issues/find-task.md
-    skills/oss-issues/fix-backlog-task.md
-    skills/oss-issues/oss-triage-issue.md
-    skills/oss-issues/oss-create-multi-repo-issue.md
-    skills/oss-issues/oss-fix-multi-repo-issue.md
-"
-SKILL_FILES[oss-review]="
-    skills/oss-review/SKILL.md
-    skills/oss-review/review-pr.md
-    skills/oss-review/address-review.md
-    skills/oss-review/oss-review-prs.md
-    skills/oss-review/pr-status.md
-    skills/oss-review/list-pr-status.md
-    skills/oss-review/list-prs.md
-    skills/oss-review/merge-pr.md
-    skills/oss-review/backport-pr.md
-"
-SKILL_FILES[oss-ci]="
-    skills/oss-ci/SKILL.md
-    skills/oss-ci/fix-ci-errors.md
-    skills/oss-ci/fix-sonarcloud.md
-    skills/oss-ci/fix-github-alert.md
-    skills/oss-ci/quick-fix.md
-"
-SKILL_FILES[oss-security]="
-    skills/oss-security/SKILL.md
-    skills/oss-security/triage-security-report.md
-    skills/oss-security/analyze-third-party-cve.md
-    skills/oss-security/draft-cve.md
-    skills/oss-security/create-security-advisory.md
-    skills/oss-security/update-gh-advisory-db.md
-    skills/oss-security/oss-security-scan.md
-"
-SKILL_FILES[oss-project]="
-    skills/oss-project/SKILL.md
-    skills/oss-project/add-project.md
-    skills/oss-project/install-info.md
-    skills/oss-project/oss-create-rules.md
-    skills/oss-project/update-knowledge.md
-    skills/oss-project/oss-workspace-init.md
-    skills/oss-project/oss-workspace-status.md
-"
-SKILL_FILES[oss-qe]="
-    skills/oss-qe/SKILL.md
-    skills/oss-qe/oss-qe-create-test-plan.md
-    skills/oss-qe/oss-qe-verify.md
-    skills/oss-qe/oss-qe-module-audit.md
-"
+# Files for each skill (relative paths from repo root).
+# Keep this as a Bash 3-compatible lookup instead of an associative array:
+# macOS still ships /bin/bash 3.2 on some machines.
+SKILL_FILES_RESULT=""
+get_skill_files() {
+    case "$1" in
+        oss-issues)
+            SKILL_FILES_RESULT="
+                skills/oss-issues/SKILL.md
+                skills/oss-issues/fix-issue.md
+                skills/oss-issues/analyze-issue.md
+                skills/oss-issues/create-issue.md
+                skills/oss-issues/list-issues.md
+                skills/oss-issues/find-task.md
+                skills/oss-issues/fix-backlog-task.md
+                skills/oss-issues/oss-triage-issue.md
+                skills/oss-issues/oss-create-multi-repo-issue.md
+                skills/oss-issues/oss-fix-multi-repo-issue.md
+            "
+            ;;
+        oss-review)
+            SKILL_FILES_RESULT="
+                skills/oss-review/SKILL.md
+                skills/oss-review/review-pr.md
+                skills/oss-review/address-review.md
+                skills/oss-review/oss-review-prs.md
+                skills/oss-review/pr-status.md
+                skills/oss-review/list-pr-status.md
+                skills/oss-review/list-prs.md
+                skills/oss-review/merge-pr.md
+                skills/oss-review/backport-pr.md
+            "
+            ;;
+        oss-ci)
+            SKILL_FILES_RESULT="
+                skills/oss-ci/SKILL.md
+                skills/oss-ci/fix-ci-errors.md
+                skills/oss-ci/fix-sonarcloud.md
+                skills/oss-ci/fix-github-alert.md
+                skills/oss-ci/quick-fix.md
+            "
+            ;;
+        oss-security)
+            SKILL_FILES_RESULT="
+                skills/oss-security/SKILL.md
+                skills/oss-security/triage-security-report.md
+                skills/oss-security/analyze-third-party-cve.md
+                skills/oss-security/draft-cve.md
+                skills/oss-security/create-security-advisory.md
+                skills/oss-security/update-gh-advisory-db.md
+                skills/oss-security/oss-security-scan.md
+            "
+            ;;
+        oss-project)
+            SKILL_FILES_RESULT="
+                skills/oss-project/SKILL.md
+                skills/oss-project/add-project.md
+                skills/oss-project/install-info.md
+                skills/oss-project/oss-create-rules.md
+                skills/oss-project/update-knowledge.md
+                skills/oss-project/oss-workspace-init.md
+                skills/oss-project/oss-workspace-status.md
+            "
+            ;;
+        oss-qe)
+            SKILL_FILES_RESULT="
+                skills/oss-qe/SKILL.md
+                skills/oss-qe/oss-qe-create-test-plan.md
+                skills/oss-qe/oss-qe-verify.md
+                skills/oss-qe/oss-qe-module-audit.md
+            "
+            ;;
+        *)
+            SKILL_FILES_RESULT=""
+            return 1
+            ;;
+    esac
+}
 
 # Guideline files that become individual commands for all agents.
 # Each entry: "skill-dir|guideline-filename|oss-command-name|description"
@@ -458,7 +480,11 @@ install_skill_agent() {
         info "  Installing skill: $skill_dir"
 
         # Install skill files
-        for file in ${SKILL_FILES[$skill_dir]}; do
+        if ! get_skill_files "$skill_dir"; then
+            error "Unknown skill: $skill_dir"
+            return 1
+        fi
+        for file in $SKILL_FILES_RESULT; do
             local filename
             filename="$(basename "$file")"
             local dest="$target_dir/$filename"
@@ -728,7 +754,11 @@ install_codex() {
         info "  Installing skill: $skill_dir"
 
         # Install skill files
-        for file in ${SKILL_FILES[$skill_dir]}; do
+        if ! get_skill_files "$skill_dir"; then
+            error "Unknown skill: $skill_dir"
+            return 1
+        fi
+        for file in $SKILL_FILES_RESULT; do
             local filename
             filename="$(basename "$file")"
             local dest="$target_dir/$filename"
