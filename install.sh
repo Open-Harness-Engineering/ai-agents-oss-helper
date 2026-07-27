@@ -23,7 +23,7 @@ SHARED_INIT="skills/_shared/init.md"
 
 # Skill definitions: "skill-dir|SKILL.md + guideline files..."
 # Each skill is a directory under skills/ containing a SKILL.md and guideline files.
-SKILL_DIRS=("oss-issues" "oss-review" "oss-ci" "oss-security" "oss-project" "oss-qe" "oss-loop-core" "oss-ci-sweeper" "oss-review-loop" "oss-babysit" "oss-issue-loop")
+SKILL_DIRS=("oss-issues" "oss-review" "oss-ci" "oss-security" "oss-project" "oss-qe" "oss-loop-core" "oss-ci-sweeper" "oss-review-loop" "oss-babysit" "oss-issue-loop" "oss-container-upgrade-ci")
 
 # Sub-agent definitions (installed for all tools in their native format)
 AGENT_FILES=(
@@ -93,6 +93,10 @@ SKILL_FILES[oss-qe]="
     skills/oss-qe/oss-qe-verify.md
     skills/oss-qe/oss-qe-module-audit.md
 "
+SKILL_FILES[oss-container-upgrade-ci]="
+    skills/oss-container-upgrade-ci/SKILL.md
+    skills/oss-container-upgrade-ci/container-upgrade-ci.md
+"
 
 # Guideline files that become individual commands for all agents.
 # Each entry: "skill-dir|guideline-filename|oss-command-name|description"
@@ -133,6 +137,7 @@ GUIDELINE_COMMANDS=(
     "oss-qe|oss-qe-create-test-plan.md|oss-qe-create-test-plan|Create a test plan for a project feature or component"
     "oss-qe|oss-qe-verify.md|oss-qe-verify|Execute an existing test plan and track results"
     "oss-qe|oss-qe-module-audit.md|oss-qe-module-audit|Deep-audit a module family for bugs, antipatterns, inconsistencies, missing features, and ideas"
+    "oss-container-upgrade-ci|container-upgrade-ci.md|oss-container-upgrade-ci|Trigger CI for container-image upgrade PRs via /component-test"
 )
 
 # Old rule files to clean up (relative paths under rules/)
