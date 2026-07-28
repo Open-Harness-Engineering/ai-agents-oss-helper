@@ -397,13 +397,14 @@ convert_agent_to_codex_toml() {
 }
 
 # Generate a thin command file for skill agents (Claude, Bob).
-# The skill provides all initialization and guideline content;
-# the command just triggers the right skill and guideline.
+# Claude has a native skill framework that resolves references automatically;
+# Bob does not, so its commands include explicit file paths instead.
 generate_skill_agent_command() {
-    local skill_name="$1"
-    local guideline_file="$2"
-    local dest="$3"
-    local description="$4"
+    local agent="$1"
+    local skill_name="$2"
+    local guideline_file="$3"
+    local dest="$4"
+    local description="$5"
 
     # Escape quotes and backslashes for YAML
     description="$(printf '%s' "$description" | sed 's/\\/\\\\/g; s/\"/\\\"/g')"
@@ -412,7 +413,16 @@ generate_skill_agent_command() {
         printf -- "---\n"
         printf 'description: "%s"\n' "$description"
         printf -- "---\n\n"
-        printf 'Invoke the %s skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$skill_name" "$guideline_file"
+
+        case "$agent" in
+            claude)
+                printf 'Invoke the %s skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$skill_name" "$guideline_file"
+                ;;
+            *)
+                printf 'Read and follow the initialization steps in `~/.%s/skills/%s/init.md` to detect the current project and load its configuration. Then read and follow the guideline in `~/.%s/skills/%s/%s`.\n' \
+                    "$agent" "$skill_name" "$agent" "$skill_name" "$guideline_file"
+                ;;
+        esac
     } > "$dest"
 }
 
@@ -493,7 +503,7 @@ install_skill_agent() {
         IFS='|' read -r skill_dir guideline_file cmd_name description <<< "$entry"
 
         local dest="$commands_dir/${cmd_name}.md"
-        generate_skill_agent_command "$skill_dir" "$guideline_file" "$dest" "$description"
+        generate_skill_agent_command "$agent" "$skill_dir" "$guideline_file" "$dest" "$description"
         info "    Installed: ${cmd_name}.md"
     done
 
