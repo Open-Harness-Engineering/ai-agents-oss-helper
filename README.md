@@ -104,7 +104,7 @@ The OSS Helper provides guidelines for the following tasks. For agents with skil
 | Address review | `/oss-address-review` | Address review feedback on a PR |
 | Merge a PR | `/oss-merge-pr` | Merge a PR after verifying all requirements are met |
 | Triage security report | `/oss-triage-security-report` | Triage an inbound security vulnerability report |
-| Draft CVE advisory | `/oss-draft-cve` | Draft a project-specific CVE advisory page |
+| Draft CVE advisory | `/oss-draft-cve` | Draft a project-specific CVE advisory page plus the CVE Record Format JSON |
 | Analyze third-party CVE | `/oss-analyze-third-party-cve` | Analyze exposure to a CVE in a third-party dependency |
 | Create security advisory | `/oss-create-security-advisory` | Privately report a security vulnerability via GitHub |
 | Update GH Advisory Database | `/oss-update-gh-advisory-db` | Populate GitHub Advisory Database entries for the project's published CVEs |

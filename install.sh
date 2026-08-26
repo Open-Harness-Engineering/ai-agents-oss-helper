@@ -142,7 +142,7 @@ GUIDELINE_COMMANDS=(
     "oss-ci|quick-fix.md|oss-quick-fix|Apply a quick fix without a tracked issue"
     "oss-security|triage-security-report.md|oss-triage-security-report|Triage an inbound security vulnerability report"
     "oss-security|analyze-third-party-cve.md|oss-analyze-third-party-cve|Analyze exposure to a third-party CVE"
-    "oss-security|draft-cve.md|oss-draft-cve|Draft a CVE advisory page"
+    "oss-security|draft-cve.md|oss-draft-cve|Draft a CVE advisory page and the matching CVE Record Format JSON"
     "oss-security|create-security-advisory.md|oss-create-security-advisory|Report a security vulnerability via GitHub"
     "oss-security|update-gh-advisory-db.md|oss-update-gh-advisory-db|Populate GitHub Advisory Database entries for the project's published CVEs"
     "oss-security|oss-security-scan.md|oss-security-scan|Scan codebase for security vulnerabilities"

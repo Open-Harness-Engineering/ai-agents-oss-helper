@@ -26,7 +26,7 @@ After initialization, read and follow the appropriate guideline file based on th
 |---|---|
 | Triage an inbound security vulnerability report | `triage-security-report.md` |
 | Analyze exposure to a third-party CVE | `analyze-third-party-cve.md` |
-| Draft a CVE advisory page | `draft-cve.md` |
+| Draft a CVE advisory page, or produce a CVE Record Format 5.x JSON record | `draft-cve.md` |
 | Create a GitHub security advisory | `create-security-advisory.md` |
 | Populate GitHub Advisory Database entries for the project's published CVEs | `update-gh-advisory-db.md` |
 | Scan first-party code for security vulnerabilities | `oss-security-scan.md` |
