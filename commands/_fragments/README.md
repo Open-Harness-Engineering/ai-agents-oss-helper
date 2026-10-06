@@ -172,4 +172,3 @@ Each fragment should include:
 3. Create API and constraint fragments
 4. Create multi-repo fragments
 5. Add validation script to ensure all commands use fragments correctly
-6. Update installer to include `_fragments/` directory

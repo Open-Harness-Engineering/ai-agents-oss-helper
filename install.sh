@@ -21,6 +21,13 @@ AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 # Shared initialization file (copied into each skill directory during install)
 SHARED_INIT="skills/_shared/init.md"
 
+# Shared fragments referenced by guidelines as `_fragments/<name>`
+# (copied into each skill's _fragments/ directory during install)
+SHARED_FRAGMENTS=(
+    "commands/_fragments/_build-workflow.md"
+    "commands/_fragments/_issue-ownership.md"
+)
+
 # Skill definitions: "skill-dir|SKILL.md + guideline files..."
 # Each skill is a directory under skills/ containing a SKILL.md and guideline files.
 SKILL_DIRS=("oss-issues" "oss-review" "oss-ci" "oss-security" "oss-project" "oss-qe")
@@ -515,6 +522,22 @@ install_skill_agent() {
             error "    Failed to install: init.md"
             return 1
         fi
+
+        # Copy shared fragments into each skill's _fragments/ directory
+        if ! mkdir -p "$target_dir/_fragments"; then
+            error "Failed to create directory: $target_dir/_fragments"
+            return 1
+        fi
+        for fragment in "${SHARED_FRAGMENTS[@]}"; do
+            local fragment_name
+            fragment_name="$(basename "$fragment")"
+            if fetch_file "$fragment" "$target_dir/_fragments/$fragment_name"; then
+                info "    Installed: _fragments/$fragment_name (shared)"
+            else
+                error "    Failed to install: _fragments/$fragment_name"
+                return 1
+            fi
+        done
     done
 
     # Install individual commands (thin wrappers that invoke the skills)
@@ -789,6 +812,22 @@ install_codex() {
             error "    Failed to install: init.md"
             return 1
         fi
+
+        # Copy shared fragments into each skill's _fragments/ directory
+        if ! mkdir -p "$target_dir/_fragments"; then
+            error "Failed to create directory: $target_dir/_fragments"
+            return 1
+        fi
+        for fragment in "${SHARED_FRAGMENTS[@]}"; do
+            local fragment_name
+            fragment_name="$(basename "$fragment")"
+            if fetch_file "$fragment" "$target_dir/_fragments/$fragment_name"; then
+                info "    Installed: _fragments/$fragment_name (shared)"
+            else
+                error "    Failed to install: _fragments/$fragment_name"
+                return 1
+            fi
+        done
     done
 
     # Install sub-agents
