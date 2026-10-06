@@ -217,6 +217,8 @@ Individual markdown commands with frontmatter are generated and installed to `~/
 
 Installed as 6 skill directories at `~/.agents/skills/oss-{issues,review,ci,security,project,qe}/` with all guideline files as supporting files. Project rule files are installed to `~/.codex/oss-helper/rules/`.
 
+If Codex reports a missing `~/.codex/oss-helper/.oss-init.md`, rerun `./install.sh codex` from an updated checkout, then start a new Codex session. The installer removes stale standalone OSS Helper skills; current skills use their bundled `init.md`.
+
 ## Project Structure
 
 ```text
