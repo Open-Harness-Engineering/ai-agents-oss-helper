@@ -263,6 +263,17 @@ OLD_CODEX_SKILLS=(
     "oss-review-pr"
     "oss-triage-security-report"
     "oss-update-knowledge"
+    "oss-create-rules"
+    "oss-triage-issue"
+    "oss-review-prs"
+    "oss-security-scan"
+    "oss-workspace-init"
+    "oss-workspace-status"
+    "oss-create-multi-repo-issue"
+    "oss-fix-multi-repo-issue"
+    "oss-qe-create-test-plan"
+    "oss-qe-verify"
+    "oss-qe-module-audit"
 )
 
 # Colors for output
@@ -771,6 +782,14 @@ install_codex() {
     info "  Cleaning up old skills..."
     for old_skill in "${OLD_CODEX_SKILLS[@]}"; do
         rm -rf "$skills_root/$old_skill"
+    done
+    # Legacy installs exposed internal fragments as skills. Only remove them
+    # when their init preamble identifies them as OSS Helper artifacts.
+    for old_skill in README _common-init _build-workflow; do
+        if [[ -f "$skills_root/$old_skill/SKILL.md" ]] &&
+            grep -Fq 'Before you begin, read and follow the OSS Helper init file at ~/.codex/oss-helper/.oss-init.md.' "$skills_root/$old_skill/SKILL.md"; then
+            rm -rf "$skills_root/$old_skill"
+        fi
     done
     # Clean up old init file
     rm -f "$HOME/.codex/oss-helper/.oss-init.md"
