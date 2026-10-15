@@ -1,11 +1,24 @@
+### Usage
+
+```text
+/oss-draft-cve <cve_id> template=<url|path> [triage_ref=<url|path>] [fix_pr=<number|url>] [backup_repo=<private-url|path>]
+```
+
+- `<cve_id>` - the CVE identifier already reserved with the CNA (e.g. `CVE-2026-12345`). Required, positional.
+- `template=` - the advisory template whose layout to mirror. URL or local file. Required.
+- `triage_ref=` - the triage summary to draw content from. URL or local file. Optional.
+- `fix_pr=` - the fix pull request. Number or URL. Optional.
+- `backup_repo=` - a **private** repository to archive the drafted material into for durability ("in case of disruption"). A remote URL, or a local clone path whose `origin` is private. Optional; see step 10.
+
 ### 1. Parse Input
 
-Parse the argument string into four values:
+Parse the argument string into five values:
 
 - `cve_id` - first positional argument
 - `template` - required key/value
 - `triage_ref` - optional key/value
 - `fix_pr` - optional key/value
+- `backup_repo` - optional key/value
 
 If `cve_id` or `template` is missing, stop and print the usage block above.
 
@@ -126,7 +139,7 @@ CVE Record Format 5.x is the structure the CVE Program defines for a record, and
 
 3. `<cve_id>.cve5.json` - the CVE Record Format JSON, carrying exactly the same facts as the advisory page and the plaintext body.
 
-This file is a *draft record*, not a submission. Producing it does not change the rule in step 10: you never press the button that publishes.
+This file is a *draft record*, not a submission. Producing it does not change the rule in step 11: you never press the button that publishes.
 
 #### 7.1 Shape the record against the real schema
 
@@ -329,6 +342,7 @@ After writing the files, print a checklist for the maintainer to run through bef
 - [ ] `cveMetadata.state` is still absent (the CNA tool sets it on publication).
 - [ ] `:robot:` draft banner removed from both text files.
 - [ ] Plaintext body clearsigned with the project release key (`gpg --clearsign <cve_id>.txt` → `<cve_id>.txt.asc`).
+- [ ] (if `backup_repo` used) Material archived to the verified-private backup repo and pushed; no secrets committed.
 ```
 
 ### 9. Hand the Record to the CNA Tool
@@ -369,7 +383,76 @@ The entry is visible only to the project's PMC and the ASF security team until i
 
 Never advise the user to submit to MITRE directly, and never describe a saved record as published.
 
-### 10. Constraints
+### 10. Archive to Backup Repository (if `backup_repo` provided)
+
+If `backup_repo` is not provided, skip this step entirely. It can be performed as soon as the artifacts exist (after step 7); it is placed here because it is optional and independent of the CNA handoff in step 9.
+
+This step stores the drafted material in a **private** repository so it survives a lost laptop, a wiped workspace, or a long embargo. It is the only part of this command that writes to a remote.
+
+#### 10.1 Resolve and hard-verify the target is private
+
+Resolve the push remote:
+
+- If `backup_repo` is a local path, read its origin: `git -C <backup_repo> remote get-url origin`.
+- If `backup_repo` is a URL, use it directly.
+
+Then verify it is private. **This is a hard gate: if you cannot positively confirm the repository is private, STOP and write nothing.**
+
+- GitHub remote:
+
+  ```bash
+  gh repo view <owner/repo> --json nameWithOwner,isPrivate,visibility
+  ```
+
+  Require `isPrivate: true` (and `visibility: "PRIVATE"`). If it is public or internal, or the command fails, hard-fail: print the resolved remote and the reason, and stop.
+- Non-GitHub remote (GitLab, internal Git, etc.): visibility cannot be verified automatically. Hard-fail by default - stop and ask the user to confirm in writing that the remote is private before re-running. Do NOT write to it on assumption.
+
+The backup repository MUST be distinct from the project repository. Never archive embargoed material into the project's own (public) repo or working tree.
+
+#### 10.2 Lay out the material
+
+Copy the produced files into a per-CVE directory in the backup repo working copy, so concurrent embargoes do not collide:
+
+```text
+<backup_repo>/<cve_id>/
+├── <cve_id>.<ext>        # advisory page (draft banner intact)
+├── <cve_id>.txt          # signing plaintext (draft banner intact)
+├── <cve_id>.cve5.json    # CVE Record Format JSON (draft record)
+├── triage.md             # triage summary, if triage_ref was provided
+├── metadata.yaml         # recovery pointers (see below)
+└── reproducers/          # ONLY if the user supplies reproducers - never fabricate them
+```
+
+Write `metadata.yaml` as the "where was I" index for picking a stalled embargo back up:
+
+```yaml
+cve_id: "<cve_id>"
+status: draft
+generated: "<date>"
+issue: "<JIRA/GitHub issue URL or ID, from triage/fix_pr, or TODO>"
+fix_pr: "<PR URL, or TODO>"
+fix_commits: ["<merge/commit SHAs, or TODO>"]
+template_source: "<where the template came from>"
+reporter: "<credit, or TODO>"
+embargo_until: "TODO: embargo lift date"
+notes: ""
+```
+
+Do NOT commit secrets. Triage notes and reproducers may contain tokens, internal URLs, or reporter PII - scrub anything not needed to reconstruct the work.
+
+#### 10.3 Commit and push
+
+Show the user the resolved private remote and the list of files to be committed, then commit and push:
+
+```bash
+git -C <backup_repo> add <cve_id>/
+git -C <backup_repo> commit -m "<cve_id>: draft advisory material (<date>)"
+git -C <backup_repo> push
+```
+
+If the push fails (auth, protected branch), report the error and stop - the local commit is preserved, so nothing is lost.
+
+### 11. Constraints
 
 You MUST:
 
@@ -381,7 +464,8 @@ You MUST:
 - Omit optional JSON blocks whose data is unknown, and report every omission to the user.
 - Confirm the step 8 checklist is done before handing the record to the CNA tool.
 - Warn that importing replaces the tool's current editor contents, and offer to fold in existing work first.
-- Stop after handing over the file. Do not sign, push, publish, or open a PR.
+- Stop after handing over the file. Do not sign, publish, or open a PR. The only remote write this command performs is archiving to a verified-private `backup_repo` (step 10).
+- When `backup_repo` is given, positively confirm it is private BEFORE writing to it, and hard-fail otherwise.
 - Confirm URL fetches with the user before calling `WebFetch`.
 
 You MUST NOT:
@@ -393,12 +477,14 @@ You MUST NOT:
 - Include exploit payloads, PoC code, or reporter-private details in the draft.
 - Run `gpg` or any signing command.
 - Save, submit, or publish the record. Producing the file is the job; loading it and pressing SAVE is the maintainer's action, always. This applies to MITRE, a project security site, and any public tracker.
+- Push to, or open a PR against, the project repository or any repository not verified as private. Pushing the archive to the verified-private `backup_repo` (step 10) is the only push this command performs.
+- Commit secrets, tokens, or reporter PII to the backup repo.
 - Drive the CNA tool by any means - browser automation, a replayed session cookie, or a direct POST. The `Open` import makes it unnecessary (step 9.1).
 - Automate a login or MFA flow, or ask for a password or one-time code.
 - Advise submitting to the CVE Program directly, or describe a saved record as published (step 9.2).
 - Overwrite an existing `<cve_id>.<ext>`, `<cve_id>.txt`, or `<cve_id>.cve5.json` without confirming with the user.
 
-### 11. Acceptance Criteria
+### 12. Acceptance Criteria
 
 - The reserved `cve_id` is validated and carried through every artifact unchanged.
 - The advisory layout matches the sections and labels of the provided template.
@@ -408,4 +494,5 @@ You MUST NOT:
 - The list of omitted JSON blocks is printed alongside the review checklist.
 - A `:robot:` draft banner is present on both text files.
 - The user is handed the JSON path with the import steps, the warning that import replaces editor contents, and the reminder that SAVE is theirs to press.
-- A review checklist is printed and nothing is signed, pushed, published, or submitted.
+- When `backup_repo` is supplied, it is confirmed private before any write; the per-CVE directory (advisory, plaintext, cve5.json, metadata, optional triage/reproducers) is committed and pushed there; and the command hard-fails without writing if privateness cannot be confirmed.
+- A review checklist is printed and nothing is signed, published, or submitted, and nothing is pushed anywhere except the verified-private `backup_repo`.
