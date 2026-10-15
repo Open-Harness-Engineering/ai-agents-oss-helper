@@ -1,0 +1,734 @@
+# Apache-matching CVEs in the GitHub Advisory Database that cannot be given `affected` package data.
+# One CVE id per line, with the reason after '#'. Entries are re-checkable: a project that starts
+# publishing to a package registry can be removed from this list.
+# Used by skills/oss-security/update-gh-advisory-db.md so each sweep does not re-research dead ends.
+
+CVE-2002-0936  # Apache Tomcat JSP engine, no version bound stated; no Tomcat artifact on Maven Central predates 7.0.0
+CVE-2002-1895  # Jakarta Tomcat 3.3/4.0.4 via mod_jk + IIS - native connector, and no Tomcat artifact on Central predates 7.0.0
+CVE-2005-1753  # ** DISPUTED ** and the flaw is in the JavaMail API as shipped in a Tomcat example, not a Tomcat artifact
+CVE-2005-1754  # ** DISPUTED ** and the flaw is in the JavaMail API as shipped in a Tomcat example, not a Tomcat artifact
+CVE-2005-4838  # XSS in the Tomcat example web applications - the examples webapp ships only in the distribution
+CVE-2006-20001  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2006-5752  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-0774  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-1858  # Apache Tomcat 4.1.x/5.0.x/5.5.x default SSL ciphers - no Tomcat artifact on Maven Central predates 7.0.0
+CVE-2007-1860  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-1862  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-1863  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-3304  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-3386  # Tomcat 6.0.x Host Manager servlet - manager webapp ships only in the distribution, and no Tomcat 6.x artifact is on Central
+CVE-2007-3847  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-5000  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-6388  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-6421  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2007-6422  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2008-3271  # Apache Tomcat 4.1.x/5.5.0 - no Tomcat artifact on Maven Central predates 7.0.0
+CVE-2008-5519  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2009-3548  # Apache Tomcat Windows installer default password - installer, not a published artifact
+CVE-2009-4267  # Apache jUDDI 3.0.0 console - the console is a webapp, not a consumable published artifact
+CVE-2010-0009  # Apache CouchDB - Erlang, no package-registry distribution GitHub indexes
+CVE-2010-0408  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2010-0425  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2010-0434  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2010-1452  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2010-2068  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2010-3315  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2010-3449  # Redback before 1.2.4 - org.apache.archiva.redback:redback on Central starts at 2.3, so no published version falls inside the range
+CVE-2011-0419  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2011-0715  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2011-1026  # Apache Archiva 1.0-1.3.x - org.apache.archiva:archiva on Central starts at 2.2.0, so no published version falls inside the range
+CVE-2011-1077  # Apache Archiva 1.0-1.3.x - org.apache.archiva:archiva on Central starts at 2.2.0, so no published version falls inside the range
+CVE-2011-1752  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2011-1783  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2011-1921  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2011-2729  # Apache Commons Daemon jsvc - native C launcher, no package-registry distribution
+CVE-2011-3348  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2012-0021  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2012-0053  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2012-0883  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2012-2687  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2012-3499  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2012-3502  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2012-4557  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2012-4558  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2013-0253  # Apache Maven 3.0.4 default config with Wagon 2.1 - no fix version stated and the affected artifact is ambiguous between maven-core and wagon-http
+CVE-2013-10075  # CPAN Perl distribution (Apache::*) - GitHub has no CPAN ecosystem, and not an ASF project
+CVE-2013-1845  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-1846  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-1847  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-1849  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-1884  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-1896  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2013-1968  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-2088  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-2112  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-2187  # Apache Archiva 1.2-1.3.7 - org.apache.archiva:archiva on Central starts at 2.2.0, so no published version falls inside the range
+CVE-2013-2249  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2013-4131  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-4246  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-4262  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-4277  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-4352  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2013-4505  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-4558  # Apache Subversion - C project, no package-registry distribution
+CVE-2013-5704  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2013-6438  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2013-7393  # Apache Subversion - C project, no package-registry distribution
+CVE-2014-0098  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2014-0117  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2014-0118  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2014-0226  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2014-0231  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2014-0468  # fusionforge shipped Apache configuration, not an ASF artifact
+CVE-2014-3504  # Apache Subversion - C project, no package-registry distribution
+CVE-2014-3522  # Apache Subversion - C project, no package-registry distribution
+CVE-2014-3523  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2014-3528  # Apache Subversion - C project, no package-registry distribution
+CVE-2014-3580  # Apache Subversion - C project, no package-registry distribution
+CVE-2014-3583  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2014-8108  # Apache Subversion - C project, no package-registry distribution
+CVE-2015-0202  # Apache Subversion - C project, no package-registry distribution
+CVE-2015-0248  # Apache Subversion - C project, no package-registry distribution
+CVE-2015-0251  # Apache Subversion - C project, no package-registry distribution
+CVE-2015-0253  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2015-3183  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2015-3184  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2015-3185  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2015-3187  # Apache Subversion - C project, no package-registry distribution
+CVE-2015-5259  # Apache Subversion - C project, no package-registry distribution
+CVE-2015-5343  # Apache Subversion - C project, no package-registry distribution
+CVE-2016-0736  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2016-0779  # Apache TomEE before 1.7.4 / 7.x before 7.0.0-M3 - the EjbObjectInputStream is in openejb-core, whose version numbering does not map 1:1 onto the TomEE versions the advisory states
+CVE-2016-0783  # Apache OpenMeetings - only openmeetings-db/-util/-parent/-tests are published; the vulnerable web module is not
+CVE-2016-1546  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2016-20026  # ZKTeco ZKBioSecurity product bundling Tomcat, not Apache Tomcat itself
+CVE-2016-2161  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2016-2167  # Apache Subversion - C project, no package-registry distribution
+CVE-2016-2168  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2016-4975  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2016-4979  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2016-5017  # Apache ZooKeeper C cli shell - native component, not the Java artifact
+CVE-2016-5387  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2016-6808  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2016-8734  # Apache Subversion - C project, no package-registry distribution
+CVE-2016-8743  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2017-15710  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2017-15715  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2017-9788  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2017-9789  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2017-9798  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2017-9800  # Apache Subversion - C project, no package-registry distribution
+CVE-2018-11763  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-11782  # Apache Subversion - C project, no package-registry distribution
+CVE-2018-1283  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-1301  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-1302  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-1303  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-1312  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-1333  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-17189  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-17199  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2018-9481  # Android Bluetooth stack (bta_hd_act.cc) - matched only via a trafficserver mailing-list reference; not an ASF project
+CVE-2019-0190  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-0196  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-0197  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-0203  # Apache Subversion - C project, no package-registry distribution
+CVE-2019-0211  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-0215  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-0217  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-0220  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-10081  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-10082  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-10092  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-10097  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-10098  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2019-17567  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-11984  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-11985  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-11993  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-13938  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-13950  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-17525  # Apache Subversion - C project, no package-registry distribution
+CVE-2020-1927  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-1934  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-35452  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2020-9490  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-26558  # Apache ShardingSphere-UI - the UI distribution is not published to Maven Central
+CVE-2021-26690  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-26691  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-28544  # Apache Subversion - C project, no package-registry distribution
+CVE-2021-30641  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-31618  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-34798  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-35940  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-36160  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-37147  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-37148  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-37149  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-37150  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-37608  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2021-38161  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-39275  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-40438  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-41524  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-41585  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-41767  # Apache Guacamole REST layer - lives in the guacamole webapp; guacamole-client is a pom-only aggregator and the published -common/-ext libraries are unaffected
+CVE-2021-41773  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-42013  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-43082  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-43083  # Apache PLC4X PLC4C - the advisory states only the C implementation is affected; plc4go/plc4j are not
+CVE-2021-43410  # Apache Airavata Django Portal - no release version stated ("master branch before commit 3c5d8c7") and the portal is not published on PyPI (only the SDK packages are)
+CVE-2021-43557  # Apache APISIX uri-block plugin - Lua/OpenResty, no package-registry distribution
+CVE-2021-43999  # Apache Guacamole SAML extension - guacamole-auth-saml is not published to Maven Central
+CVE-2021-44040  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-44224  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-44759  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2021-44790  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2021-45232  # Apache APISIX Dashboard - Lua/Go dashboard application, no package-registry distribution
+CVE-2021-47700  # Nagios XI product; Apache user permissions only, not an ASF artifact
+CVE-2022-22719  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-22720  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-22721  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-22728  # Apache libapreq2 - C project, no package-registry distribution
+CVE-2022-22733  # Apache ShardingSphere ElasticJob-UI - only the elasticjob-lite libraries are published, not the UI
+CVE-2022-23943  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-24112  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2022-24706  # Apache CouchDB - Erlang, no package-registry distribution GitHub indexes
+CVE-2022-24963  # Apache Portable Runtime (APR) - C project, no package-registry distribution
+CVE-2022-25147  # Apache Portable Runtime (APR) - C project, no package-registry distribution
+CVE-2022-25370  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2022-25371  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2022-25757  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2022-25763  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-25813  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2022-26377  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-28129  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-28330  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-28331  # Apache Portable Runtime (APR) - C project, no package-registry distribution
+CVE-2022-28614  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-28615  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-29063  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2022-29158  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2022-29266  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2022-29404  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-30522  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-30556  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-31764  # ElasticJob-UI is not published to Maven Central (only the elasticjob-lite libraries are)
+CVE-2022-31778  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-31779  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-31780  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-31813  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-32749  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-35741  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2022-36760  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-37392  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-37436  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2022-38745  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2022-40743  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-44635  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2022-45910  # Apache ManifoldCF - advisory names no fix version ('2.23 and prior'), and the mcf-*-connector artifacts on Central start at 2.26, so no published version falls inside the affected range
+CVE-2022-47184  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-47185  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2022-47501  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2022-47502  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2023-24829  # Apache IoTDB Workbench (iotdb-web-workbench) - optional web console, not published to Maven Central
+CVE-2023-25195  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2023-25196  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2023-25197  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2023-25690  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2023-26268  # Apache CouchDB - Erlang, no package-registry distribution GitHub indexes
+CVE-2023-30575  # guacd instruction parsing (guacamole-server, C) - the Maven artifacts are unaffected
+CVE-2023-30576  # guacd RDP audio buffer (guacamole-server, C) - the Maven artifacts are unaffected
+CVE-2023-30631  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2023-30771  # Apache IoTDB Workbench (iotdb-web-workbench) - optional web console, not published to Maven Central
+CVE-2023-31038  # Apache Log4cxx - C++ project, no package-registry distribution
+CVE-2023-31039  # Apache bRPC - C++ project, no package-registry distribution
+CVE-2023-31122  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2023-33933  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2023-33934  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2023-37581  # Apache Roller - not published to Maven Central (org/apache/roller is 404)
+CVE-2023-38522  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2023-38709  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2023-39456  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2023-41081  # Apache Tomcat Connectors (mod_jk) - native C connector, no package-registry distribution
+CVE-2023-41180  # Apache NiFi MiNiFi C++ - C++ project, no package-registry distribution
+CVE-2023-41313  # Apache Doris - no FE artifacts on Maven Central (connectors/SDKs only)
+CVE-2023-41314  # Apache Doris - no FE artifacts on Maven Central (connectors/SDKs only)
+CVE-2023-41752  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2023-43622  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2023-43826  # guacd VNC handling (guacamole-server, C) - the Maven artifacts are unaffected
+CVE-2023-45725  # Apache CouchDB - Erlang, no package-registry distribution GitHub indexes
+CVE-2023-45757  # Apache bRPC - C++ project, no package-registry distribution
+CVE-2023-45802  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2023-46819  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2023-46851  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2023-47804  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2023-49070  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2023-49582  # Apache Portable Runtime (APR) - C project, no package-registry distribution
+CVE-2023-50968  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2023-51467  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2023-52290  # Apache StreamPark streampark-console - no streampark-console artifact on Maven Central (only the Flink/Spark connector libs); cf. CVE-2024-48988 'does not involve Maven artifacts'
+CVE-2024-23452  # Apache bRPC - C++ project, no package-registry distribution
+CVE-2024-23537  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2024-23538  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2024-23539  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2024-23807  # Apache Xerces-C++ - C++ project, no package-registry distribution
+CVE-2024-23946  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-24746  # Apache NimBLE / Mynewt - C project, no package-registry distribution
+CVE-2024-24795  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-25065  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-25090  # Apache Roller - not published to Maven Central (org/apache/roller is 404)
+CVE-2024-26307  # Apache Doris - no FE artifacts on Maven Central (connectors/SDKs only)
+CVE-2024-27316  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-27438  # Apache Doris - no FE artifacts on Maven Central (connectors/SDKs only)
+CVE-2024-27905  # Apache Aurora - retired (unsupported when assigned); only aurora-api thrift stubs are on Central, not the scheduler
+CVE-2024-29006  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-29007  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-29008  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-29070  # Apache StreamPark streampark-console - no streampark-console artifact on Maven Central (only the Flink/Spark connector libs); cf. CVE-2024-48988 'does not involve Maven artifacts'
+CVE-2024-31309  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-32113  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-32638  # Apache APISIX forward-auth plugin - Lua/OpenResty, no package-registry distribution
+CVE-2024-32838  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2024-34457  # Apache StreamPark streampark-console - no streampark-console artifact on Maven Central (only the Flink/Spark connector libs); cf. CVE-2024-48988 'does not involve Maven artifacts'
+CVE-2024-34580  # Apache XML Security for C++ (Santuario C++) - C++ project, no package-registry distribution
+CVE-2024-35161  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-35164  # guacd terminal emulator (guacamole-server, C) - the Maven artifacts are unaffected
+CVE-2024-35296  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-36104  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-36387  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-36448  # Apache IoTDB Workbench - retired web UI, not published to Maven Central (unsupported when assigned)
+CVE-2024-36471  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2024-38311  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-38346  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-38379  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2024-38472  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-38473  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-38474  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-38475  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-38476  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-38477  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-38479  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-38856  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-39573  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-39864  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-39884  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-40725  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-40898  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-41107  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-41151  # Apache HertzBeat - not published to Maven Central under any groupId
+CVE-2024-42062  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-42222  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-42323  # Apache HertzBeat - not published to Maven Central under any groupId
+CVE-2024-42516  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-43204  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-43394  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-45195  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-45219  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-45461  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-45462  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-45505  # Apache HertzBeat - not published to Maven Central under any groupId
+CVE-2024-45507  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-45693  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-45720  # Apache Subversion - C project, no package-registry distribution
+CVE-2024-45791  # Apache HertzBeat - not published to Maven Central under any groupId
+CVE-2024-46544  # Apache Tomcat Connectors (mod_jk) - native C connector, no package-registry distribution
+CVE-2024-46901  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-46911  # Apache Roller - not published to Maven Central (org/apache/roller is 404)
+CVE-2024-47208  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-47248  # Apache NimBLE / Mynewt - C project, no package-registry distribution
+CVE-2024-47249  # Apache NimBLE / Mynewt - C project, no package-registry distribution
+CVE-2024-47250  # Apache NimBLE / Mynewt - C project, no package-registry distribution
+CVE-2024-47252  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2024-48019  # Apache Doris - no FE artifacts on Maven Central (connectors/SDKs only)
+CVE-2024-48962  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2024-48988  # advisory states it is 'present only in the distribution package (SpringBoot platform) and does not involve Maven artifacts'
+CVE-2024-50305  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-50306  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-50386  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2024-51569  # Apache NimBLE / Mynewt - C project, no package-registry distribution
+CVE-2024-51941  # Apache Ambari Metrics: ambari-metrics on Central stops at 2.7.0.0.0 and the advisory names no fix version
+CVE-2024-52338  # Apache Arrow R package - distributed on CRAN, which GitHub's advisory database has no ecosystem for
+CVE-2024-53678  # Apache VCL - Perl/PHP web application, no package-registry distribution
+CVE-2024-53679  # Apache VCL - Perl/PHP web application, no package-registry distribution
+CVE-2024-53868  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-56195  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-56196  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-56202  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2024-56736  # Apache HertzBeat - not published to Maven Central under any groupId
+CVE-2024-58273  # Nagios Log Server product; 'the Apache web user' only, not an ASF artifact
+CVE-2024-8510  # N-central product path traversal into a bundled Tomcat, not Apache Tomcat itself
+CVE-2025-22828  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2025-22829  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2025-23048  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-23195  # Apache Ambari/Oozie: no ambari-server artifact on Maven Central; the named fix (2.7.9) is not published
+CVE-2025-23196  # Apache Ambari: no ambari-server artifact on Maven Central (only ambari-metrics/-views, which stop at 2.7.0.0.0) and no fix version named
+CVE-2025-23408  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2025-24404  # Apache HertzBeat - not published to Maven Central under any groupId
+CVE-2025-24859  # Apache Roller - not published to Maven Central (org/apache/roller is 404)
+CVE-2025-25069  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2025-26413  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2025-26521  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2025-26865  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2025-27446  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2025-27452  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-30675  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2025-30676  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2025-31698  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2025-35003  # Apache NuttX - C project, no package-registry distribution
+CVE-2025-3790  # baseweb JSite product exposing a Druid monitor page, not Apache Druid itself
+CVE-2025-3891  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-40931  # CPAN Perl distribution (Apache::*) - GitHub has no CPAN ecosystem, and not an ASF project
+CVE-2025-40932  # CPAN Perl distribution (Apache::*) - GitHub has no CPAN ecosystem, and not an ASF project
+CVE-2025-40933  # CPAN Perl distribution (Apache::AuthAny::Cookie) - GitHub has no CPAN ecosystem, and not an ASF project
+CVE-2025-46295  # Claris/FileMaker Server vendor CVE about its bundled commons-text (fix is FileMaker Server 22.0.4); the ASF-artifact exposure is already curated as CVE-2022-42889
+CVE-2025-46647  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2025-47436  # ORC C++ LZO decompression only - the Java artifacts are unaffected
+CVE-2025-47713  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2025-47849  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2025-47868  # Apache NuttX (bdf-converter) - C project, no package-registry distribution
+CVE-2025-47869  # Apache NuttX - C project, no package-registry distribution
+CVE-2025-48208  # Apache HertzBeat - not published to Maven Central under any groupId
+CVE-2025-48431  # Thrift c_glib bindings - no package-manager distribution
+CVE-2025-48768  # Apache NuttX - C project, no package-registry distribution
+CVE-2025-48769  # Apache NuttX - C project, no package-registry distribution
+CVE-2025-49506  # Apache APR-util - C project, no package-registry distribution
+CVE-2025-49630  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-49763  # Apache Traffic Server ESI plugin - C++ project, no package-registry distribution
+CVE-2025-49812  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-52435  # Apache NimBLE - C project, no package-registry distribution
+CVE-2025-53020  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-53192  # Apache Commons OGNL - retired, never released to Maven Central (org/apache/commons/commons-ognl is 404)
+CVE-2025-53470  # Apache NimBLE - C project, no package-registry distribution
+CVE-2025-53477  # Apache NimBLE - C project, no package-registry distribution
+CVE-2025-54090  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-54466  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2025-54472  # Apache bRPC - C++ project, no package-registry distribution
+CVE-2025-54812  # Apache Log4cxx - C++ project, no package-registry distribution
+CVE-2025-54813  # Apache Log4cxx - C++ project, no package-registry distribution
+CVE-2025-55753  # Apache HTTP Server (httpd) mod_md ACME - C project, no package-registry distribution
+CVE-2025-58098  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-58130  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2025-58136  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2025-58137  # Fineract: no org.apache.fineract artifacts on Maven Central
+CVE-2025-59118  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2025-59302  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2025-59454  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2025-59775  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-59789  # Apache bRPC - C++ project, no package-registry distribution
+CVE-2025-59790  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2025-59792  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2025-60021  # Apache bRPC - C++ project, no package-registry distribution
+CVE-2025-61623  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2025-62232  # Apache APISIX basic-auth plugin - Lua/OpenResty, no package-registry distribution
+CVE-2025-62235  # Apache NimBLE - C project, no package-registry distribution
+CVE-2025-64401  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2025-64402  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2025-64403  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2025-64404  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2025-64405  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2025-64406  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2025-64407  # Apache OpenOffice - C++ desktop suite, no package-registry distribution
+CVE-2025-65082  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-65114  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2025-66170  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2025-66171  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2025-66172  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2025-66200  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2025-66467  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2025-68637  # Apache Uniffle - announcement is an unfilled template ('undefined before 0.10.0', no coordinate); Central holds only rss-client-spark{2,3}-shaded
+CVE-2025-69233  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central (advisory from the CloudStack 4.20/4.22 announcement thread)
+CVE-2026-100669  # Grav CMS (PHP) shipping Apache/IIS access-control config samples; not an ASF project or artifact
+CVE-2026-100717  # froxlor server-admin panel (PHP); not an ASF project (only manages Apache/nginx config)
+CVE-2026-10821  # Yoast SEO WordPress plugin writing Apache config; not an ASF artifact
+CVE-2026-11873  # Dogtag CA/IdM behind an Apache proxy; not an ASF artifact
+CVE-2026-1464  # MuntashirAkon AppManager with vendored commons-compress source, not the ASF artifact
+CVE-2026-19565  # CPAN Perl distribution (Apache::*) - GitHub has no CPAN ecosystem, and not an ASF project
+CVE-2026-21962  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-22068  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-23918  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-24033  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-24072  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-24343  # Apache HertzBeat - not published to Maven Central under any groupId
+CVE-2026-25077  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central (advisory from the CloudStack 4.20/4.22 announcement thread)
+CVE-2026-25199  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-28780  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-29167  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-29168  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-29169  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-29170  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-29207  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-29220  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-29226  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-30898  # Apache Airflow documentation example only - no code fix and no affected version range
+CVE-2026-31377  # Apache Doris FE meta service auth bypass - org.apache.doris publishes only Flink/Spark/Kafka connectors, not the FE server
+CVE-2026-31378  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-31379  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-31380  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-31387  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-31388  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-31906  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-31908  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-31909  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-31910  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-31923  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-31924  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-31986  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-32327  # Apache APR-util - C project, no package-registry distribution
+CVE-2026-33006  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-33007  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-33109  # Azure Managed Instance for Apache Cassandra - Microsoft product, not ASF
+CVE-2026-33267  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-33523  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-33844  # Azure Managed Instance for Apache Cassandra - Microsoft product, not ASF
+CVE-2026-33857  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-33930  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-34032  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-34059  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-34191  # Apache Portable Runtime (APR) - C project, no package-registry distribution
+CVE-2026-34355  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-34356  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-34501  # Apache Portable Runtime (APR) - C project, no package-registry distribution
+CVE-2026-34502  # Apache Portable Runtime (APR) - C project, no package-registry distribution
+CVE-2026-34884  # Apache SkyWalking MCP - not published on PyPI
+CVE-2026-35086  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-35152  # Fineract: no org.apache.fineract artifacts on Central; no fix version named
+CVE-2026-39920  # BridgeHead FileStore product exposing an Axis2 admin module, not Axis2 itself
+CVE-2026-39998  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-39999  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-40023  # Apache Log4cxx - C++ project, no package-registry distribution
+CVE-2026-40454  # Apache IoTDB C++ client - client-cpp is a CMake driver module
+CVE-2026-41115  # Kafka: no code fix - docs/KIP change only, no fixed version
+CVE-2026-41566  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2026-41604  # Thrift Swift bindings - apache/thrift has no Package.swift
+CVE-2026-41605  # Thrift Swift bindings - apache/thrift has no Package.swift
+CVE-2026-41606  # Thrift c_glib bindings - no package-manager distribution
+CVE-2026-41607  # Thrift C++ bindings - no package-manager distribution
+CVE-2026-41873  # Apache Pony Mail (Lua implementation, unsupported when assigned) - no package-registry distribution
+CVE-2026-41919  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-41920  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-42356  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-42528  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-42535  # mod_dav_fs in Apache HTTP Server - C project, no package-registry distribution
+CVE-2026-42536  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-43951  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-44046  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-44087  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-44119  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-44185  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-44186  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-44631  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-44915  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-45187  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-45188  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2026-45434  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-45811  # Apache NimBLE - C project, no package-registry distribution
+CVE-2026-45812  # Apache NimBLE - C project, no package-registry distribution
+CVE-2026-45813  # Apache NimBLE - C project, no package-registry distribution
+CVE-2026-45815  # Apache NimBLE - C project, no package-registry distribution
+CVE-2026-45816  # Apache NimBLE - C project, no package-registry distribution
+CVE-2026-46452  # Apache NimBLE - C project, no package-registry distribution
+CVE-2026-4649  # KNIME Business Hub vendor advisory (references Artemis CVE-2026-27446); KNIME is not a registry artifact
+CVE-2026-46586  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-46729  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-46751  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2026-46752  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2026-47339  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-47341  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-47342  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-47359  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-47360  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-48005  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-48144  # Thrift c_glib bindings - no package-manager distribution
+CVE-2026-48145  # Thrift C++ bindings - no package-manager distribution
+CVE-2026-48895  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-48913  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-48946  # Joomla K2 extension plus mod_php; not an ASF artifact
+CVE-2026-49230  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-49231  # Apache APISIX opa plugin - Lua/OpenResty, no package-registry distribution
+CVE-2026-49488  # OpenMeetings: vulnerable web module not published to Central
+CVE-2026-49871  # Apache APISIX cas-auth plugin - Lua/OpenResty, no package-registry distribution
+CVE-2026-49872  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-49975  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-50112  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central (advisory from the CloudStack 4.20/4.22 announcement thread)
+CVE-2026-50222  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-50223  # OFBiz: org.apache.ofbiz has no Maven Central presence
+CVE-2026-5081  # CPAN Perl distribution (Apache::*) - GitHub has no CPAN ecosystem, and not an ASF project
+CVE-2026-5088  # CPAN Perl distribution (Apache::*) - GitHub has no CPAN ecosystem, and not an ASF project
+CVE-2026-52691  # Apache Griffin retired (Attic) - UNSUPPORTED WHEN ASSIGNED, all versions affected with no fix
+CVE-2026-54048  # Apache Impala - org.apache.impala is absent from Maven Central
+CVE-2026-54226  # Apache Kvrocks - C++ project, no package-registry distribution
+CVE-2026-55970  # Thrift C++ bindings - no package-manager distribution
+CVE-2026-55971  # Thrift C++ bindings - no package-manager distribution
+CVE-2026-56096  # third-party extension passing queries to Solr, not Apache Solr itself
+CVE-2026-56153  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-56154  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-56207  # Apache Impala - org.apache.impala is absent from Maven Central
+CVE-2026-56287  # Fineract: no org.apache.fineract artifacts on Central; no fix version named
+CVE-2026-56449  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-57821  # Fineract: no org.apache.fineract artifacts on Central; no fix version named
+CVE-2026-57834  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-57866  # Apache Impala - org.apache.impala is absent from Maven Central
+CVE-2026-57941  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-58023  # Thrift c_glib bindings - no package-manager distribution
+CVE-2026-58150  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58151  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58152  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58153  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58154  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58155  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58156  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58157  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58158  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58159  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58160  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58161  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58162  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58163  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58164  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58175  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58177  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58178  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58179  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58180  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58181  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58182  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58183  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58184  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58185  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58186  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58187  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58188  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58189  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-58319  # Apache Doris - no FE artifacts on Maven Central (connectors/SDKs only)
+CVE-2026-58415  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-58662  # Thrift C++ bindings - no package-manager distribution
+CVE-2026-59085  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-59173  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-59654  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-59655  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-59657  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-59685  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-59780  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-59797  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-59799  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-60363  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-61397  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-61398  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-61399  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-61400  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-61422  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-61483  # Apache Lucy - C/Perl project, no package-registry distribution
+CVE-2026-61484  # Apache Lucy - C/Perl project, no package-registry distribution
+CVE-2026-61485  # Apache Lucy - C/Perl project, no package-registry distribution
+CVE-2026-61486  # Apache Lucy - C/Perl project, no package-registry distribution
+CVE-2026-62440  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-63041  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-63045  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-63292  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-63686  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-63718  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-64608  # Apache Fory C++ only - no package-manager distribution
+CVE-2026-65100  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-65181  # Apache Impala - org.apache.impala is absent from Maven Central
+CVE-2026-65324  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-65325  # Apache Traffic Server - C++ project, no package-registry distribution
+CVE-2026-65613  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-65770  # Azure Managed Instance for Apache Cassandra - Microsoft product, not ASF
+CVE-2026-66054  # Apache Thrift cpp binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-66081  # Apache Thrift c_glib binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-66256  # Shindig: retired, all versions affected, no fix will ship
+CVE-2026-66331  # Apache Thrift delphi binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-66721  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2026-66722  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2026-66797  # Apache CloudStack - org.apache.cloudstack is absent from Maven Central
+CVE-2026-66859  # Apache Thrift c_glib binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-67178  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-67402  # ConfigServer Security & Firewall product; an Apache httpd misconfiguration, not an ASF artifact
+CVE-2026-68570  # Apache Doris FE authorization bypass - org.apache.doris publishes only Flink/Spark/Kafka connectors, not the FE server
+CVE-2026-68745  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
+CVE-2026-69223  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-71558  # Apache Fory C++ only - no package-manager distribution
+CVE-2026-71560  # Apache Fory C++ only - no package-manager distribution
+CVE-2026-72524  # Apache Doris FE authorization bypass - org.apache.doris publishes only Flink/Spark/Kafka connectors, not the FE server
+CVE-2026-73237  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-73238  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-73239  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-73240  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-73636  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-73637  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-74848  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-75005  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-75020  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-75099  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-76420  # Cisco Secure FMC product (AJP connector misconfiguration); not an ASF artifact
+CVE-2026-78242  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-79768  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-80180  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-80181  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-80190  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-81270  # Apache Allura - PyPI 'allura' holds only a 0.1dev placeholder
+CVE-2026-82348  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82375  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82376  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82377  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82378  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82379  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82380  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82381  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82382  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82383  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82384  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82385  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82386  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82387  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82459  # Apache Thrift cpp binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-82546  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-82806  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-83632  # binding not stated in the advisory; the defect class (heap overflow / memory release) indicates a native binding
+CVE-2026-8500  # Web::Passwd CPAN Perl distribution (references htpasswd docs only) - not an ASF project
+CVE-2026-8503  # CPAN Perl distribution (Apache::*) - GitHub has no CPAN ecosystem, and not an ASF project
+CVE-2026-85086  # Apache Thrift perl binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-85088  # Apache Thrift cpp/d binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-85229  # Apache SkyWalking Booster UI - bundled web frontend, not on npm (404) or Maven Central; also UNSUPPORTED WHEN ASSIGNED
+CVE-2026-85476  # Apache Thrift c_glib binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-85483  # Apache Thrift c_glib binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-85493  # Apache Thrift java-me/dart binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-86243  # Apache Tomcat Native - native C library (libtcnative); no consumable Maven artifact
+CVE-2026-86246  # Apache Tomcat Native - native C library (libtcnative); no consumable Maven artifact
+CVE-2026-86247  # Apache Tomcat Native - native C library (libtcnative); no consumable Maven artifact
+CVE-2026-86507  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-86537  # Apache Thrift d binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-89281  # Apache Lounge third-party Windows build of httpd (C); not an ASF-published package
+CVE-2026-89282  # Apache Lounge third-party Windows build of httpd (C); not an ASF-published package
+CVE-2026-90440  # Apache Thrift d binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-90937  # froxlor server-admin panel (PHP); not an ASF project (only manages Apache/nginx config)
+CVE-2026-91135  # Apache Thrift cpp binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-91204  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-91206  # Apache Roller - org.apache.roller is absent from Maven Central (ships only source/binary distributions)
+CVE-2026-92834  # Apache Thrift cpp binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-93302  # wolfSSL (C TLS library, wolfSSL Inc.); not an ASF project
+CVE-2026-93352  # Laravel-Mediable (PHP/Composer package); not an ASF project
+CVE-2026-93546  # Apache HTTP Server (httpd) - C project, no package-registry distribution
+CVE-2026-93925  # Apache Thrift cpp binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-93926  # binding not stated in the advisory; the defect class (heap overflow / memory release) indicates a native binding
+CVE-2026-94212  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-94220  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-94250  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-94269  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-94276  # Apache APISIX - Lua/OpenResty, no package-registry distribution
+CVE-2026-94633  # Apache Thrift dart binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-94635  # Apache Thrift lua binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-94648  # Apache Thrift dart binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-94650  # Apache Thrift c_glib binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-94652  # Apache Thrift cpp binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-94655  # Apache Thrift lua binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-94657  # Apache Thrift java-me binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-94658  # Apache Thrift lua binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-96286  # Apache Thrift perl binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-96287  # Apache Thrift perl binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-96288  # Apache Thrift erlang binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-96292  # Apache Thrift lua binding(s) only - no package-manager distribution at 0.25.0
+CVE-2026-96443  # Apache Doris FE JDBC-driver-URL RCE - org.apache.doris publishes only Flink/Spark/Kafka connectors, not the FE server
+CVE-2026-96740  # StreamsHub Console for Apache Kafka (separate project, not ASF Kafka); a console application, not a Maven artifact
+CVE-2026-96990  # Apache Thrift erlang binding(s) only - no package-manager distribution at 0.25.0
