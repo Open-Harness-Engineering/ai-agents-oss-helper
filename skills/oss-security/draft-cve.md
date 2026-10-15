@@ -8,7 +8,7 @@
 - `template=` - the advisory template whose layout to mirror. URL or local file. Required.
 - `triage_ref=` - the triage summary to draw content from. URL or local file. Optional.
 - `fix_pr=` - the fix pull request. Number or URL. Optional.
-- `backup_repo=` - a **private** repository to archive the drafted material into for durability ("in case of disruption"). A remote URL, or a local clone path whose `origin` is private. Optional; see step 10.
+- `backup_repo=` - a **private** repository to archive the drafted material into for durability ("in case of disruption"). A remote URL, or a local clone path whose `origin` is private. Optional; defaults to the `OSS_CVE_BACKUP_REPO` environment variable when that is set (see step 1). See step 10.
 
 ### 1. Parse Input
 
@@ -21,6 +21,14 @@ Parse the argument string into five values:
 - `backup_repo` - optional key/value
 
 If `cve_id` or `template` is missing, stop and print the usage block above.
+
+**Resolve the `backup_repo` default.** If `backup_repo` was not passed as an argument, fall back to the `OSS_CVE_BACKUP_REPO` environment variable (override via environment if set):
+
+| Variable | Default |
+|----------|---------|
+| `OSS_CVE_BACKUP_REPO` | _(none)_ |
+
+If neither the argument nor the environment variable is set, `backup_repo` stays unset and step 10 is skipped. A value coming from the environment is **not** exempt from the hard privacy gate in step 10.1 — it is verified private before any write exactly like an argument value.
 
 ### 2. Validate the Reserved CVE ID
 
@@ -385,7 +393,7 @@ Never advise the user to submit to MITRE directly, and never describe a saved re
 
 ### 10. Archive to Backup Repository (if `backup_repo` provided)
 
-If `backup_repo` is not provided, skip this step entirely. It can be performed as soon as the artifacts exist (after step 7); it is placed here because it is optional and independent of the CNA handoff in step 9.
+If `backup_repo` is not provided (neither as an argument nor via the `OSS_CVE_BACKUP_REPO` environment variable; see step 1), skip this step entirely. It can be performed as soon as the artifacts exist (after step 7); it is placed here because it is optional and independent of the CNA handoff in step 9.
 
 This step stores the drafted material in a **private** repository so it survives a lost laptop, a wiped workspace, or a long embargo. It is the only part of this command that writes to a remote.
 
@@ -465,7 +473,7 @@ You MUST:
 - Confirm the step 8 checklist is done before handing the record to the CNA tool.
 - Warn that importing replaces the tool's current editor contents, and offer to fold in existing work first.
 - Stop after handing over the file. Do not sign, publish, or open a PR. The only remote write this command performs is archiving to a verified-private `backup_repo` (step 10).
-- When `backup_repo` is given, positively confirm it is private BEFORE writing to it, and hard-fail otherwise.
+- When `backup_repo` is set (by argument or the `OSS_CVE_BACKUP_REPO` environment variable), positively confirm it is private BEFORE writing to it, and hard-fail otherwise.
 - Confirm URL fetches with the user before calling `WebFetch`.
 
 You MUST NOT:
@@ -494,5 +502,5 @@ You MUST NOT:
 - The list of omitted JSON blocks is printed alongside the review checklist.
 - A `:robot:` draft banner is present on both text files.
 - The user is handed the JSON path with the import steps, the warning that import replaces editor contents, and the reminder that SAVE is theirs to press.
-- When `backup_repo` is supplied, it is confirmed private before any write; the per-CVE directory (advisory, plaintext, cve5.json, metadata, optional triage/reproducers) is committed and pushed there; and the command hard-fails without writing if privateness cannot be confirmed.
+- When `backup_repo` is set (by argument or the `OSS_CVE_BACKUP_REPO` environment variable), it is confirmed private before any write; the per-CVE directory (advisory, plaintext, cve5.json, metadata, optional triage/reproducers) is committed and pushed there; and the command hard-fails without writing if privateness cannot be confirmed.
 - A review checklist is printed and nothing is signed, published, or submitted, and nothing is pushed anywhere except the verified-private `backup_repo`.
