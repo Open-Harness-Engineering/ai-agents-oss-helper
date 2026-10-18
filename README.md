@@ -53,12 +53,12 @@ The helper provides guidelines that are project-agnostic. Project-specific confi
 
 ### Skill groups
 
-The 36 guidelines are organized into 6 focused skills:
+The 37 guidelines are organized into 6 focused skills:
 
 - **`/oss-issues`** — Issue lifecycle: fix, analyze, create, list, find tasks, triage, cross-repo issues
 - **`/oss-review`** — PR lifecycle: review, address feedback, batch review, status, merge, backport
 - **`/oss-ci`** — CI/CD and code quality: fix CI errors, SonarCloud, GitHub alerts, quick fixes
-- **`/oss-security`** — Security: triage reports, analyze CVEs, draft advisories, sync the GitHub Advisory Database, scan code
+- **`/oss-security`** — Security: triage reports, drive a report end to end, analyze CVEs, draft advisories, sync the GitHub Advisory Database, scan code
 - **`/oss-project`** — Project setup: add projects, install/generate/update rules, workspaces
 - **`/oss-qe`** — Quality engineering: create and execute test plans, deep module audits
 
@@ -104,6 +104,7 @@ The OSS Helper provides guidelines for the following tasks. For agents with skil
 | Address review | `/oss-address-review` | Address review feedback on a PR |
 | Merge a PR | `/oss-merge-pr` | Merge a PR after verifying all requirements are met |
 | Triage security report | `/oss-triage-security-report` | Triage an inbound security vulnerability report |
+| Drive a security case | `/oss-security-case` | Drive one security report through triage, reporter reply, CVE, sanitized issue, fix, backports and CVE draft, stopping at every maintainer gate (a Claude Code workflow; other agents follow the same graph by hand) |
 | Draft CVE advisory | `/oss-draft-cve` | Draft a project-specific CVE advisory page plus the CVE Record Format JSON |
 | Analyze third-party CVE | `/oss-analyze-third-party-cve` | Analyze exposure to a CVE in a third-party dependency |
 | Create security advisory | `/oss-create-security-advisory` | Privately report a security vulnerability via GitHub |
@@ -178,6 +179,20 @@ backport PR 42 to the release/1.x branch
 /oss-backport-pr 42 branch=release/1.x
 ```
 
+### Drive a Security Report End to End
+
+```text
+# Start a case from a report file; it stops at the verdict gate:
+/oss-security-case xml-entities report=/path/to/report.txt
+
+# Each later run records your decisions and approvals, and advances to the next gate:
+/oss-security-case xml-entities verdict=VALID approve=issue
+/oss-security-case xml-entities cve=CVE-2026-12345 approve=pr
+/oss-security-case xml-entities done=reply approve=backports
+```
+
+Every run leaves a `STATUS.md` in the private case directory listing what is done, what waits on you, and the next command. Nothing is sent, reserved, merged, signed or published by the agent: those stay maintainer actions. The project's `project-security.md` supplies the CNA, the advisory template and the supported lines; see `skills/oss-security/security-case.md` for the other settings.
+
 ### Install Project Rules
 
 ```text
@@ -205,6 +220,8 @@ The default source is [`Open-Harness-Engineering/ai-agents-oss-known-projects`](
 
 Installed as 6 user-invocable skills at `~/.{agent}/skills/oss-{issues,review,ci,security,project,qe}/` plus individual `/oss-*` commands in `~/.{agent}/commands/`. You can either describe what you want in natural language (the agent matches it to a skill automatically), invoke a skill group (e.g. `/oss-issues`), or invoke a specific command directly (e.g. `/oss-fix-issue 42`).
 
+For Claude only, the installer also copies the workflows in `workflows/` to `~/.claude/workflows/`. These are scripts for Claude Code's Workflow tool, which runs the subagents of a multi-step guideline in the background. `/oss-security-case` uses one. Claude Code reads the directory when a session starts, so start a new session after installing. Bob installs the same guideline and follows it by hand.
+
 ### Gemini CLI
 
 Individual TOML commands are generated from each guideline file and installed to `~/.gemini/commands/`. Each command includes a preamble instructing Gemini to read project rules from `~/.gemini/rules/<project-directory>/`.
@@ -225,6 +242,11 @@ If Codex reports a missing `~/.codex/oss-helper/.oss-init.md`, rerun `./install.
 ai-agents-oss-helper/
 ├── install.sh                              # Installation script
 ├── README.md
+├── workflows/                              # Claude Code workflows (installed for Claude only)
+│   └── oss-security-case.js               # Security report lifecycle graph
+├── tests/
+│   └── workflows/
+│       └── oss-security-case.test.mjs     # Routing test with mocked agents
 └── skills/
     ├── _shared/
     │   └── init.md                         # Shared initialization logic
@@ -258,6 +280,7 @@ ai-agents-oss-helper/
     ├── oss-security/                        # Security skill
     │   ├── SKILL.md
     │   ├── triage-security-report.md      # Triage security report
+    │   ├── security-case.md               # Drive a security report end to end
     │   ├── analyze-third-party-cve.md     # Analyze third-party CVE
     │   ├── draft-cve.md                   # Draft CVE advisory
     │   ├── create-security-advisory.md    # Create security advisory
@@ -288,7 +311,8 @@ and are installed on demand via the Install Info guideline.
 2. Create a feature branch
 3. Add or modify guideline files in the appropriate `skills/oss-*/` directory
 4. Update `install.sh` if adding new files
-5. Submit a pull request
+5. For a Claude Code workflow, add the script to `workflows/` (its `meta.name` must match the file name), list it in `WORKFLOW_FILES` in `install.sh`, give it a guideline that also works by hand for the other agents, and add a test under `tests/workflows/`
+6. Submit a pull request
 
 ## License
 
