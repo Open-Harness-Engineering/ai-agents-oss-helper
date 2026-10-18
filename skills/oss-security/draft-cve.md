@@ -147,7 +147,7 @@ CVE Record Format 5.x is the structure the CVE Program defines for a record, and
 
 3. `<cve_id>.cve5.json` - the CVE Record Format JSON, carrying exactly the same facts as the advisory page and the plaintext body.
 
-This file is a *draft record*, not a submission. Producing it does not change the rule in step 11: you never press the button that publishes.
+This file is a _draft record_, not a submission. Producing it does not change the rule in step 11: you never press the button that publishes.
 
 #### 7.1 Shape the record against the real schema
 
@@ -188,7 +188,7 @@ Map the template's sections onto the record. The section labels differ per proje
 
 #### 7.2 Leave the CNA-controlled fields alone
 
-The schema documents `cveMetadata` as *"controlled by the CVE Services"*. The CNA tool populates these on import, and a value you invent will either be silently overwritten or rejected:
+The schema documents `cveMetadata` as _"controlled by the CVE Services"_. The CNA tool populates these on import, and a value you invent will either be silently overwritten or rejected:
 
 - `cveMetadata.assignerOrgId`, `cveMetadata.assignerShortName`, `cveMetadata.requesterUserId`
 - `cveMetadata.state`, `cveMetadata.serial`

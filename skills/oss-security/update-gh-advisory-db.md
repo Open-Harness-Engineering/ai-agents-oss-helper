@@ -53,7 +53,7 @@ NVD pastes onto advisories for other software that an ASF project merely discuss
 in 2022 that inflated the candidate set from 210 to 807 (OpenLDAP, libcurl, Python, Xorg, binutils,
 even a LOGITEC router). Match on the strong forms only:
 
-```
+```text
 lists\.apache\.org/thread/[0-9a-z] | apache\.org/security | dist\.apache\.org/repos/dist/release/[a-z]+/.*CVE
 ```
 
@@ -74,8 +74,6 @@ window once hid a 385-advisory backlog, and a 61-advisory Apache Thrift release 
 after a reconciliation that reported nothing outstanding. Projects ship whole CVE families at once.
 Reference matching also removes the opposite error — third-party advisories that merely mention an
 ASF product (a Nagios or WordPress bug that happens to name Apache) stop showing up as candidates.
-
-
 
 List the project CVEs in scope from the authoritative source (e.g. enumerate `content/security/CVE-<year>-*.md` via `gh api repos/<org>/<website-repo>/contents/<path>`). Only **published** advisories qualify — anything embargoed, draft, or on a hold-merge branch is out of scope and MUST NOT be submitted.
 
