@@ -44,6 +44,12 @@ AGENT_FILES=(
     "agents/qa-test-strategist.md"
 )
 
+# Claude Code workflows: scripts run by the Workflow tool. They are installed for Claude only,
+# into ~/.claude/workflows/; the other agents follow the matching guideline by hand.
+WORKFLOW_FILES=(
+    "workflows/oss-security-case.js"
+)
+
 # Files for each skill (relative paths from repo root).
 # Keep this as a Bash 3-compatible lookup instead of an associative array:
 # macOS still ships /bin/bash 3.2 on some machines.
@@ -90,6 +96,7 @@ get_skill_files() {
             SKILL_FILES_RESULT="
                 skills/oss-security/SKILL.md
                 skills/oss-security/triage-security-report.md
+                skills/oss-security/security-case.md
                 skills/oss-security/analyze-third-party-cve.md
                 skills/oss-security/draft-cve.md
                 skills/oss-security/create-security-advisory.md
@@ -148,6 +155,7 @@ GUIDELINE_COMMANDS=(
     "oss-ci|fix-github-alert.md|oss-fix-github-alert|Fix a GitHub security or quality alert"
     "oss-ci|quick-fix.md|oss-quick-fix|Apply a quick fix without a tracked issue"
     "oss-security|triage-security-report.md|oss-triage-security-report|Triage an inbound security vulnerability report"
+    "oss-security|security-case.md|oss-security-case|Drive a security report through triage, reply, CVE, issue, fix, backports and CVE draft"
     "oss-security|analyze-third-party-cve.md|oss-analyze-third-party-cve|Analyze exposure to a third-party CVE"
     "oss-security|draft-cve.md|oss-draft-cve|Draft a CVE advisory page and the matching CVE Record Format JSON"
     "oss-security|create-security-advisory.md|oss-create-security-advisory|Report a security vulnerability via GitHub"
@@ -588,6 +596,11 @@ install_skill_agent() {
         fi
     done
 
+    # Install workflows (the Workflow tool is Claude Code only)
+    if [[ "$agent" == "claude" ]]; then
+        install_claude_workflows || return 1
+    fi
+
     # Remove old monolithic rule files (legacy cleanup)
     info "  Cleaning up old rule files..."
     for old_file in "${OLD_RULE_FILES[@]}"; do
@@ -598,6 +611,32 @@ install_skill_agent() {
     info "  Commands installed to: $commands_dir"
     info "  Sub-agents installed to: $agents_dir"
     info "  Rules directory: $rules_dir (project rules installed on demand)"
+}
+
+# Install Claude Code workflows into ~/.claude/workflows/. Claude Code reads that directory when a
+# session starts, so a session that was already running sees a new workflow only by its path.
+install_claude_workflows() {
+    local workflows_dir="$HOME/.claude/workflows"
+
+    if ! mkdir -p "$workflows_dir"; then
+        error "Failed to create directory: $workflows_dir"
+        return 1
+    fi
+
+    info "  Installing workflows..."
+    for workflow_file in "${WORKFLOW_FILES[@]}"; do
+        local filename
+        filename="$(basename "$workflow_file")"
+
+        if fetch_file "$workflow_file" "$workflows_dir/$filename"; then
+            info "    Installed: $filename"
+        else
+            error "    Failed to install: $filename"
+            return 1
+        fi
+    done
+
+    info "  Workflows installed to: $workflows_dir (start a new Claude Code session to load them)"
 }
 
 # Install for Gemini CLI (individual TOML commands)
@@ -952,6 +991,11 @@ main() {
     echo "Sub-agents (all tools):"
     echo "  Specialized agents for backend, frontend, architecture, testing,"
     echo "  code review, technical writing, and marketing."
+    echo ""
+    echo "Workflows (Claude Code only):"
+    echo "  /oss-security-case drives a security report through triage, reply, CVE,"
+    echo "  issue, fix, backports and CVE draft; other agents follow the same"
+    echo "  guideline by hand."
 }
 
 main "$@"

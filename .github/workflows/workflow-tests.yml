@@ -1,0 +1,27 @@
+name: Workflow Tests
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "workflows/**"
+      - "tests/**"
+      - "install.sh"
+      - "scripts/test-claude-workflow-install.sh"
+      - ".github/workflows/workflow-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Check the installer syntax
+        run: bash -n install.sh
+      - name: Run the oss-security-case routing test (mocked agents)
+        run: node tests/workflows/oss-security-case.test.mjs
+      - name: Check the Claude workflow install
+        run: bash scripts/test-claude-workflow-install.sh
