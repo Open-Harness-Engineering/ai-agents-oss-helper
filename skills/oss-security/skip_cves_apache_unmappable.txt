@@ -603,6 +603,7 @@ CVE-2026-58189  # Apache Traffic Server - C++ project, no package-registry distr
 CVE-2026-58319  # Apache Doris - no FE artifacts on Maven Central (connectors/SDKs only)
 CVE-2026-58415  # Apache HTTP Server (httpd) - C project, no package-registry distribution
 CVE-2026-58662  # Thrift C++ bindings - no package-manager distribution
+CVE-2026-59084  # Tomcat EncryptInterceptor: no code fix - docs-only change (use AES/GCM); the named fixed versions change no code (PR #9974 closed)
 CVE-2026-59085  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
 CVE-2026-59173  # Apache Traffic Server - C++ project, no package-registry distribution
 CVE-2026-59654  # Apache CloudStack - org.apache.cloudstack is empty on Maven Central
