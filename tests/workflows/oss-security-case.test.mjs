@@ -62,7 +62,7 @@ function makeSim(rec, config) {
       if (label === 'fix:publish') return { status: 'pr-open', pr: 28001, url: 'https://github.com/example/server/pull/28001' }
       if (/^backport:[^:]+$/.test(label)) {
         const line = label.slice('backport:'.length)
-        return { status: 'local', line, localBranch: 'backport/28001-to-' + line, worktree: '/work/bp-' + line, straight: line !== 'release-1.x', adaptations: line === 'release-1.x' ? ['older test framework'] : [], fixVersion: '9.9.9', prBodyFile: caseDir + '/bp.md' }
+        return { status: 'local', line, localBranch: 'backport/28001-to-' + line, worktree: '/work/bp-' + line, straight: line !== 'release-1.x', adaptations: line === 'release-1.x' ? ['older test framework'] : [], fixVersion: line === 'release-1.x' ? '1.9.4' : '2.5.1', prBodyFile: caseDir + '/bp.md' }
       }
       if (/^backport:.*:publish$/.test(label)) return { status: 'pr-open', line: label.split(':')[1], pr: label.includes('release-2.x') ? 28002 : 28003 }
       if (label === 'docsync') return { status: 'local', worktree: '/work/docsync', branch: 'docs/PROJ-123-guide-sync', commit: 'def456', files: ['guide-2.x.md', 'guide-1.x.md'], prBodyFile: caseDir + '/docsync.md' }
@@ -130,16 +130,28 @@ function makeSim(rec, config) {
 
   sim.live = { mainPr: { number: 28001, state: 'MERGED' } }
   r = await runIt({ done: { reply: true } })
-  check(['backport_release-2.x', 'backport_release-1.x', 'docSync', 'cveDraft'].every(x => r.ran.includes(x)), 'after the merge: both backports, the note sync and the CVE draft')
+  check(['backport_release-2.x', 'backport_release-1.x', 'docSync'].every(x => r.ran.includes(x)), 'after the merge: both backports and the note sync')
+  check(!r.ran.includes('cveDraft') && gateIds(r).includes('release'), 'the CVE draft waits for the release, not for the merge')
   check(sim.maxActive.heavy === 1, 'build-heavy nodes never ran concurrently')
-  check(gateIds(r).includes('approve-backports') && gateIds(r).includes('cve-record'), 'stops at approve-backports and the CNA/advisory gate')
+  check(gateIds(r).includes('approve-backports'), 'stops at approve-backports')
 
   r = await runIt({ approve: { backports: true } })
   check(r.ran.join() === 'backport_release-2.x:publish,backport_release-1.x:publish,docSync:publish', 'backport PRs open first, then the note-sync PR, in one run')
   check(sim.maxActive.publish === 1, 'PR-opening nodes never ran concurrently')
-  check(gateIds(r).join() === 'cve-record', 'only the maintainer CVE/advisory gate is left')
+  check(gateIds(r).join() === 'release', 'only the release is left before the CVE draft')
   check(disk.nodes['backport_release-1.x'].worktree === '/work/bp-release-1.x', 'publish results merge into the prepared node record')
-  check(/Waiting on you/.test(disk.status) && /CNA tool/.test(disk.status), 'STATUS.md is rendered')
+
+  sim.live = { mainPr: { number: 28001, state: 'MERGED' }, releases: { '3.0.0': true, '2.5.1': true, '1.9.4': false } }
+  r = await runIt({})
+  const releaseGate = (r.waitingOn || []).find(g => g.id === 'release') || {}
+  check(r.ran.length === 0 && /1\.9\.4/.test(releaseGate.text || '') && !/3\.0\.0|2\.5\.1/.test(releaseGate.text || ''), 'a partial release keeps the CVE draft waiting and names only what is missing')
+
+  sim.live.releases['1.9.4'] = true
+  r = await runIt({})
+  check(r.ran.join() === 'cveDraft' && gateIds(r).join() === 'cve-record', 'once every fixed version is released: the CVE draft, then the signing and publication PR gate')
+  check(/never open a pull request with them/.test(sim.prompts['cve:draft'] || '') && /stay local only/.test(sim.prompts['cve:draft'] || ''), 'the CVE draft stays local or goes to the private draft repository, never into a PR')
+  check(/in the private draft repository/.test(((r.waitingOn || []).find(g => g.id === 'cve-record') || {}).text || ''), 'the final gate says where the drafts are')
+  check(/Waiting on you/.test(disk.status) && /CNA tool/.test(disk.status) && /archived to the private draft repository/.test(disk.status), 'STATUS.md is rendered and says where the drafts are')
   check(r.memory && r.memory.file === 'project_seccase_demo.md', 'a memory pointer is returned')
 
   const bad = await runIt({ decision: { backportTargets: ['release-0.x'] } })
@@ -178,9 +190,10 @@ function makeSim(rec, config) {
   sim.live = { mainPr: { number: 28001, state: 'MERGED' } }
   r = await runIt({})
   check(gateIds(r).includes('targets') && !r.ran.some(x => x.startsWith('backport_')), 'unknown supported lines ask for targets instead of guessing')
-  check(r.ran.includes('cveDraft') && /template=<none configured>/.test(sim.prompts['cve:draft']), 'the CVE draft runs and is told no template is configured')
-  r = await runIt({ decision: { backportTargets: [] } })
+  check(!r.ran.includes('cveDraft') && gateIds(r).includes('release'), 'the CVE draft waits for the release of the default-branch version')
+  r = await runIt({ decision: { backportTargets: [] }, done: { release: true } })
   check(!gateIds(r).includes('targets'), 'targets=none clears the targets gate')
+  check(r.ran.includes('cveDraft') && /template=<none configured>/.test(sim.prompts['cve:draft']), 'done=release lets the CVE draft run, and it is told no template is configured')
   check(disk.decisions.decisions.fixModel === 'public', 'the fix model is sticky')
   const bad = await runIt({ decision: { issue: 'PROJ-1' } })
   check(bad.error && /GitHub issues/.test(bad.problems.join()), 'a Jira key is rejected for a GitHub project')
@@ -197,7 +210,10 @@ function makeSim(rec, config) {
   check(gateIds(r).includes('ghsa') && !r.ran.includes('issue') && !r.ran.includes('fix'), 'the graph hands the fix to the advisory flow')
   sim.live = { mainPr: { number: 77, state: 'MERGED' } }
   r = await runIt({ decision: { pr: 77 } })
-  check(r.ran.includes('cveDraft') && !r.ran.some(x => x.startsWith('backport_')), 'after pr=, the CVE draft runs and no public backport starts')
+  check(!r.ran.includes('cveDraft') && gateIds(r).includes('release') && !r.ran.some(x => x.startsWith('backport_')), 'after pr=, the CVE draft still waits for the release, and no public backport starts')
+  sim.live = { mainPr: { number: 77, state: 'MERGED' }, releases: { '3.0.0': true } }
+  r = await runIt({})
+  check(r.ran.includes('cveDraft'), 'once released, the CVE draft runs for the advisory-coordinated fix')
 }
 
 // ---- INVALID -------------------------------------------------------------------------------

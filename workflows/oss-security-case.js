@@ -8,7 +8,7 @@ export const meta = {
     { title: 'Drafts', detail: 'reporter reply, CVE reservation fields, sanitized issue; nothing is sent' },
     { title: 'Act', detail: 'approved issue, final reply, fix-issue.md in a worktree, approved PR' },
     { title: 'Backport', detail: 'backport-pr.md per supported line once the main PR merges, plus the upgrade-note sync' },
-    { title: 'CVE', detail: 'draft-cve.md once the CVE is reserved and the fix is merged' },
+    { title: 'CVE', detail: 'draft-cve.md once the CVE is reserved and the fixed versions are released' },
     { title: 'Persist', detail: 'node files, decisions.json, STATUS.md, mail-archive state' },
   ],
 }
@@ -23,7 +23,8 @@ export const meta = {
 //      |                      G approve=issue --> issue --> fix (local) --> G approve=pr --> PR
 //      |                      G merge (human review) --> backports (local) --> G approve=backports --> PRs
 //      |                                                 --> upgrade-note sync on the default branch --> PR
-//      |                      cve + merge --> cve draft --> G CNA import, signing, advisory (maintainer)
+//      |                      cve + fixed versions released --> cve draft (local, or a private draft repository)
+//      |                                                        --> G CNA import, signing, publication PR (maintainer)
 //      +-- HARDENING ........ same issue/fix/backport path, no CVE; the final reply cites the issue
 //      +-- DEFENSE_IN_DEPTH . as HARDENING, default branch only unless targets= says otherwise
 //      +-- INVALID, DUPLICATE  final reply --> G send
@@ -159,6 +160,7 @@ const LOAD_SCHEMA = {
         cveCandidates: { type: 'array', items: OBJ },
         archiveNewest: STR,
         replyEvidence: { type: 'array', items: OBJ },
+        releases: OBJ,
       },
     },
   },
@@ -397,6 +399,19 @@ function mainPrState(s) {
   const rel = ((s.live && s.live.relatedPrs) || []).find(p => p.number === pr)
   return rel ? rel.state : (s.live.mainPr && s.live.mainPr.state) || null
 }
+// The fixed versions (the default branch and every backport line) that are not released yet; null when they are
+// unknown. A backport's own fixVersion wins over the triage's, because a release cut can move it to the next patch.
+function unreleased(s) {
+  const byLine = (s.nodes.triage || {}).fixVersionsByLine || {}
+  const versions = [byLine.main || byLine[s.config.defaultBranch]].concat(targetsOf(s).map(l => {
+    const b = s.nodes['backport_' + l]
+    return (b && b.fixVersion) || byLine[l]
+  })).filter(Boolean)
+  if (!versions.length) return null
+  const released = (s.live && s.live.releases) || {}
+  return Array.from(new Set(versions)).filter(v => released[v] !== true)
+}
+
 function fixVersionsFor(s, verdict) {
   const byLine = (s.nodes.triage || {}).fixVersionsByLine || {}
   const P = POLICY[verdict]
@@ -513,6 +528,7 @@ function loadPrompt(a) {
    - The main PR number is ${a.decision && a.decision.pr ? a.decision.pr : 'decisions.decisions.pr, else nodes.fix.pr'}. If there is one: gh pr view <n> --repo <repo> --json number,state,isDraft,mergedAt,mergeCommit,url,reviewDecision -> live.mainPr.
    - The issue is ${a.decision && a.decision.issue ? a.decision.issue : 'decisions.decisions.issue, else nodes.issue.key'}. If there is one: its status, assignee and fix versions (Jira: one GET of /rest/api/2/issue/<key>?fields=status,assignee,fixVersions; GitHub: gh issue view <n> --repo <repo> --json state,assignees,milestone) -> live.issue; and every PR that names it, including backports opened by others: gh pr list --repo <repo> --state all --search "<the issue key, or the main PR number for GitHub>" --json number,title,state,baseRefName,headRefName,author,url -> live.relatedPrs.
    - With a mail archive: live.archiveNewest = the date of the newest message it holds (from its status tool, if it has one); live.replyEvidence = messages in the case threads sent by the maintainer (git config user.email, or another address the operator preferences give) after the report: {date, threadId, firstLine}. When the verdict (decisions.decisions.verdict${a.decision && a.decision.verdict ? ' = ' + a.decision.verdict : ''}, else nodes.triage.recommendedVerdict) is VALID and no CVE id is decided${a.decision && a.decision.cve ? ' (one is: skip this)' : ''}, live.cveCandidates: if the project's CNA announces reservations on a list the archive holds (the operator preferences say how to recognize them), the reservations newer than the report whose title matches nodes.triage.suggestedCveTitle: {cve, titlePrefix, date, threadId}.
+   - live.releases, only when a CVE id is decided (decisions.decisions.cve${a.decision && a.decision.cve ? ' = ' + a.decision.cve : ''}): for each version in nodes.triage.fixVersionsByLine and each nodes.backport_<line>.fixVersion, whether it is released to the project's distribution channel. If project-security.md says how releases are checked, follow it. Otherwise: for a Maven project, the POM of its main artifact answers 200 on Maven Central (https://repo1.maven.org/maven2/<group path>/<artifact>/<version>/<artifact>-<version>.pom); for npm, npm view <package>@<version> version prints it; for PyPI, https://pypi.org/pypi/<package>/<version>/json answers 200; for crates.io, https://crates.io/api/v1/crates/<crate>/<version> answers 200; else a published (not draft) GitHub release exists for the version's tag. A git tag alone is not a release. Return {"<version>": true|false}.
 Return the structured result, with decisionsFile = the content of decisions.json.`
 }
 
@@ -779,10 +795,11 @@ Arguments for the guideline:
 - template=${template ? template + ' (the maintainer configured it, so fetching it needs no further confirmation)' : '<none configured>: look at the operator preferences for a template; if none is given, stop with status "blocked" and blockedReason "template: pass template=<url or path>"'}
 - triage_ref=${s.caseDir}/triage.md, fix_pr=${pr}
 - backup_repo: as the guideline resolves it (OSS_CVE_BACKUP_REPO). Its privacy gate is mandatory. Make any clone of it under ${s.caseDir}/cve/ and delete the clone afterwards.
+Where the drafts go: they are written to ${s.caseDir}/cve/ and stay there. When a private draft repository is configured (the backup_repo above) and its privacy gate confirms it is private, they are also archived there, and archived=true. With none configured, they stay local only, and archived=false. Never push them to any other remote, and never open a pull request with them: signing the advisory and opening the publication PR are the maintainer's steps.
 Overrides:
 - Step 4: do not wait for the skeleton to be confirmed; put it in the checklist.
 - Steps 6 and 7: write the files to ${s.caseDir}/cve/, not to a repository root.${c.cveRecordsDir ? ' Then copy ' + d.cve + '.cve5.json to ' + c.cveRecordsDir + '/.' : ''}
-- Versions: start from the triage's ranges and fix versions. A version counts as fixed only if it is released to the project's distribution channel (for example Maven Central, npm, PyPI or crates.io; a git tag alone is not a release) and contains the fix commit (gh api compare). Keep a TODO marker for anything not released yet.
+- Versions: this node runs only after the fixed versions are released, so "Versions fixed" should be final. Start from the triage's ranges and fix versions (a backport's own fixVersion wins). A version counts as fixed only if it is released to the project's distribution channel (for example Maven Central, npm, PyPI or crates.io; a git tag alone is not a release) and contains the fix commit (gh api compare). Keep a TODO marker for anything not released yet.
 - Credit: ${JSON.stringify(d.credit || (s.nodes.triage || {}).credit || 'TODO: ask the maintainer')}.
 - Do not sign, publish, open PRs, touch the publication repository${sec.publicationLocation ? ' (' + sec.publicationLocation + ')' : ''}, or drive the CNA tool.
 - Write ${s.caseDir}/cve/CHECKLIST.md: the step 8 checklist, the JSON blocks you omitted and why, the template skeleton, and the remaining TODOs.
@@ -930,14 +947,18 @@ function plan(s, fresh) {
     }
   } else if (P.fix && model === 'public' && pr && (ti.targets.length || ti.unknown)) info.push('The backports start once the main PR is merged.')
 
-  // CVE draft.
+  // CVE draft: only once the fixed versions are released, not at the merge. Signing the advisory and opening the
+  // publication PR follow it, and stay with the maintainer.
   if (V === 'VALID' && cve) {
-    if (!pr || !merged) info.push('The CVE draft starts once the fix is merged.')
+    const pending = unreleased(s)
+    if (!pr || !merged) info.push('The CVE draft, its signing and the publication PR come after the fixed versions are released.')
+    else if (pending === null && !dn.release) gates.push(gate('release', 'The fixed versions are unknown, so their release cannot be checked. The CVE draft, its signing and the publication PR come after the release.', 'done=release once every fixed version is released'))
+    else if (pending && pending.length && !dn.release) gates.push(gate('release', `The CVE draft, its signing and the publication PR wait for the release of ${pending.join(', ')}.`, 'wait for the release, then run again (or done=release)'))
     else {
       const cd = n.cveDraft
       if (!cd || cd.forCve !== cve || o.redraftCve || (cd.status === 'blocked' && o.retry)) ready.push('cveDraft')
       else if (cd.status === 'blocked') gates.push(gate('cve-draft-blocked', `The CVE draft is blocked: ${oneLine(cd.blockedReason)}.`, /template/.test(cd.blockedReason || '') ? 'template=<url or path>, then retry' : 'retry'))
-      else gates.push(gate('cve-record', `Work through cve/CHECKLIST.md, load cve/${cve}.cve5.json into ${sec.cna ? 'the CNA tool of ' + sec.cna : 'your CNA tool'}, sign the advisory text${sec.signing ? ' (' + oneLine(sec.signing) + ')' : ''}, and publish it${sec.publicationLocation ? ' at ' + sec.publicationLocation : ''} once the fixed versions are released. Then send the reporter the final notice and remove the case worktrees.`, 'redraft-cve after the release, to refresh "Versions fixed"'))
+      else gates.push(gate('cve-record', `The fixed versions are released, and the drafts are in cve/${cd.archived ? ' and in the private draft repository' : ' (local only)'}. Work through cve/CHECKLIST.md, load cve/${cve}.cve5.json into ${sec.cna ? 'the CNA tool of ' + sec.cna : 'your CNA tool'}, sign the advisory text${sec.signing ? ' (' + oneLine(sec.signing) + ')' : ''}, and open the publication PR${sec.publicationLocation ? ' for ' + sec.publicationLocation : ''} yourself. Then send the reporter the final notice and remove the case worktrees.`, 'redraft-cve to refresh the draft'))
     }
   }
 
@@ -1090,7 +1111,7 @@ function renderStatus(s, p, ran) {
     if (b) L.push(`- Backport ${line}: ${b.status}${b.pr ? ' #' + b.pr : ''}${b.straight === false ? ' (adapted)' : ''}`)
   }
   if (n.docSync) L.push(`- Upgrade-note sync: ${n.docSync.status}${n.docSync.pr ? ' #' + n.docSync.pr : ''}`)
-  if (n.cveDraft) L.push(`- CVE draft: ${n.cveDraft.status}${n.cveDraft.archived ? ', archived to the private backup repo' : ''}`)
+  if (n.cveDraft) L.push(`- CVE draft: ${n.cveDraft.status}, ${n.cveDraft.archived ? 'stored in cve/ and archived to the private draft repository' : 'stored locally in cve/ only'}`)
   if (!(c.security || {}).present) L.push('- project-security.md: not found, so the CNA, advisory template and supported lines come from your decisions')
   if (live.archiveNewest) L.push(`- Mail archive, newest message: ${live.archiveNewest}`)
   if ((live.replyEvidence || []).length) L.push(`- Maintainer replies seen in the archive: ${live.replyEvidence.map(x => x.date).join(', ')}`)
@@ -1155,7 +1176,7 @@ function validateArgs(a) {
     else for (const b of d.backportTargets) if (!/^[A-Za-z0-9._\/-]+$/.test(b)) problems.push(`${b} is not a branch name`)
   }
   for (const k of Object.keys(a.approve || {})) if (['issue', 'pr', 'backports'].indexOf(k) < 0) problems.push(`unknown approval ${k} (issue, pr, backports)`)
-  for (const k of Object.keys(a.done || {})) if (['reply'].indexOf(k) < 0) problems.push(`unknown done flag ${k} (reply)`)
+  for (const k of Object.keys(a.done || {})) if (['reply', 'release'].indexOf(k) < 0) problems.push(`unknown done flag ${k} (reply, release)`)
   if (a.report !== undefined && !/^\//.test(String(a.report))) problems.push('report must be an absolute file path')
   if (a.repo !== undefined && !/^\//.test(String(a.repo))) problems.push('repo must be an absolute path')
   for (const tid of threadList(a)) if (!/^[^\s,]{1,200}$/.test(tid)) problems.push(`${tid} does not look like a mail-archive thread id`)

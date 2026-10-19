@@ -189,6 +189,10 @@ backport PR 42 to the release/1.x branch
 /oss-security-case xml-entities verdict=VALID approve=issue
 /oss-security-case xml-entities cve=CVE-2026-12345 approve=pr
 /oss-security-case xml-entities done=reply approve=backports
+
+# Once every fixed version is released, the next run drafts the advisory and the CVE record,
+# kept in the case directory and archived only to your private draft repository, if you set one:
+/oss-security-case xml-entities
 ```
 
 Every run leaves a `STATUS.md` in the private case directory listing what is done, what waits on you, and the next command. Nothing is sent, reserved, merged, signed or published by the agent: those stay maintainer actions. The project's `project-security.md` supplies the CNA, the advisory template and the supported lines; see `skills/oss-security/security-case.md` for the other settings.

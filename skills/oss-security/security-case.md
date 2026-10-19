@@ -4,7 +4,7 @@
 /oss-security-case <case> [report=<file>] [threads=<thread-id,...>]
     [verdict=VALID|HARDENING|DEFENSE_IN_DEPTH|INVALID|DUPLICATE] [cve=<CVE-ID>] [issue=<key or number>] [pr=<number>]
     [credit="<name>"] [targets=<branch,...>|none] [fix-model=public|ghsa] [template=<url|path>]
-    [approve=issue,pr,backports] [done=reply] [public] [retry] [retriage] [redraft-cve] [no-challenge]
+    [approve=issue,pr,backports] [done=reply,release] [public] [retry] [retriage] [redraft-cve] [no-challenge]
     [stop-after=<node>] [status|plan]
 ```
 
@@ -14,6 +14,7 @@
 - `verdict=`, `cve=`, `issue=`, `pr=`, `credit=`, `targets=`, `fix-model=` and `template=` - maintainer decisions. They are sticky: the case remembers them.
 - `approve=` - lets this run publish what the maintainer has reviewed: `issue` (create the sanitized issue), `pr` (push and open the fix PR), `backports` (push and open the backport and upgrade-note PRs). An approval counts for one run only, and never for a draft or branch produced in that same run.
 - `done=reply` - the maintainer has sent the reply to the reporter.
+- `done=release` - every fixed version is released. Each run checks this by itself (step 5); use the flag only when that check cannot see the versions.
 - `public` - the report is already public. `retry` reruns blocked or failed nodes, `retriage` triages again from scratch, `redraft-cve` refreshes the CVE draft (for example after the release), `no-challenge` skips the verdict challenge, `stop-after=<node>` ends the run after that node.
 - `status` refreshes `STATUS.md` without running nodes. `plan` tests the routing without agents (workflow mode only).
 
@@ -29,11 +30,14 @@ triage --> verdict challenge (scope lens, code lens) + drafts: reply, CVE fields
    |                       [approve=issue] --> issue --> fix in a worktree (local commit)
    |                       [approve=pr] --> PR --> [human review and merge] --> backports (local)
    |                       [approve=backports] --> backport PRs --> upgrade-note sync PR on the default branch
-   |                       CVE reserved + fix merged --> CVE draft --> [CNA import, signing, advisory]
+   |                       CVE reserved + fixed versions released --> CVE draft (local, or a private draft repository)
+   |                                                               --> [CNA import, signing, publication PR]
    +-- HARDENING ......... same issue, fix and backport path, no CVE; the reply cites the issue
    +-- DEFENSE_IN_DEPTH .. as HARDENING, default branch only unless targets= says otherwise
    +-- INVALID, DUPLICATE  final reply --> [maintainer sends it]
 ```
+
+The CVE draft waits for the release, not for the merge. The advisory states the fixed versions and is signed and published with them, so it is drafted only once every fixed version is released: a release can be cut before the fix lands, which moves it to the next patch, and a tag is not a release. The drafts stay in the case directory, and also go to a private draft repository when one is configured. They go nowhere else; signing the advisory and opening the publication PR stay with the maintainer.
 
 A VALID fix follows the project's fix model. With `public`, a neutral public issue and PR carry the fix before disclosure; projects that coordinate privately, for example on a security mailing list, and fix in the open work this way. With `ghsa`, a private GitHub security advisory and its temporary fork carry it, so the graph hands the fix to the security-advisory guideline (`create-security-advisory.md`) and keeps its own issue, fix and backport nodes off.
 
@@ -57,7 +61,7 @@ Map the command arguments onto the workflow's `args`:
 | `targets=a,b` / `targets=none` | `decision.backportTargets: ["a", "b"]` / `[]` |
 | `fix-model=` | `decision.fixModel` |
 | `approve=issue,pr,backports` | `approve: {issue: true, pr: true, backports: true}` |
-| `done=reply` | `done: {reply: true}` |
+| `done=reply`, `done=release`, `done=reply,release` | `done: {reply: true}`, `done: {release: true}`, both |
 | `public` | `public: true` |
 | `retry`, `retriage`, `redraft-cve`, `no-challenge`, `stop-after=<node>` | `options: {retry, retriage, redraftCve, challenge: false, stopAfter}` |
 | `status`, `plan` | `mode: "status"`, `mode: "plan"` |
@@ -100,11 +104,12 @@ Read `STATUS.md`, `decisions.json` and `nodes/*.json` in the case directory. The
 | **gate: merge** | PR open | human review and merge | merged PR |
 | backports | PR merged | the backport guideline (`backport-pr.md`), one worktree per supported line, one build at a time | local branches, then PRs once approved |
 | upgrade-note sync | backports open, and the project keeps upgrade notes on the default branch | add the per-line notes on the default branch | PR, after the backport PRs |
-| CVE draft | VALID, CVE reserved, fix merged | the CVE-draft guideline (`draft-cve.md`), output in `cve/` | advisory page, signing plaintext, CVE5 JSON, `cve/CHECKLIST.md` |
+| **gate: release** | fix merged | every fixed version (default branch and each supported line) released to the project's distribution channel | released versions |
+| CVE draft | VALID, CVE reserved, fixed versions released | the CVE-draft guideline (`draft-cve.md`), output in `cve/`, archived only to a verified-private draft repository when one is configured | advisory page, signing plaintext, CVE5 JSON, `cve/CHECKLIST.md` |
 
 #### 4.2 Stop at every gate
 
-Stop and hand over to the maintainer at each gate: the verdict, the CVE reservation, every publication (issue, PR, backports), sending the reply, the merge, and the final CNA import, signing and advisory publication. Before any publication, show the maintainer the exact text and the result of the lint in step 6, and wait for their approval in the conversation.
+Stop and hand over to the maintainer at each gate: the verdict, the CVE reservation, every publication (issue, PR, backports), sending the reply, the merge, the release of the fixed versions (the CVE draft starts only after it), and the final CNA import, signing and publication PR. Before any publication, show the maintainer the exact text and the result of the lint in step 6, and wait for their approval in the conversation.
 
 #### 4.3 Keep the case current
 
@@ -128,7 +133,7 @@ The case keeps no configuration of its own. Every run resolves it again from the
 | `OSS_SECURITY_NOTES_DIR` | _(none)_ | A directory of Markdown notes the triage searches for earlier reports and rulings |
 | `OSS_CVE_RECORDS_DIR` | _(none)_ | Where to copy the drafted CVE5 JSON as well |
 | `OSS_JIRA_USER` | the Jira user of `$JIRA_TOKEN` | Assignee for a Jira issue |
-| `OSS_CVE_BACKUP_REPO` | _(none)_ | Private archive repository of the CVE-draft guideline (`draft-cve.md`) |
+| `OSS_CVE_BACKUP_REPO` | _(none)_ | The private draft repository: the CVE drafts are archived there, after the CVE-draft guideline (`draft-cve.md`) verifies it is private. Unset, the drafts stay local in the case directory only. |
 
 - **Operator preferences**: a free-text Markdown file, given verbatim to every node, for habits that belong to the maintainer rather than the project. It is also where a maintainer names a mail archive: an MCP server that reads the project's private security list, which the workflow then uses to fetch report threads, check for earlier replies and record the ruling. For example:
 
@@ -158,6 +163,7 @@ You MUST:
 - Name only published CVEs in anything a reporter or the public reads.
 - Push to the fork remote, and recount any PR-volume cap from the project's agent instructions right before opening each PR.
 - Hold backports until the main PR is merged, and check for backport PRs opened by others before preparing one.
+- Draft the CVE advisory only after every fixed version is released, keep the drafts in the case directory, and archive them only to a configured draft repository verified as private.
 
 You MUST NOT:
 
@@ -165,6 +171,7 @@ You MUST NOT:
 - Put exploit details, the reporter's identity, CVE identifiers or security wording into public text before disclosure.
 - Tell the reporter about sibling findings, unpublished CVEs or other embargoed reports.
 - Write report material to temporary directories, a session scratchpad, or a public repository.
+- Draft the CVE advisory before every fixed version is released, push the drafts anywhere but a verified-private draft repository, or open a pull request with them.
 - Retry or reshape an issue-tracker write, push or PR that the permission system refused. Hand the prepared script to the maintainer instead.
 - Run reproducers that perform the reported attack, or stand up attacker-controlled endpoints.
 - Guess configuration that the project rules do not give (supported lines, CNA, template, fix model). Ask the maintainer instead.
