@@ -228,6 +228,24 @@ function makeSim(rec, config) {
   check(r.ran.length === 0 && gateIds(r).length === 0, 'INVALID: nothing left after the reply is sent')
 }
 
+// ---- Retriage: the persist step keeps what the run produced again ----------------------------
+{
+  console.log('\nRetriage')
+  const triageNodes = ['triage', 'challengeScope', 'challengeCode', 'draftReply', 'draftCve', 'draftIssue']
+  const removeOf = p => JSON.parse(p.split('REMOVE = ')[1].split('\n\nDECISIONS = ')[0])
+  let { sim, disk, runIt } = makeSim('VALID', JIRA_PROJECT)
+  await runIt({ report: '/tmp/report.txt' })
+  let r = await runIt({ options: { retriage: true } })
+  check(triageNodes.every(x => r.ran.includes(x)), 'a retriage runs the triage, both lenses and the drafts again')
+  check(removeOf(sim.prompts.persist).length === 0, 'nothing the run produced again is in REMOVE: ' + JSON.stringify(removeOf(sim.prompts.persist)))
+  check(triageNodes.every(x => disk.nodes[x]), 'the fresh results are on disk after the persist step (write, then delete)')
+  ;({ sim, disk, runIt } = makeSim('VALID', JIRA_PROJECT))
+  await runIt({ report: '/tmp/report.txt' })
+  r = await runIt({ options: { retriage: true, stopAfter: 'triage' } })
+  check(r.ran.join() === 'triage' && removeOf(sim.prompts.persist).join() === triageNodes.slice(1).join(), 'stop-after=triage: the dropped nodes that did not run again are deleted')
+  check(disk.nodes.triage && !disk.nodes.challengeScope && !disk.nodes.draftIssue, 'stop-after=triage: only the fresh triage is left of the dropped nodes')
+}
+
 // ---- Argument validation and plan mode ------------------------------------------------------
 {
   console.log('\nArguments and plan mode')
