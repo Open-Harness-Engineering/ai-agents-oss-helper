@@ -1339,7 +1339,8 @@ const changed = {}
 run.fresh.forEach(id => { changed[id] = s.nodes[id] })
 const persisted = await agent(persistPrompt(s, {
   nodes: changed,
-  remove: removed,
+  // A node the retriage dropped and this run produced again is rewritten, not deleted.
+  remove: removed.filter(k => !(k in changed)),
   decisions: { decisions: s.decisions, done: s.done, options: { public: s.options.public }, mirrored: s.mirrored, history: s.history },
   log: run.log,
   status,
