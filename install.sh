@@ -97,6 +97,7 @@ get_skill_files() {
                 skills/oss-security/SKILL.md
                 skills/oss-security/triage-security-report.md
                 skills/oss-security/security-case.md
+                skills/oss-security/security-case-probe.sh
                 skills/oss-security/analyze-third-party-cve.md
                 skills/oss-security/draft-cve.md
                 skills/oss-security/create-security-advisory.md

@@ -197,6 +197,8 @@ backport PR 42 to the release/1.x branch
 
 Every run leaves a `STATUS.md` in the private case directory listing what is done, what waits on you, and the next command. Nothing is sent, reserved, merged, signed or published by the agent: those stay maintainer actions. The project's `project-security.md` supplies the CNA, the advisory template and the supported lines; see `skills/oss-security/security-case.md` for the other settings.
 
+Each node is a separate subagent. The mechanical ones (the loader, the persistence step, the issue creation, the final reply and the PR publishing) run on cheaper models; pass `economy=off` to run everything on the session model. The loader starts from `security-case-probe.sh`, a read-only script installed with the skill that prints the clone facts, the rule files, the environment, the operator preferences and the case files; run it by hand to see what the workflow will read.
+
 ### Install Project Rules
 
 ```text
@@ -285,6 +287,7 @@ ai-agents-oss-helper/
     │   ├── SKILL.md
     │   ├── triage-security-report.md      # Triage security report
     │   ├── security-case.md               # Drive a security report end to end
+    │   ├── security-case-probe.sh         # Read-only probe run by the workflow's loader
     │   ├── analyze-third-party-cve.md     # Analyze third-party CVE
     │   ├── draft-cve.md                   # Draft CVE advisory
     │   ├── create-security-advisory.md    # Create security advisory

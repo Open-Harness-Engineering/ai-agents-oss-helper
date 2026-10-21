@@ -27,6 +27,19 @@ done
 cmp "$repo_root/skills/oss-security/security-case.md" "$test_home/.claude/skills/oss-security/security-case.md"
 grep -Fq 'security-case.md' "$test_home/.claude/commands/oss-security-case.md"
 
+# The loader's probe ships with the skill, parses, and runs read-only against any clone (gh may be absent).
+probe="$test_home/.claude/skills/oss-security/security-case-probe.sh"
+cmp "$repo_root/skills/oss-security/security-case-probe.sh" "$probe"
+bash -n "$probe"
+env -i HOME="$test_home" PATH="$PATH" bash "$probe" demo-case "$repo_root" > "$test_root/probe.out"
+grep -Fq "repoRoot: $repo_root" "$test_root/probe.out"
+grep -Fq "caseDir: $test_home/.oss-helper/security-cases/demo-case (does not exist yet)" "$test_root/probe.out"
+grep -Fq '=== end' "$test_root/probe.out"
+if env -i HOME="$test_home" PATH="$PATH" bash "$probe" > /dev/null 2>&1; then
+    echo 'FAIL: the probe accepted a missing case slug' >&2
+    exit 1
+fi
+
 # Bob gets the guideline and its command, but no workflow.
 HOME="$test_home" bash "$repo_root/install.sh" bob > "$test_root/install-bob.log"
 [[ -f "$test_home/.bob/skills/oss-security/security-case.md" ]]
