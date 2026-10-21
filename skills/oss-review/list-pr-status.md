@@ -1,3 +1,15 @@
+### Fast path: the script
+
+`pr-report.sh`, installed next to this guideline, does steps 1-5 in one `gh` call: it lists your open PRs with their check runs and mergeability, classifies the CI state and the review decision, and prints the summary table and the "Needs Attention" groups:
+
+```bash
+bash <directory of this guideline>/pr-report.sh mine --repo <GITHUB_REPO>
+```
+
+Present its output as it is and continue with step 6. When the script is missing or prints `ERROR`, follow steps 1-5 by hand.
+
+**Repeated runs.** When this guideline runs on a loop or a schedule, add `--state ~/.local/state/oss-helper/pr-report/<org>__<repo>-mine.txt`. When the script prints `UNCHANGED since <time>`, reply with that one line and stop. To wait for a change without running the guideline at all, start `pr-report.sh watch mine --repo <GITHUB_REPO>` with the same `--state` file in the background (in Claude Code, a background Bash command): it polls every 5 minutes and exits, printing the new report, only when something changed.
+
 ### 1. Determine Current User
 
 Get the authenticated GitHub user:
@@ -11,21 +23,17 @@ gh api user --jq '.login'
 Fetch all open PRs authored by the current user in the project's repository:
 
 ```bash
-gh pr list --repo <GITHUB_REPO> --author @me --state open --json number,title,headRefName,baseRefName,isDraft,createdAt,updatedAt,reviewDecision
+gh pr list --repo <GITHUB_REPO> --author @me --state open --json number,title,headRefName,baseRefName,isDraft,createdAt,updatedAt,reviewDecision,mergeable,statusCheckRollup
 ```
+
+`statusCheckRollup` holds every PR's check runs and `mergeable` its conflict state (`CONFLICTING` means merge conflicts), so step 3 needs no further calls.
 
 If no open PRs are found, inform the user:
 > No open pull requests found for your account in this repository.
 
-### 3. Retrieve CI Status for Each PR
+### 3. Classify CI Status for Each PR
 
-For each open PR, fetch the CI check summary:
-
-```bash
-gh pr checks <PR_NUMBER> --repo <GITHUB_REPO>
-```
-
-Classify the overall CI status as:
+From each PR's `statusCheckRollup` (when a check was re-run, use its latest run), classify the overall CI status as:
 
 - **passing** - All checks passed
 - **failing** - One or more checks failed

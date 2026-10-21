@@ -7,6 +7,7 @@ on:
     paths:
       - "workflows/**"
       - "tests/**"
+      - "skills/**/*.sh"
       - "install.sh"
       - "scripts/test-claude-workflow-install.sh"
       - ".github/workflows/workflow-tests.yml"
@@ -25,3 +26,5 @@ jobs:
         run: node tests/workflows/oss-security-case.test.mjs
       - name: Check the Claude workflow install
         run: bash scripts/test-claude-workflow-install.sh
+      - name: Test the helper scripts (stand-in gh)
+        run: bash scripts/test-helper-scripts.sh

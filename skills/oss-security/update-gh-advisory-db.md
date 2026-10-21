@@ -110,10 +110,16 @@ that already has an open PR, whoever opened it.** Re-run the index after filing 
 appear in between, and a duplicate must then be closed with a comment pointing at the earlier PR.
 
 Also drop any CVE listed in `skip_cves_apache_unmappable.txt` (next to this file) — those are
-already-proven dead ends. **And when you judge a candidate unmappable, append it to that file with
-its reason in the same session.** A verdict you keep only in your head is invisible to the next
+already-proven dead ends. Do not read the list itself (over 700 entries): pipe the candidate rows
+through `bash <directory of this guideline>/skip-list.sh filter`, which prints the rows whose CVE is
+not listed and, on stderr, how many it dropped. **And when you judge a candidate unmappable, add it
+with its reason in the same session:** `bash <directory of this guideline>/skip-list.sh add <CVE-ID>
+"<reason>"`. A verdict you keep only in your head is invisible to the next
 sweep: parking ~150 "unmappable" items without recording them is what grew a 385-advisory backlog,
-and the first sweep after that re-derived 182 of them from scratch.
+and the first sweep after that re-derived 182 of them from scratch. The installed list is replaced on
+every install, so also add the new entries to `skills/oss-security/skip_cves_apache_unmappable.txt`
+in the helper's repository (a quick-fix PR), or run the script with `--list` pointing at that file in
+a checkout.
 
 Skip categories worth recognising, beyond "the project is C/C++/Lua with no registry":
 
@@ -225,7 +231,7 @@ that component's artifact: Struts JSON-plugin bulletins -> `struts2-json-plugin`
 its own fix PR (InLong does), the modules that PR touches are the authoritative artifact list.
 
 **No mappable package is a valid outcome.** Skip, and add the CVE to
-`skip_cves_apache_unmappable.txt` with the reason, when the affected code is a C/C++/c_glib/Swift
+`skip_cves_apache_unmappable.txt` with the reason (`skip-list.sh add`), when the affected code is a C/C++/c_glib/Swift
 binding with no package-manager distribution, the project publishes nothing to a package registry
 (OFBiz, Fineract), the vulnerable module is unpublished (OpenMeetings' web module), the project is
 retired with no fix (Shindig), the "fix" is documentation only (Kafka CVE-2026-41115), or the
