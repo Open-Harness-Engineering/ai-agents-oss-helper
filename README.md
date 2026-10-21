@@ -226,6 +226,8 @@ The default source is [`Open-Harness-Engineering/ai-agents-oss-known-projects`](
 
 Installed as 6 user-invocable skills at `~/.{agent}/skills/oss-{issues,review,ci,security,project,qe}/` plus individual `/oss-*` commands in `~/.{agent}/commands/`. You can either describe what you want in natural language (the agent matches it to a skill automatically), invoke a skill group (e.g. `/oss-issues`), or invoke a specific command directly (e.g. `/oss-fix-issue 42`).
 
+In Claude Code the individual commands are installed with `disable-model-invocation: true`: you type them, but their descriptions stay out of the model's context in every session. Requests in natural language reach the same guidelines through the skill groups. The sub-agent descriptions are kept to a sentence or two for the same reason, since Claude Code lists them in every session too.
+
 For Claude only, the installer also copies the workflows in `workflows/` to `~/.claude/workflows/`. These are scripts for Claude Code's Workflow tool, which runs the subagents of a multi-step guideline in the background. `/oss-security-case` uses one. Claude Code reads the directory when a session starts, so start a new session after installing. Bob installs the same guideline and follows it by hand.
 
 ### Gemini CLI
