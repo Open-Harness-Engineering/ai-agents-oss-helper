@@ -73,6 +73,7 @@ Installed rules are located under the agent's rules directory:
 - Gemini CLI: `~/.gemini/rules/`
 - OpenCode: `~/.config/opencode/rules/`
 - Codex: `~/.codex/oss-helper/rules/`
+- agy: `~/.agy/oss-helper/rules/`
 
 For Claude and Bob, when no rule set there matches, also check the old location, `~/.claude/rules/` or `~/.bob/rules/`: installs from before the move keep their rules there until `install.sh` runs again. Do not install anything into the old location. Claude Code loads every file under `~/.claude/rules/` into every session, which is why the rules moved.
 

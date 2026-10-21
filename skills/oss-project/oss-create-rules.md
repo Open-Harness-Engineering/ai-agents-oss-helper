@@ -73,7 +73,7 @@ List installed projects from the agent's rules directory:
 ls -d ~/.claude/oss-helper/rules/*/project-info.md 2>/dev/null | xargs -I{} dirname {} | xargs -I{} basename {}
 ```
 
-(Adjust the path for the current agent: `~/.bob/oss-helper/rules/`, `~/.gemini/rules/`, `~/.config/opencode/rules/`, `~/.codex/oss-helper/rules/`)
+(Adjust the path for the current agent: `~/.bob/oss-helper/rules/`, `~/.gemini/rules/`, `~/.config/opencode/rules/`, `~/.codex/oss-helper/rules/`, `~/.agy/oss-helper/rules/`)
 
 Present the list to the user:
 
@@ -257,6 +257,7 @@ Where `<RULES_DIR>` is the agent's rules directory:
 | Gemini CLI | `~/.gemini/rules/` |
 | OpenCode | `~/.config/opencode/rules/` |
 | Codex | `~/.codex/oss-helper/rules/` |
+| agy | `~/.agy/oss-helper/rules/` |
 
 And `<project-slug>` is derived from the repo name (e.g., `apache/camel-k` -> `camel-k`).
 

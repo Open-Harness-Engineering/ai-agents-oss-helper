@@ -77,4 +77,10 @@ if grep -l '^context: fork' "$test_home"/.bob/commands/*.md; then
     exit 1
 fi
 
-echo 'PASS: the Claude install ships the oss-security-case workflow, guideline and command; Bob gets no workflow'
+# agy gets the guideline and its command, but no workflow.
+HOME="$test_home" bash "$repo_root/install.sh" agy > "$test_root/install-agy.log"
+[[ -f "$test_home/.agy/skills/oss-security/security-case.md" ]]
+grep -Fq 'security-case.md' "$test_home/.agy/commands/oss-security-case.md"
+[[ ! -e "$test_home/.agy/workflows" ]]
+
+echo 'PASS: the Claude install ships the oss-security-case workflow, guideline and command; Bob and agy get no workflow'
