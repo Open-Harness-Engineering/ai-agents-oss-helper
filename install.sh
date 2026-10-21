@@ -448,6 +448,9 @@ convert_agent_to_codex_toml() {
 # Generate a thin command file for skill agents (Claude, Bob).
 # Claude has a native skill framework that resolves references automatically;
 # Bob does not, so its commands include explicit file paths instead.
+# Claude's wrappers are user-only (disable-model-invocation): Claude Code then keeps their
+# descriptions out of every session's context, and the model reaches the same guidelines through
+# the 6 skill groups. Typing /oss-<name> still works.
 generate_skill_agent_command() {
     local agent="$1"
     local skill_name="$2"
@@ -460,6 +463,9 @@ generate_skill_agent_command() {
 
     {
         printf -- "---\n"
+        if [[ "$agent" == "claude" ]]; then
+            printf 'disable-model-invocation: true\n'
+        fi
         printf 'description: "%s"\n' "$description"
         printf -- "---\n\n"
 
