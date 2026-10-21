@@ -20,6 +20,14 @@ gh api user --jq '.login'
 
 ### 3. List Open Pull Requests
 
+**With the script.** `pr-report.sh`, installed next to this guideline, makes the one `gh pr list` call described below and prints the numbered table of step 4, with the review decisions already mapped:
+
+```bash
+bash <directory of this guideline>/pr-report.sh list --repo <GITHUB_REPO> [--author <user>] [--label "<label>"] [--limit <N>] [--include-drafts] [--exclude-mine]
+```
+
+Pass only the arguments the user gave. Present its output as it is, then continue with step 5; step 2 is not needed, because the script lets GitHub resolve `@me`. When the script is missing or prints `ERROR`, build the call by hand as follows.
+
 Build a `gh pr list` invocation using the `--search` flag so multiple criteria can be combined. Always include `is:pr is:open` in the search.
 
 | Condition | Search fragment to add |
@@ -71,6 +79,10 @@ Map `reviewDecision` values to readable text:
 - `REVIEW_REQUIRED` -> `review required`
 - `null` / empty -> `none`
 
+#### Repeated runs
+
+When this guideline runs on a loop or a schedule, add `--state ~/.local/state/oss-helper/pr-report/<org>__<repo>-list.txt` to the script call. When it prints `UNCHANGED since <time>`, reply with that one line and stop. To wait for a change without running the guideline at all, start the same call as `pr-report.sh watch list ...` with the same `--state` file in the background (in Claude Code, a background Bash command): it polls every 5 minutes and exits, printing the new table, only when something changed.
+
 ### 5. Highlight Notable PRs (optional)
 
 If any PRs in the list look especially relevant for review, briefly call them out **after** the table — keep this short and only when it adds value:
@@ -113,7 +125,7 @@ You MUST NOT:
 - Fetch CI checks or detailed reviews for every PR (defer to the PR Status guideline (`pr-status.md`))
 - Submit a review on behalf of the user
 - List closed or merged PRs
-- Repeat the API call to refresh the list within the same invocation
+- Repeat the API call to refresh the list within the same invocation (the exception is `pr-report.sh watch`, which a loop set up by the user runs in the background and which polls every 5 minutes)
 
 ### 9. Acceptance Criteria
 

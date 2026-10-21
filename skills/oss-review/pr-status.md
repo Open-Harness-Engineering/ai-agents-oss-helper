@@ -13,6 +13,16 @@ Determine the pull request to inspect:
   If no PR is associated with the current branch, **STOP** and inform the user:
   > No pull request found for the current branch. Please provide a PR number or URL.
 
+### Fast path: the script
+
+`pr-report.sh`, installed next to this guideline, does steps 2-6 in one `gh pr view` call. It prints the status report of step 6 with the CI checks classified (latest run of each check), the latest review of each reviewer, the pending actions and the last five comments:
+
+```bash
+bash <directory of this guideline>/pr-report.sh status <PR_NUMBER> --repo <GITHUB_REPO>
+```
+
+Without a PR number it reports the PR of the current branch. Present its output, read the failing checks and the comments it shows, and continue with step 7. When the script is missing or prints `ERROR`, follow steps 2-6 by hand.
+
 ### 2. Retrieve PR Details
 
 Fetch the pull request metadata:

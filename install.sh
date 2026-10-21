@@ -20,6 +20,8 @@ AGENTS=("claude" "bob" "gemini" "opencode" "codex")
 
 # Shared initialization file (copied into each skill directory during install)
 SHARED_INIT="skills/_shared/init.md"
+# Its script: init.md steps 1-3 in one read-only call (copied next to init.md)
+SHARED_INIT_SCRIPT="skills/_shared/oss-init.sh"
 
 # Shared fragments referenced by guidelines as `_fragments/<name>`
 # (copied into each skill's _fragments/ directory during install)
@@ -81,6 +83,7 @@ get_skill_files() {
                 skills/oss-review/list-prs.md
                 skills/oss-review/merge-pr.md
                 skills/oss-review/backport-pr.md
+                skills/oss-review/pr-report.sh
             "
             ;;
         oss-ci)
@@ -98,6 +101,8 @@ get_skill_files() {
                 skills/oss-security/triage-security-report.md
                 skills/oss-security/security-case.md
                 skills/oss-security/security-case-probe.sh
+                skills/oss-security/skip-list.sh
+                skills/oss-security/skip_cves_apache_unmappable.txt
                 skills/oss-security/analyze-third-party-cve.md
                 skills/oss-security/draft-cve.md
                 skills/oss-security/create-security-advisory.md
@@ -579,6 +584,12 @@ install_skill_agent() {
             error "    Failed to install: init.md"
             return 1
         fi
+        if fetch_file "$SHARED_INIT_SCRIPT" "$target_dir/oss-init.sh"; then
+            info "    Installed: oss-init.sh (shared)"
+        else
+            error "    Failed to install: oss-init.sh"
+            return 1
+        fi
 
         # Copy shared fragments into each skill's _fragments/ directory
         if ! mkdir -p "$target_dir/_fragments"; then
@@ -906,6 +917,12 @@ install_codex() {
             info "    Installed: init.md (shared)"
         else
             error "    Failed to install: init.md"
+            return 1
+        fi
+        if fetch_file "$SHARED_INIT_SCRIPT" "$target_dir/oss-init.sh"; then
+            info "    Installed: oss-init.sh (shared)"
+        else
+            error "    Failed to install: oss-init.sh"
             return 1
         fi
 

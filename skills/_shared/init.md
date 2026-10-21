@@ -2,6 +2,22 @@
 
 Before following any guideline, always run these steps to detect the current project and load its configuration.
 
+## Fast path: the init script
+
+When you can run bash, run the script installed next to this file, from the repository you are working in:
+
+```bash
+bash <directory of this init.md>/oss-init.sh
+```
+
+It performs steps 1-3 below in one read-only call and prints three sections:
+
+- `=== project`: the repository root, and each remote with its `org/repo`.
+- `=== rules`: where the rules come from, `source: project-local ...` or `source: installed ...`, followed by the rule files themselves (use them from this output; do not read them again), or `source: NONE`.
+- `=== version`: the version check of step 3. `status: update-available` means: tell the user and ask before updating, as step 3.3 says. `up-to-date` and `skipped` need nothing.
+
+Use that output instead of running steps 1-3 by hand. With `source: NONE`, give the user the message at the end of step 2B and continue with step 2C. If the script is missing, or a value shows `ERROR`, work out that value with the manual steps below.
+
 ## 1. Detect Project
 
 Determine the current project by running:
