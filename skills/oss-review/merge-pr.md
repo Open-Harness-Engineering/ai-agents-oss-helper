@@ -8,6 +8,7 @@
   ```
 
 - If no PR is found, abort: "No pull request found for the current branch."
+- If the arguments include `resume`, follow the resume steps of `_fragments/_checkpoint.md` for `merge-pr-<number>`: run the pre-merge checks of step 2 again, since CI and reviews can change, and when they pass, ask again with the saved commit message (step 5).
 
 ### 2. Pre-merge Checks
 
@@ -104,6 +105,8 @@ Present the following for approval before proceeding:
 - Pre-merge check results (all passed)
 - The composed commit message
 - Merge strategy (squash)
+
+Before asking, save a checkpoint (`_fragments/_checkpoint.md`) named `merge-pr-<number>` with the PR's head SHA, the commit subject and body, and the merge command of step 6. Delete it once the merge is done.
 
 **Wait for explicit user approval.**
 

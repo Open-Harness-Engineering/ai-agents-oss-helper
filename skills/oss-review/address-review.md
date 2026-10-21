@@ -12,6 +12,7 @@ If you have access to agents specialized in **coding or implementation** (e.g., 
   ```
 
 - If no PR is found, abort: "No pull request found for the current branch."
+- If the arguments include `resume`, follow the resume steps of `_fragments/_checkpoint.md` for `address-review-<number>`. If review comments arrived after the checkpoint, run the guideline from step 2; otherwise ask again for approval of the saved plan and continue at step 6.
 
 ### 2. Gather Review Feedback
 
@@ -66,6 +67,8 @@ For each comment, show:
 - Comment text
 - Proposed action (fix, reply, or decline with reason)
 - Any git history context that informs the response
+
+Before asking, save the plan as a checkpoint (`_fragments/_checkpoint.md`) named `address-review-<number>`: the PR's head SHA and, for each unresolved comment, its id, reviewer, file and line, text, and proposed action. Delete it once the changes are pushed and the replies posted (step 10).
 
 **Wait for user approval before making changes.**
 

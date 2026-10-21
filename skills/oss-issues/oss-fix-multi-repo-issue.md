@@ -188,7 +188,7 @@ For each changed repository:
 1. Inspect `git status`.
 2. Include only files related to that repository's part of the fix.
 3. Use that repository's commit message format, referencing the canonical issue.
-4. Ask whether to sign the commit with `-S`, use `-s`, both, or neither.
+4. Sign the commit with `-S`, `-s`, both, or neither: the `sign=` argument, else the **Commit signing** preference, else ask (`_fragments/_operator-preferences.md`).
 5. Commit from the correct checkout or worktree path.
 
 Do not combine changes from different repositories into one commit.

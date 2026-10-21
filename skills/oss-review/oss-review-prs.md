@@ -15,6 +15,7 @@ Parse the optional arguments into local variables. Use these defaults when an ar
 | `include-drafts` | false (drafts are excluded) |
 | `post` | `ask` |
 | `auto-approve` | false (clean PRs are never auto-approved) |
+| `resume` | false (set it to submit the reviews that an earlier run saved at step 6) |
 
 ### 2. Determine the Current User
 
@@ -69,6 +70,8 @@ Before presenting, re-check the claims a posted review would stand on — curren
 Present all reviews locally, grouped by recommended event (`REQUEST_CHANGES`, then `COMMENT`, then `APPROVE`), each with a one-line verdict and its key findings. Note the skipped PRs (already-reviewed, drafts, DO-NOT-MERGE) and any batch-threshold confirmation.
 
 **Wait for approval before submitting anything to GitHub**, unless `post` was given a non-`ask` value (which pre-answers this). When asking, offer clear choices (e.g. post all / actionable only / pick / none, and whether to allow approvals).
+
+Before asking, save the batch as a checkpoint (`_fragments/_checkpoint.md`) named `review-prs`: for each PR, its head SHA, the event and the review body, each body in a file next to the checkpoint. With `resume`, follow the fragment's resume steps: drop and report every PR whose head SHA changed, ask again for the rest, and submit them as step 7 says. Delete the checkpoint after submitting.
 
 ### 7. Submit the Reviews
 

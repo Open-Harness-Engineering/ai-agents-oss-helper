@@ -186,7 +186,7 @@ Read branch naming and PR policy from the project's `project-guidelines.md`.
    - `Fix dependabot alert 18: bump jackson-databind to 2.15.4`
    - `Fix secret-scanning alert 7: remove leaked AWS access key`
 
-   **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
+   **Before committing**, determine whether to sign the commit with `-S` (GPG/SSH signature) and `-s` (Signed-off-by): the `sign=` argument, else the **Commit signing** preference, else ask the user (`_fragments/_operator-preferences.md`). Then run the appropriate command:
    - Both: `git commit -S -s -m "<COMMIT_MESSAGE>"`
    - `-S` only: `git commit -S -m "<COMMIT_MESSAGE>"`
    - `-s` only: `git commit -s -m "<COMMIT_MESSAGE>"`

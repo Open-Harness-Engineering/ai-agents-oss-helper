@@ -102,7 +102,7 @@ This step catches:
 - Downstream code generation (catalogs, DSL factories, metadata mirrors)
 - Integration issues between modules
 
-**Before running, ask the user** which build mode to use:
+**Determine the build mode:** the `build=` argument (`skip-tests` or `full`), else the **Reactor build** preference in the operator's preferences file (`_fragments/_operator-preferences.md`). With neither, **ask the user** which build mode to use:
 
 > Which build mode would you like to use for the full reactor build?
 >
@@ -116,7 +116,7 @@ This step catches:
 > - Command: `mvn clean install`
 > - Use when: You want comprehensive validation including integration tests
 
-**Wait for user's choice.** Do NOT pick a default silently.
+**When you ask, wait for the user's choice.** Do NOT pick a default silently: an argument or a preference is the user's choice, made in advance.
 
 **Then run the chosen command from the repository root:**
 
@@ -237,7 +237,7 @@ git status
 4. **Don't skip tests without justification** - Tests catch regressions
 5. **Respect module-specific build requirements** - Some projects require it for performance
 6. **Include regenerated artifacts in commits** - They're part of the change
-7. **Wait for user input on build mode** - Don't assume what the user wants
+7. **Never assume the build mode** - Use the argument or the preference the user set; otherwise ask and wait
 
 ## Version
 
