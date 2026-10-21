@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const src = readFileSync(join(root, 'workflows', 'oss-security-case.js'), 'utf8')
 const guideline = readFileSync(join(root, 'skills', 'oss-security', 'security-case.md'), 'utf8')
+const probe = readFileSync(join(root, 'skills', 'oss-security', 'security-case-probe.sh'), 'utf8')
+const installer = readFileSync(join(root, 'install.sh'), 'utf8')
 if (!/^export const meta = \{/.test(src)) throw new Error('the script must begin with export const meta')
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
 const wf = new AsyncFunction('agent', 'parallel', 'pipeline', 'phase', 'log', 'args', 'budget', 'workflow', src.replace(/^export const meta/m, 'const meta'))
@@ -35,11 +37,12 @@ const GITHUB_PROJECT = Object.assign({}, JIRA_PROJECT, {
 function makeSim(rec, config) {
   const caseDir = config.casesRoot + '/demo'
   const disk = { nodes: {}, decisions: {}, report: { subject: 'component: exception echoed', reporter: 'Jane Doe', reporterEmail: 'jane@example.org', via: 'security team', threads: config.mailArchive ? ['thread-0001'] : [] }, status: '' }
-  const sim = { rec, live: {}, active: { heavy: 0, publish: 0 }, maxActive: { heavy: 0, publish: 0 }, mirrors: [], prompts: {} }
+  const sim = { rec, live: {}, active: { heavy: 0, publish: 0 }, maxActive: { heavy: 0, publish: 0 }, mirrors: [], prompts: {}, opts: {} }
   const between = (p, a, b) => { const i = p.indexOf(a); const j = b ? p.indexOf(b, i + a.length) : p.length; return p.slice(i + a.length, j) }
   async function agent(prompt, opts) {
     const label = opts.label
     sim.prompts[label] = prompt
+    sim.opts[label] = opts
     const heavy = /^fix:(?!publish)/.test(label) || /^backport:[^:]+$/.test(label)
     const publish = /publish$/.test(label)
     const lane = heavy ? 'heavy' : publish ? 'publish' : null
@@ -95,6 +98,8 @@ function makeSim(rec, config) {
   const banned = /ponymail|apache|camel|cveprocess|vulnogram|\/home\/|\.claude\/projects/i
   check(!banned.test(src), 'the workflow names no local tool, local path or specific foundation')
   check(!banned.test(guideline), 'the guideline names no local tool, local path or specific foundation')
+  check(!banned.test(probe), 'the probe script names no local tool, local path or specific foundation')
+  check(installer.includes('skills/oss-security/security-case-probe.sh'), 'the installer ships the probe with the oss-security skill')
 }
 
 // ---- Jira project with project-security.md: the full VALID lifecycle -----------------------
@@ -110,17 +115,24 @@ function makeSim(rec, config) {
   check(r.next === '/oss-security-case demo verdict=VALID', 'next command proposes the recommended verdict: ' + r.next)
   check(/release-2\.x, release-1\.x/.test(sim.prompts.triage) && /cna\.example\.org/.test(sim.prompts['draft:cve-fields']), 'project-security.md lines and CNA reach the prompts')
   check(/read every case thread/.test(sim.prompts['draft:reply']), 'with a mail archive, the reply draft reads the case threads')
+  check(sim.opts.load.model === 'claude-sonnet-5-5' && sim.opts.persist.model === 'claude-haiku-5-5', 'the loader and the persistence step run on cheaper models')
+  check(sim.opts.triage.model === undefined && sim.opts['challenge:code'].model === undefined && sim.opts['draft:reply'].model === undefined, 'triage, the challenge lenses and the drafts keep the session model')
+  check(/security-case-probe\.sh demo /.test(sim.prompts.load), 'the loader starts from the probe script')
+  check(/slices of at most 240 seconds/.test(sim.prompts.triage), 'every node is told to keep tool calls under the cache TTL')
 
   r = await runIt({ decision: { verdict: 'VALID' }, approve: { issue: true } })
   check(r.ran.includes('issue') && r.ran.includes('fix'), 'run 2 creates the issue, then prepares the fix')
   check(/worktree add -b fix\/PROJ-123 /.test(sim.prompts['fix:PROJ-123']), 'the fix branch follows the project pattern')
   check(!r.ran.includes('reply'), 'the VALID reply waits for the CVE id')
+  check(sim.opts['fix:PROJ-123'].model === undefined && sim.opts['issue:create'].model === 'claude-sonnet-5-5', 'the fix keeps the session model; the issue creation runs on Sonnet')
+  check(/slices of at most 240 seconds, as the rules above say/.test(sim.prompts['fix:PROJ-123']), 'the fix node polls builds in slices under the cache TTL')
   check(gateIds(r).includes('cve') && gateIds(r).includes('approve-pr'), 'run 2 stops at the cve and approve-pr gates')
   check(sim.mirrors.join() === 'ACCEPTED', 'the ruling is recorded in the mail archive once, as ACCEPTED')
 
   r = await runIt({ decision: { cve: 'CVE-2026-11111' }, approve: { pr: true } })
   check(r.ran.includes('reply') && r.ran.includes('fix:publish'), 'run 3 finalizes the reply and opens the PR')
   check(/--head maintainer:fix\/PROJ-123/.test(sim.prompts['fix:publish']), 'the PR head points at the fork')
+  check(sim.opts['fix:publish'].model === 'claude-sonnet-5-5' && sim.opts['reply:final'].model === 'claude-sonnet-5-5', 'the publish node and the final reply run on Sonnet')
   check(gateIds(r).includes('send-reply') && gateIds(r).includes('merge'), 'run 3 waits for the reply to be sent and for the merge')
   check(disk.decisions.decisions.verdict === 'VALID' && disk.decisions.decisions.cve === 'CVE-2026-11111', 'decisions are sticky across runs')
   check(sim.mirrors.length === 1, 'no second record for the same ruling')
@@ -133,6 +145,7 @@ function makeSim(rec, config) {
   check(['backport_release-2.x', 'backport_release-1.x', 'docSync'].every(x => r.ran.includes(x)), 'after the merge: both backports and the note sync')
   check(!r.ran.includes('cveDraft') && gateIds(r).includes('release'), 'the CVE draft waits for the release, not for the merge')
   check(sim.maxActive.heavy === 1, 'build-heavy nodes never ran concurrently')
+  check(/polled in slices of at most 240 seconds/.test(sim.prompts['backport:release-1.x']) && sim.opts['backport:release-1.x'].model === undefined, 'backports poll builds in slices and keep the session model')
   check(gateIds(r).includes('approve-backports'), 'stops at approve-backports')
 
   r = await runIt({ approve: { backports: true } })
@@ -244,6 +257,16 @@ function makeSim(rec, config) {
   r = await runIt({ options: { retriage: true, stopAfter: 'triage' } })
   check(r.ran.join() === 'triage' && removeOf(sim.prompts.persist).join() === triageNodes.slice(1).join(), 'stop-after=triage: the dropped nodes that did not run again are deleted')
   check(disk.nodes.triage && !disk.nodes.challengeScope && !disk.nodes.draftIssue, 'stop-after=triage: only the fresh triage is left of the dropped nodes')
+}
+
+// ---- economy=off runs every node on the session model ---------------------------------------
+{
+  console.log('\neconomy=off')
+  const { sim, runIt } = makeSim('INVALID', JIRA_PROJECT)
+  let r = await runIt({ report: '/tmp/report.txt', options: { economy: false } })
+  check(r.ran.includes('triage') && sim.opts.load.model === undefined && sim.opts.persist.model === undefined, 'economy=off: the loader and the persistence step inherit the session model')
+  r = await runIt({ options: { economy: 'no' } })
+  check(r.error === 'invalid arguments', 'a non-boolean economy option is rejected before any agent runs')
 }
 
 // ---- Argument validation and plan mode ------------------------------------------------------

@@ -5,7 +5,7 @@
     [verdict=VALID|HARDENING|DEFENSE_IN_DEPTH|INVALID|DUPLICATE] [cve=<CVE-ID>] [issue=<key or number>] [pr=<number>]
     [credit="<name>"] [targets=<branch,...>|none] [fix-model=public|ghsa] [template=<url|path>]
     [approve=issue,pr,backports] [done=reply,release] [public] [retry] [retriage] [redraft-cve] [no-challenge]
-    [stop-after=<node>] [status|plan]
+    [economy=off] [stop-after=<node>] [status|plan]
 ```
 
 - `<case>` - a slug for the report (lowercase letters, digits and dashes, for example `xml-entities-source-body`). Required, positional. One case is one report.
@@ -16,6 +16,7 @@
 - `done=reply` - the maintainer has sent the reply to the reporter.
 - `done=release` - every fixed version is released. Each run checks this by itself (step 5); use the flag only when that check cannot see the versions.
 - `public` - the report is already public. `retry` reruns blocked or failed nodes, `retriage` triages again from scratch, `redraft-cve` refreshes the CVE draft (for example after the release), `no-challenge` skips the verdict challenge, `stop-after=<node>` ends the run after that node.
+- `economy=off` - run every node on the session model, for this run. By default the mechanical nodes (the loader, the persistence step, the issue creation, the final reply and the nodes that push and open PRs) run on cheaper models; triage, the challenge lenses, the drafts, the fix, the backports and the CVE draft always use the session model.
 - `status` refreshes `STATUS.md` without running nodes. `plan` tests the routing without agents (workflow mode only).
 
 ### 1. What this guideline does
@@ -64,6 +65,7 @@ Map the command arguments onto the workflow's `args`:
 | `done=reply`, `done=release`, `done=reply,release` | `done: {reply: true}`, `done: {release: true}`, both |
 | `public` | `public: true` |
 | `retry`, `retriage`, `redraft-cve`, `no-challenge`, `stop-after=<node>` | `options: {retry, retriage, redraftCve, challenge: false, stopAfter}` |
+| `economy=off` | `options: {economy: false}` |
 | `status`, `plan` | `mode: "status"`, `mode: "plan"` |
 
 Run the command from a clone of the project, or pass `repo=<absolute path>` as `args.repo`.
@@ -119,6 +121,7 @@ After each node, write its result to `nodes/<node>.json`, record maintainer deci
 
 The case keeps no configuration of its own. Every run resolves it again from these sources:
 
+- **The probe**: `security-case-probe.sh <case> [repo]`, installed next to this guideline, prints the clone facts, the project's rule files, the environment variables and the directories they resolve to, the operator preferences and the case files in one read-only call, with an `ERROR` marker for anything it could not answer. The workflow's loader starts from it; in manual mode, run it first.
 - **Project rules** (the initialization steps): `project-info.md` for the repository and the issue tracker, `project-guidelines.md` for the fix branch and commit formats and any upgrade-note policy, `project-standards.md` for build and test commands.
 - **`project-security.md`**, when present: the private reporting channel, the CNA and its tool, the advisory template and publication location, the signing step, the supported maintenance lines and end-of-life lines, the fix model (`public` or `ghsa`), and an optional public-text denylist. When it is missing, the CVE gate, the template, the fix model and the backport targets are asked from the maintainer (`template=`, `fix-model=`, `targets=`) instead of guessed.
 - **git and gh**: the upstream remote, the fork remote (the one that points at the maintainer's login), the default branch, and whether the clone is shallow.

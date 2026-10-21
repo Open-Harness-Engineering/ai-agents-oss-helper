@@ -42,6 +42,11 @@ export const meta = {
 // STATUS.md, log.md, work/ and the drafts. Decisions (verdict, cve, issue, pr, credit, targets,
 // fixModel, template) and done flags are sticky. Approvals (issue, pr, backports) count for one run
 // only, and only for drafts and branches that existed before that run started.
+//
+// Cost: every node is a fresh subagent that starts with the session's full context, and a tool call that
+// runs longer than five minutes expires that context's prompt cache, so the preamble keeps every call under
+// four minutes, the loader starts from a read-only probe script instead of probing one command at a time,
+// and the mechanical nodes run on cheaper models (MODEL_TIERS; options.economy = false turns that off).
 
 // ---------------------------------------------------------------------------------------------
 // Policy
@@ -67,6 +72,18 @@ const DENY_SOFT = ['attack', 'bypass', 'malicious', 'payload', 'injection', 'tra
 
 const PR_FOOTER = '🤖 Generated with [Claude Code](https://claude.com/claude-code)'
 const MAX_WAVES = 6
+
+// Cheaper models for the mechanical nodes. Cache reads cost the same on every tier, so the saving sits in
+// the writes and the output of the short nodes: the loader, the persistence step, the issue creation, the
+// final reply and the nodes that push and open PRs. The judgement nodes (triage, challenge lenses, drafts,
+// fix, backports, CVE draft) keep the session model. options.economy === false runs every node on it.
+const MODEL_TIERS = { light: 'claude-sonnet-5-5', mechanical: 'claude-haiku-5-5' }
+const NODE_TIER = { load: 'light', persist: 'mechanical', issue: 'light', reply: 'light', publish: 'light' }
+function modelFor(options, node) {
+  if (options && options.economy === false) return undefined
+  const tier = NODE_TIER[node]
+  return tier ? MODEL_TIERS[tier] : undefined
+}
 
 // ---------------------------------------------------------------------------------------------
 // Schemas
@@ -493,6 +510,7 @@ Rules for every node:
 - ${lineText}
 - Only PUBLISHED CVEs may be named in anything a reporter or the public reads. ${published} Never name an unpublished CVE id, a sibling finding or another embargoed report there.
 - Scratch files (calculators, fetched pages, mock servers, copies of payloads) go in ${s.caseDir}/work/, never in /tmp or a session scratchpad.
+- Keep every tool call under four minutes. Builds, test runs and other long commands go to the background and are polled in slices of at most 240 seconds (for example timeout 240 tail --pid=<pid> -f /dev/null, then read the log), because a call that runs longer than five minutes expires the prompt cache and bills the whole context again.
 - You never send email, reserve CVE ids, merge PRs, or publish or sign advisories. Those are the maintainer's actions.
 - Issue-tracker writes, git push and PR creation happen only in the nodes whose task says so. If the permission system refuses one of them, do not retry it and do not reshape the request: report it.
 ${record}${prefs}`
@@ -505,8 +523,8 @@ function loadPrompt(a) {
   if (threads.length) sources.push(`for each mail-archive thread id in ${JSON.stringify(threads)}: read the thread with the mail archive's thread-reading tool, and append each message (From, Date, Subject, body) to <caseDir>/report.txt`)
   return `You are the loader of the "oss-security-case" workflow (OSS Helper), case "${a.case}". You are read-only, except that you create and fill the case directory. Do not build, push, or write to an issue tracker or forge.
 
-1. Configuration. Return every value in config; use null when a value is unknown, never guess.
-   - repoRoot: git rev-parse --show-toplevel in ${a.repo ? a.repo : 'the current working directory'}. If that is not a git repository, return initialized=false with error "run from a clone of the project, or pass repo=<path>". repoBase: its directory name.
+1. Configuration. Start with the probe, once: bash ~/.claude/skills/oss-security/security-case-probe.sh ${a.case} ${a.repo ? a.repo : '.'}. It is read-only and prints, in sections, the clone (root, remotes with their org/repo, default branch, shallow flag), the operator (gh login, git identity, the upstream and push remotes it worked out), the project's rule files, the environment variables and the directories they resolve to, the operator preferences, and the case directory with its JSON files. Take every value it answers from that output; run only what it leaves open (an ERROR marker, a missing section, the Jira user, the mail archive, and the live facts of step 4). The definitions below are the contract for each field. Return every value in config; use null when a value is unknown, never guess.
+   - repoRoot: the clone root (git rev-parse --show-toplevel in ${a.repo ? a.repo : 'the current working directory'}). If that is not a git repository, return initialized=false with error "run from a clone of the project, or pass repo=<path>". repoBase: its directory name.
    - Follow steps 1 and 2 of ~/.claude/skills/oss-security/init.md from repoRoot (skip step 3) to find the project's rule files. repo (org/repo) from project-info.md's GitHub repo; upstreamRemote = the git remote whose URL points at that repo; defaultBranch: gh repo view <repo> --json defaultBranchRef --jq .defaultBranchRef.name; shallow: git rev-parse --is-shallow-repository.
    - login: gh api /user --jq .login. gitName and gitEmail: git config user.name and user.email. pushRemote: $OSS_PUSH_REMOTE if set, else the remote whose URL points at <login>/<repository name>, else null.
    - tracker (GitHub or Jira), trackerUrl and jiraProject from project-info.md. jiraUser: $OSS_JIRA_USER if set, else, for Jira with $JIRA_TOKEN set, one GET of <REST base>/rest/api/2/myself (field name), else null.
@@ -522,7 +540,7 @@ function loadPrompt(a) {
    - If it exists and a report file was given while report.txt is already there, do not overwrite report.txt; add a warning.${threads.length ? `
    - If it exists and report-meta.json lacks some of the thread ids ${JSON.stringify(threads)}: add them to its "threads" list, read them with the mail archive's thread-reading tool, append their messages to <caseDir>/report-threads.txt (report.txt stays as it is), and fill in "via", "receivedAt" and "participants" where they are empty.` : ''}
    - If report-meta.json is missing, write it: {"threads": [...], "subject", "reporter", "reporterEmail", "reporterHandle", "via", "receivedAt", "participants": [...]}. Take what report.txt shows. With a mail archive and no thread id, search it for the reporter's thread and any forwarded thread, by sender address and by distinctive subject words; use full thread ids.
-3. Read <caseDir>/report-meta.json, <caseDir>/decisions.json ({} when missing) and every <caseDir>/nodes/*.json. Return the node files as an object keyed by file name without ".json", exactly as they are; do not summarize or edit them.
+3. The probe's case section prints <caseDir>/report-meta.json, <caseDir>/decisions.json ({} when missing) and every <caseDir>/nodes/*.json; read them yourself only if it could not. Return the node files as an object keyed by file name without ".json", exactly as they are; do not summarize or edit them.
 4. Live facts. Read-only, one request each:
    - today: date -u +%F.
    - The main PR number is ${a.decision && a.decision.pr ? a.decision.pr : 'decisions.decisions.pr, else nodes.fix.pr'}. If there is one: gh pr view <n> --repo <repo> --json number,state,isDraft,mergedAt,mergeCommit,url,reviewDecision -> live.mainPr.
@@ -689,7 +707,7 @@ Overrides:
 - Implement the "Fix plan" in ${s.caseDir}/triage.md. Keep the change minimal. Name new tests for the behaviour (for example ...PathNormalizationTest), never for the attack, and follow the module's test conventions.
 - Prove the test: it must fail on the unfixed code for the reason the fix addresses, not with a compile error and not as a vacuous pass. Revert only the production change, run the test, restore the change.
 ${guide}
-- Build, test and format with the guideline's build workflow and project-standards.md${c.buildCommand ? ' (build: ' + c.buildCommand + ')' : ''}. Commit every regenerated file; git status must be clean at the end. Run one build at a time, and start long builds in the background and wait for them.
+- Build, test and format with the guideline's build workflow and project-standards.md${c.buildCommand ? ' (build: ' + c.buildCommand + ')' : ''}. Commit every regenerated file; git status must be clean at the end. Run one build at a time; start long builds in the background and poll them in slices of at most 240 seconds, as the rules above say, never in one long wait.
 - Commit message in the project's fix format${c.commitFormatFix ? ' ("' + c.commitFormatFix + '")' : ''}, with a neutral description, ending with the co-author trailer your attribution settings require. Sign the commit if the operator preferences ask for it. No session id anywhere.
 - ${lintRule(s)} Apply it to the commit message, to the added lines of the diff, and to the test class and method names. Fix the hard hits; list the soft hits.
 - Write ${s.caseDir}/pr-body.md: the problem in functional terms, the change, the tests; any attribution the project's agent instructions require; the last line is exactly "${PR_FOOTER}".
@@ -730,7 +748,7 @@ Overrides:
 - Worktree: git --git-dir=${c.repoRoot}/.git worktree add -b backport/${pr}-to-${sh} ${wt} ${c.upstreamRemote}/${line}. Cherry-pick with -x.
 ${guide}
 - Adapt to ${line} where needed, using the triage's "Backport notes" (test framework versions, annotations or generated files missing on older lines). Anything beyond a mechanical port makes straight=false; list the adaptations.
-- Build and test per project-standards.md; generated files must come from this branch's own build, never copied from ${c.defaultBranch}. git status must be clean at the end.
+- Build and test per project-standards.md, in the background and polled in slices of at most 240 seconds; generated files must come from this branch's own build, never copied from ${c.defaultBranch}. git status must be clean at the end.
 - Commit with the original message, the "(cherry picked from commit <sha>)" line and the co-author trailer your attribution settings require; sign it if the operator preferences ask for it.
 - fixVersion: ${line}'s next unreleased version from its build file, moved to the next patch if that version is already tagged or has a release branch.
 - Write ${s.caseDir}/backport-${sh}-pr-body.md: "Backport of #${pr}" with the original title, whether it is straight or adapted (list the adaptations), any attribution the project requires, and last "${PR_FOOTER}".
@@ -1032,7 +1050,7 @@ async function runAction(s, action, run) {
   run.tried.add(action)
   const parts = action.split(':'), id = parts[0], mode = parts[1]
   const spec = nodeSpec(s, id, mode)
-  const res = await agent(spec.prompt, { label: spec.label, phase: spec.phase, schema: spec.schema, effort: spec.effort })
+  const res = await agent(spec.prompt, { label: spec.label, phase: spec.phase, schema: spec.schema, effort: spec.effort, model: modelFor(s.options, mode === 'publish' ? 'publish' : id) })
   const prev = s.nodes[id]
   let out
   if (!res) {
@@ -1181,6 +1199,7 @@ function validateArgs(a) {
   if (a.repo !== undefined && !/^\//.test(String(a.repo))) problems.push('repo must be an absolute path')
   for (const tid of threadList(a)) if (!/^[^\s,]{1,200}$/.test(tid)) problems.push(`${tid} does not look like a mail-archive thread id`)
   if (a.mode !== undefined && ['run', 'plan', 'status'].indexOf(a.mode) < 0) problems.push('mode must be run, plan or status')
+  if (a.options && a.options.economy !== undefined && typeof a.options.economy !== 'boolean') problems.push('options.economy must be true or false')
   return problems
 }
 
@@ -1277,7 +1296,7 @@ if (typeof a.case !== 'string' || !/^[a-z0-9][a-z0-9-]{1,60}$/.test(a.case)) {
 const argProblems = validateArgs(a)
 if (argProblems.length) return { case: a.case, error: 'invalid arguments', problems: argProblems }
 
-const loaded = await agent(loadPrompt(a), { label: 'load', phase: 'Load', schema: LOAD_SCHEMA, effort: 'medium' })
+const loaded = await agent(loadPrompt(a), { label: 'load', phase: 'Load', schema: LOAD_SCHEMA, effort: 'medium', model: modelFor(a.options, 'load') })
 if (!loaded || !loaded.initialized || !loaded.config) {
   return { case: a.case, error: (loaded && loaded.error) || 'the loader failed', warnings: (loaded && loaded.warnings) || [] }
 }
@@ -1345,7 +1364,7 @@ const persisted = await agent(persistPrompt(s, {
   log: run.log,
   status,
   mirror,
-}), { label: 'persist', phase: 'Persist', schema: PERSIST_SCHEMA, effort: 'low' })
+}), { label: 'persist', phase: 'Persist', schema: PERSIST_SCHEMA, effort: 'low', model: modelFor(s.options, 'persist') })
 
 return {
   case: s.case,
