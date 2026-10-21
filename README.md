@@ -69,7 +69,7 @@ Each skill is user-invocable — you can invoke it directly via `/oss-issues`, `
 Each skill initializes by loading project rules in this priority order:
 
 1. **Project-local rules** - `.oss-ai-helper-rules/` directory in the repository root. Highest priority, versioned with the project.
-2. **Installed fallback rules** - A subdirectory under the agent's local rules directory (for example `~/.claude/rules/<project>/`) whose `project-info.md` declares a matching `Remote pattern`. Install these on demand with the Install Info guideline.
+2. **Installed fallback rules** - A subdirectory under the agent's local rules directory (for example `~/.claude/oss-helper/rules/<project>/`) whose `project-info.md` declares a matching `Remote pattern`. Install these on demand with the Install Info guideline. Claude and Bob keep them under `oss-helper/rules/`, not `~/.claude/rules/`, because Claude Code loads every file under `~/.claude/rules/` into every session in every repository. `install.sh` moves rule sets left in the old location.
 3. **Auto-discovery** - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files in `.oss-ai-helper-rules/` so they can be committed and shared.
 
 Projects should adopt project-local rules so that configuration travels with the repository and stays in sync across all contributors and agents.

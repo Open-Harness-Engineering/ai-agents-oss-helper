@@ -15,13 +15,15 @@ Determine the rules directory based on the agent that invoked this command:
 
 | Agent      | Rules directory                       |
 |------------|---------------------------------------|
-| Claude     | `~/.claude/rules/`                    |
-| Bob        | `~/.bob/rules/`                       |
+| Claude     | `~/.claude/oss-helper/rules/`         |
+| Bob        | `~/.bob/oss-helper/rules/`            |
 | Gemini CLI | `~/.gemini/rules/`                    |
 | OpenCode   | `~/.config/opencode/rules/`           |
 | Codex      | `~/.codex/oss-helper/rules/`          |
 
 Project rule files will be written to `<RULES_DIR>/<project>/`.
+
+For Claude and Bob, never write to `~/.claude/rules/` or `~/.bob/rules/`: Claude Code loads every file under `~/.claude/rules/` into every session, in every repository. `install.sh` moves rule sets it finds there into `oss-helper/rules/`.
 
 ### 3. List Mode (no `<project>` argument)
 

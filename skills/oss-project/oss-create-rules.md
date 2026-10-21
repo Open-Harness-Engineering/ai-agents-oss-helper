@@ -51,7 +51,7 @@ Stop if the user declines. Continue if they confirm.
 
 Locate the template project's rule files. Check, in order:
 
-1. Agent's installed rules directory (e.g., `~/.claude/rules/<project>/`)
+1. Agent's installed rules directory (e.g., `~/.claude/oss-helper/rules/<project>/`)
 2. The `ai-agents-oss-known-projects` repository:
 
    ```bash
@@ -70,10 +70,10 @@ If found, read all three rule files (`project-info.md`, `project-standards.md`, 
 List installed projects from the agent's rules directory:
 
 ```bash
-ls -d ~/.claude/rules/*/project-info.md 2>/dev/null | xargs -I{} dirname {} | xargs -I{} basename {}
+ls -d ~/.claude/oss-helper/rules/*/project-info.md 2>/dev/null | xargs -I{} dirname {} | xargs -I{} basename {}
 ```
 
-(Adjust the path for the current agent: `~/.bob/rules/`, `~/.gemini/rules/`, `~/.config/opencode/rules/`, `~/.codex/oss-helper/rules/`)
+(Adjust the path for the current agent: `~/.bob/oss-helper/rules/`, `~/.gemini/rules/`, `~/.config/opencode/rules/`, `~/.codex/oss-helper/rules/`)
 
 Present the list to the user:
 
@@ -252,8 +252,8 @@ Where `<RULES_DIR>` is the agent's rules directory:
 
 | Agent | Rules directory |
 |-------|----------------|
-| Claude | `~/.claude/rules/` |
-| Bob | `~/.bob/rules/` |
+| Claude | `~/.claude/oss-helper/rules/` |
+| Bob | `~/.bob/oss-helper/rules/` |
 | Gemini CLI | `~/.gemini/rules/` |
 | OpenCode | `~/.config/opencode/rules/` |
 | Codex | `~/.codex/oss-helper/rules/` |

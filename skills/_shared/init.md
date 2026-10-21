@@ -52,11 +52,13 @@ If no `.oss-ai-helper-rules/` directory exists, look for installed rules whose `
 
 Installed rules are located under the agent's rules directory:
 
-- Claude: `~/.claude/rules/`
-- Bob: `~/.bob/rules/`
+- Claude: `~/.claude/oss-helper/rules/`
+- Bob: `~/.bob/oss-helper/rules/`
 - Gemini CLI: `~/.gemini/rules/`
 - OpenCode: `~/.config/opencode/rules/`
 - Codex: `~/.codex/oss-helper/rules/`
+
+For Claude and Bob, when no rule set there matches, also check the old location, `~/.claude/rules/` or `~/.bob/rules/`: installs from before the move keep their rules there until `install.sh` runs again. Do not install anything into the old location. Claude Code loads every file under `~/.claude/rules/` into every session, which is why the rules moved.
 
 Iterate over the subdirectories of that rules directory and read each `<project>/project-info.md`. If one has a `Remote pattern:` matching `<org>/<repo>` from step 1, that project's rule files are the ones to load:
 

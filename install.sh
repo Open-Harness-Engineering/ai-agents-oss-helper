@@ -475,12 +475,42 @@ generate_skill_agent_command() {
     } > "$dest"
 }
 
+# Installed project rules used to live in ~/.<agent>/rules/<project>/. Claude Code loads every file
+# under ~/.claude/rules/ into every session and sub-agent, whichever repository is open, so they now
+# live in ~/.<agent>/oss-helper/rules/<project>/, where only the OSS Helper initialization reads them.
+# Move the OSS Helper rule sets (a project-info.md that declares a Remote pattern) and leave
+# everything else in the old directory alone.
+migrate_legacy_rules() {
+    local legacy_dir="$1"
+    local rules_dir="$2"
+    local info_file project_dir project
+
+    [[ -d "$legacy_dir" ]] || return 0
+    for info_file in "$legacy_dir"/*/project-info.md; do
+        [[ -f "$info_file" ]] || continue
+        grep -Eq '\*\*Remote pattern:\*\*' "$info_file" || continue
+        project_dir="$(dirname "$info_file")"
+        project="$(basename "$project_dir")"
+        if [[ -e "$rules_dir/$project" ]]; then
+            warn "  Rules for $project are in both $project_dir and $rules_dir/$project. Kept the second; compare them and remove $project_dir."
+            continue
+        fi
+        if mv "$project_dir" "$rules_dir/$project"; then
+            info "  Moved project rules: $project_dir -> $rules_dir/$project"
+        else
+            error "  Failed to move $project_dir to $rules_dir/$project"
+            return 1
+        fi
+    done
+}
+
 # Install for agents that support skills natively (Claude, Bob)
 install_skill_agent() {
     local agent="$1"
     local skills_root="$HOME/.$agent/skills"
     local commands_dir="$HOME/.$agent/commands"
-    local rules_dir="$HOME/.$agent/rules"
+    local rules_dir="$HOME/.$agent/oss-helper/rules"
+    local legacy_rules_dir="$HOME/.$agent/rules"
 
     info "Installing for $agent..."
 
@@ -488,6 +518,7 @@ install_skill_agent() {
         error "Failed to create directory: $rules_dir"
         return 1
     fi
+    migrate_legacy_rules "$legacy_rules_dir" "$rules_dir" || return 1
 
     # Clean up old command files
     if [[ -d "$commands_dir" ]]; then
@@ -605,7 +636,7 @@ install_skill_agent() {
     # Remove old monolithic rule files (legacy cleanup)
     info "  Cleaning up old rule files..."
     for old_file in "${OLD_RULE_FILES[@]}"; do
-        rm -f "$rules_dir/$old_file"
+        rm -f "$legacy_rules_dir/$old_file"
     done
 
     info "  Skills installed to: $skills_root/{${SKILL_DIRS[*]}}"
