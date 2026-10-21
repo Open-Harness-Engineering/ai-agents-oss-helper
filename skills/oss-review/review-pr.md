@@ -8,6 +8,7 @@ Extract the pull request number:
 
 - If the input is a full GitHub pull request URL (for example, `https://github.com/org/repo/pull/42`), extract the number from the path
 - If the input is a number only, use it as-is
+- If the arguments include `resume`, pick up the review saved by an earlier run instead of starting over: follow the resume steps of `_fragments/_checkpoint.md` for the checkpoint `review-pr-<PR_NUMBER>`, then submit it as step 7 says
 
 ### 2. Retrieve Pull Request Details
 
@@ -141,6 +142,8 @@ Clearly separate:
 If all review questions resolved as non-issues, state that explicitly: _"All review questions resolved — no issues found."_
 
 Keep the review concise and actionable. Do not pad findings with restated diff content.
+
+Before asking, save the review as a checkpoint (`_fragments/_checkpoint.md`) named `review-pr-<PR_NUMBER>`: the PR's head SHA, the findings as presented, the review event they map to (step 8.1), and every inline comment with its file and line. Delete it once the review is submitted.
 
 **Wait for user approval before submitting the review to GitHub.**
 

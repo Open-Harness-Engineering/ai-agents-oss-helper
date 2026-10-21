@@ -28,6 +28,8 @@ SHARED_INIT_SCRIPT="skills/_shared/oss-init.sh"
 SHARED_FRAGMENTS=(
     "commands/_fragments/_build-workflow.md"
     "commands/_fragments/_issue-ownership.md"
+    "commands/_fragments/_operator-preferences.md"
+    "commands/_fragments/_checkpoint.md"
 )
 
 # Skill definitions: "skill-dir|SKILL.md + guideline files..."
@@ -177,6 +179,13 @@ GUIDELINE_COMMANDS=(
     "oss-qe|oss-qe-verify.md|oss-qe-verify|Execute an existing test plan and track results"
     "oss-qe|oss-qe-module-audit.md|oss-qe-module-audit|Deep-audit a module family for bugs, antipatterns, inconsistencies, missing features, and ideas"
 )
+
+# Report commands that Claude Code runs in a forked context (context: fork): a fresh sub-agent does
+# the reads and only its report comes back, so the command neither re-reads the history of the
+# session it is started from nor grows it. Their guidelines ask nothing until the end. find-task
+# stays inline because it starts by asking the user questions, which a fork cannot do.
+FORKED_COMMANDS="oss-list-prs oss-list-pr-status oss-pr-status oss-list-issues oss-analyze-issue oss-workspace-status"
+FORK_NOTE='You run in a forked context: a fresh sub-agent that sees none of the conversation that started you, and whose tool calls stay out of it. Your final message is all the user sees, so make it the complete report the guideline describes. You cannot ask questions while you work: where the guideline asks the user to choose or to answer, end the report with that question, and the conversation that started you takes the answer.'
 
 # Old rule files to clean up (relative paths under rules/)
 OLD_RULE_FILES=(
@@ -466,17 +475,35 @@ generate_skill_agent_command() {
     # Escape quotes and backslashes for YAML
     description="$(printf '%s' "$description" | sed 's/\\/\\\\/g; s/\"/\\\"/g')"
 
+    local forked=false
+    if [[ "$agent" == "claude" ]] && [[ " $FORKED_COMMANDS " == *" $(basename "$dest" .md) "* ]]; then
+        forked=true
+    fi
+
     {
         printf -- "---\n"
         if [[ "$agent" == "claude" ]]; then
             printf 'disable-model-invocation: true\n'
         fi
         printf 'description: "%s"\n' "$description"
+        if [[ "$forked" == true ]]; then
+            printf 'context: fork\n'
+            printf 'background: false\n'
+        fi
         printf -- "---\n\n"
 
         case "$agent" in
             claude)
-                printf 'Invoke the %s skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$skill_name" "$guideline_file"
+                if [[ "$forked" == true ]]; then
+                    # A fork starts without the conversation: name the files, and pass the arguments
+                    # through $ARGUMENTS, which Claude Code substitutes (left unexpanded here on purpose).
+                    printf 'Read and follow the initialization steps in `~/.claude/skills/%s/init.md` to detect the current project and load its configuration. Then read and follow the guideline in `~/.claude/skills/%s/%s`.\n\n' \
+                        "$skill_name" "$skill_name" "$guideline_file"
+                    printf 'Arguments: $ARGUMENTS\n\n'
+                    printf '%s\n' "$FORK_NOTE"
+                else
+                    printf 'Invoke the %s skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$skill_name" "$guideline_file"
+                fi
                 ;;
             *)
                 printf 'Read and follow the initialization steps in `~/.%s/skills/%s/init.md` to detect the current project and load its configuration. Then read and follow the guideline in `~/.%s/skills/%s/%s`.\n' \

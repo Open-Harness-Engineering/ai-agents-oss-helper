@@ -32,7 +32,17 @@ Command fragments extract common patterns that appear in multiple commands into 
   - Git status inspection for regen artifacts
   - Used by: oss-fix-issue, oss-quick-fix, oss-fix-sonarcloud, oss-fix-ci-errors, oss-address-review, oss-backport-pr
 
-- **`_commit-signing.md`** - Commit signing prompts
+- **`_operator-preferences.md`** - Decisions answered in advance
+  - Reads `~/.config/oss-helper/preferences.md` (or `$OSS_HELPER_PREFS`) and the `sign=` / `build=` arguments
+  - Commit signing flags and the full reactor build mode; asks only when neither is set
+  - Used by: oss-fix-issue, oss-quick-fix, oss-fix-ci-errors, oss-fix-github-alert, oss-fix-backlog-task, oss-fix-multi-repo-issue, oss-fix-sonarcloud, oss-backport-pr, and `_build-workflow.md`
+
+- **`_checkpoint.md`** - Resumable gates
+  - Saves the pending public action under `~/.local/state/oss-helper/checkpoints/` before a gate
+  - `resume` picks it up from a fresh session after re-checking the live state
+  - Used by: oss-review-pr, oss-review-prs, oss-merge-pr, oss-create-issue, oss-address-review
+
+- **`_commit-signing.md`** - Commit signing prompts (superseded by `_operator-preferences.md`)
   - Standard prompt for GPG/SSH signing
   - Command variations for -S, -s, both, or neither
   - Used by: oss-fix-issue, oss-quick-fix, oss-fix-ci-errors, oss-backport-pr, and others
@@ -155,7 +165,9 @@ Each fragment should include:
 | `_common-init.md` | ✅ Implemented | All (30+) | ~1,500 |
 | `_git-history-investigation.md` | 📋 Planned | 6 | ~100 |
 | `_build-workflow.md` | ✅ Implemented | 7 | ~240 |
-| `_commit-signing.md` | 📋 Planned | 8 | ~80 |
+| `_commit-signing.md` | ↪️ Superseded by `_operator-preferences.md` | 8 | ~80 |
+| `_operator-preferences.md` | ✅ Implemented | 9 | — |
+| `_checkpoint.md` | ✅ Implemented | 5 | — |
 | `_agent-delegation.md` | 📋 Planned | 6 | ~48 |
 | `_api-patterns.md` | 📋 Planned | 12 | ~180 |
 | `_common-constraints.md` | 📋 Planned | 15 | ~300 |

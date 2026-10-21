@@ -27,6 +27,33 @@ done
 cmp "$repo_root/skills/oss-security/security-case.md" "$test_home/.claude/skills/oss-security/security-case.md"
 grep -Fq 'security-case.md' "$test_home/.claude/commands/oss-security-case.md"
 
+# Report commands run in a forked context: the body names the files a fresh sub-agent needs and
+# passes the arguments. Commands that stop at a gate or ask questions stay inline.
+for cmd in oss-list-prs oss-list-pr-status oss-pr-status oss-list-issues oss-analyze-issue oss-workspace-status; do
+    file="$test_home/.claude/commands/$cmd.md"
+    grep -Fxq 'context: fork' "$file"
+    grep -Fxq 'background: false' "$file"
+    grep -Fq 'Arguments: $ARGUMENTS' "$file"
+    paths="$(grep -oE '~/\.claude/skills/[a-z-]+/[a-z-]+\.md' "$file")"
+    [[ "$(printf '%s\n' "$paths" | wc -l)" -eq 2 ]]
+    for path in $paths; do
+        [[ -f "$test_home/${path:2}" ]]
+    done
+done
+for cmd in oss-fix-issue oss-review-pr oss-merge-pr oss-address-review oss-find-task oss-security-case; do
+    if grep -q '^context: fork' "$test_home/.claude/commands/$cmd.md"; then
+        echo "FAIL: $cmd runs in a fork but stops for the user" >&2
+        exit 1
+    fi
+done
+
+# The fragments the guidelines reference ship in every skill.
+for skill in oss-issues oss-review oss-ci oss-security oss-project oss-qe; do
+    for fragment in _build-workflow.md _issue-ownership.md _operator-preferences.md _checkpoint.md; do
+        cmp "$repo_root/commands/_fragments/$fragment" "$test_home/.claude/skills/$skill/_fragments/$fragment"
+    done
+done
+
 # The loader's probe ships with the skill, parses, and runs read-only against any clone (gh may be absent).
 probe="$test_home/.claude/skills/oss-security/security-case-probe.sh"
 cmp "$repo_root/skills/oss-security/security-case-probe.sh" "$probe"
@@ -45,5 +72,9 @@ HOME="$test_home" bash "$repo_root/install.sh" bob > "$test_root/install-bob.log
 [[ -f "$test_home/.bob/skills/oss-security/security-case.md" ]]
 grep -Fq 'security-case.md' "$test_home/.bob/commands/oss-security-case.md"
 [[ ! -e "$test_home/.bob/workflows" ]]
+if grep -l '^context: fork' "$test_home"/.bob/commands/*.md; then
+    echo 'FAIL: a Bob command carries the Claude-only context: fork field' >&2
+    exit 1
+fi
 
 echo 'PASS: the Claude install ships the oss-security-case workflow, guideline and command; Bob gets no workflow'

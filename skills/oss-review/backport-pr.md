@@ -127,7 +127,7 @@ Follow the build workflow from `_fragments/_build-workflow.md`:
 
 - Read build configuration from `project-standards.md`
 - Run full reactor build (Maven projects only, MANDATORY before push)
-- Ask user for build mode: (a) skip tests (default for backports) or (b) full tests
+- Build mode: (a) skip tests (default for backports) or (b) full tests, from the `build=` argument, else the **Reactor build** preference (`_fragments/_operator-preferences.md`), else ask the user
 - This catches API drift between source and target branches
 - Skip for non-Maven projects
 

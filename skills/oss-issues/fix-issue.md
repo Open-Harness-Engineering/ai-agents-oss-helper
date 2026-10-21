@@ -146,7 +146,7 @@ Read branch naming and commit format from the project's `project-guidelines.md`.
    - GitHub projects: `Fix #<ISSUE_NUMBER>: <brief description>`
    - Jira projects: `<ISSUE_ID>: <brief description of fix>`
 
-   **Before committing**, ask the user whether they want to sign the commit using `-S` (GPG/SSH signature) and `-s` (Signed-off-by). Then run the appropriate command:
+   **Before committing**, determine whether to sign the commit with `-S` (GPG/SSH signature) and `-s` (Signed-off-by): the `sign=` argument, else the **Commit signing** preference, else ask the user (`_fragments/_operator-preferences.md`). Then run the appropriate command:
    - If the user wants both: `git commit -S -s -m "<COMMIT_MESSAGE>"`
    - If the user wants only `-S`: `git commit -S -m "<COMMIT_MESSAGE>"`
    - If the user wants only `-s`: `git commit -s -m "<COMMIT_MESSAGE>"`

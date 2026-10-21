@@ -5,6 +5,8 @@ Read the **Issue tracker** field from the project's `project-info.md`:
 - If `GitHub` -> follow the **GitHub path** (steps 3-7)
 - If `Jira` -> follow the **Jira path** (steps 8-13)
 
+**Resuming:** if the arguments include `resume`, follow the resume steps of `_fragments/_checkpoint.md` for `create-issue-<slug>`, the slug of the saved title (without a slug, list the saved ones). For GitHub, check that no issue with the same title was created meanwhile and continue at step 5. For Jira, run the duplicate check of step 8 again and continue at step 9.
+
 ---
 
 ## GitHub Path
@@ -75,6 +77,8 @@ Before creating, show the user:
 - Labels
 - Full body content
 
+Before asking, save a checkpoint (`_fragments/_checkpoint.md`) named `create-issue-<slug>`, from the title, with the title, the labels and the full body. Delete it once the issue is created.
+
 Ask for confirmation to proceed.
 
 ### 6. Create the Issue (GitHub)
@@ -139,6 +143,8 @@ Before creating, present the issue details:
 - Component(s)
 - Priority
 - Full description
+
+Before asking, save a checkpoint (`_fragments/_checkpoint.md`) named `create-issue-<slug>`, from the summary, with every field above. Delete it once the issue is created.
 
 Ask for confirmation to proceed.
 
