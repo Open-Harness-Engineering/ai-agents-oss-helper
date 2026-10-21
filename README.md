@@ -1,8 +1,8 @@
 # AI Agents OSS Helper
 
-A collection of skills for AI coding agents (Claude, Bob, Gemini, OpenCode, Codex) that provides guidelines for contributing to open source projects. The skills auto-detect the current project via `git remote get-url origin` and load project-specific configuration from rule files.
+A collection of skills for AI coding agents (Claude, Bob, Gemini, OpenCode, Codex, agy) that provides guidelines for contributing to open source projects. The skills auto-detect the current project via `git remote get-url origin` and load project-specific configuration from rule files.
 
-For agents that support skills natively (Claude, Bob, Codex), the helper is installed as 6 focused, user-invocable skills — just describe what you want to do (or invoke `/oss-*` directly) and the agent follows the appropriate guidelines automatically. For other agents (Gemini, OpenCode), individual commands are generated from the same guidelines.
+For agents that support skills natively (Claude, Bob, Codex, agy), the helper is installed as 6 focused, user-invocable skills — just describe what you want to do (or invoke `/oss-*` directly) and the agent follows the appropriate guidelines automatically. For other agents (Gemini, OpenCode), individual commands are generated from the same guidelines.
 
 ## Getting Started
 
@@ -40,6 +40,7 @@ cd ai-agents-oss-helper
 ./install.sh gemini    # Gemini CLI only
 ./install.sh opencode  # OpenCode only
 ./install.sh codex     # Codex only
+./install.sh agy       # agy only
 ./install.sh           # All agents
 ```
 
@@ -88,7 +89,7 @@ Deterministic steps ship as read-only scripts installed next to the guidelines, 
 
 ## Capabilities
 
-The OSS Helper provides guidelines for the following tasks. For agents with skill support (Claude, Bob, Codex), just describe what you want in natural language or use the `/oss-*` command directly. For other agents, use the corresponding command.
+The OSS Helper provides guidelines for the following tasks. For agents with skill support (Claude, Bob, Codex, agy), just describe what you want in natural language or use the `/oss-*` command directly. For other agents, use the corresponding command.
 
 | Capability | Command | Description |
 |---|---|---|
@@ -135,7 +136,7 @@ The OSS Helper provides guidelines for the following tasks. For agents with skil
 ### Fix an Issue
 
 ```text
-# With Claude, Bob, or Codex — just ask naturally:
+# With Claude, Bob, Codex, or agy — just ask naturally:
 fix issue 42
 fix issue CAMEL-20410
 fix https://github.com/wanaku-ai/wanaku/issues/42
@@ -245,13 +246,13 @@ An agent re-reads its whole conversation on every turn, and an answer that comes
 
 ## Agent-Specific Notes
 
-### Claude, Bob
+### Claude, Bob, agy
 
 Installed as 6 user-invocable skills at `~/.{agent}/skills/oss-{issues,review,ci,security,project,qe}/` plus individual `/oss-*` commands in `~/.{agent}/commands/`. You can either describe what you want in natural language (the agent matches it to a skill automatically), invoke a skill group (e.g. `/oss-issues`), or invoke a specific command directly (e.g. `/oss-fix-issue 42`).
 
 In Claude Code the individual commands are installed with `disable-model-invocation: true`: you type them, but their descriptions stay out of the model's context in every session. Requests in natural language reach the same guidelines through the skill groups. The sub-agent descriptions are kept to a sentence or two for the same reason, since Claude Code lists them in every session too.
 
-For Claude only, the installer also copies the workflows in `workflows/` to `~/.claude/workflows/`. These are scripts for Claude Code's Workflow tool, which runs the subagents of a multi-step guideline in the background. `/oss-security-case` uses one. Claude Code reads the directory when a session starts, so start a new session after installing. Bob installs the same guideline and follows it by hand.
+For Claude only, the installer also copies the workflows in `workflows/` to `~/.claude/workflows/`. These are scripts for Claude Code's Workflow tool, which runs the subagents of a multi-step guideline in the background. `/oss-security-case` uses one. Claude Code reads the directory when a session starts, so start a new session after installing. Bob and agy install the same guideline and follow it by hand.
 
 ### Gemini CLI
 

@@ -4,19 +4,20 @@
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
-#   ./install.sh              # Install to all agents (claude, bob, gemini, opencode, codex)
+#   ./install.sh              # Install to all agents (claude, bob, gemini, opencode, codex, agy)
 #   ./install.sh claude       # Install to claude only
 #   ./install.sh bob          # Install to bob only
 #   ./install.sh gemini       # Install to gemini only
 #   ./install.sh opencode     # Install to opencode only
 #   ./install.sh codex        # Install to codex only
+#   ./install.sh agy          # Install to agy only
 #
 
 set -euo pipefail
 
 # Configuration
 BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main}"
-AGENTS=("claude" "bob" "gemini" "opencode" "codex")
+AGENTS=("claude" "bob" "gemini" "opencode" "codex" "agy")
 
 # Shared initialization file (copied into each skill directory during install)
 SHARED_INIT="skills/_shared/init.md"
@@ -459,9 +460,9 @@ convert_agent_to_codex_toml() {
     } > "$dest"
 }
 
-# Generate a thin command file for skill agents (Claude, Bob).
+# Generate a thin command file for skill agents (Claude, Bob, agy).
 # Claude has a native skill framework that resolves references automatically;
-# Bob does not, so its commands include explicit file paths instead.
+# Bob and agy do not, so their commands include explicit file paths instead.
 # Claude's wrappers are user-only (disable-model-invocation): Claude Code then keeps their
 # descriptions out of every session's context, and the model reaches the same guidelines through
 # the 6 skill groups. Typing /oss-<name> still works.
@@ -513,6 +514,7 @@ generate_skill_agent_command() {
     } > "$dest"
 }
 
+
 # Installed project rules used to live in ~/.<agent>/rules/<project>/. Claude Code loads every file
 # under ~/.claude/rules/ into every session and sub-agent, whichever repository is open, so they now
 # live in ~/.<agent>/oss-helper/rules/<project>/, where only the OSS Helper initialization reads them.
@@ -542,7 +544,7 @@ migrate_legacy_rules() {
     done
 }
 
-# Install for agents that support skills natively (Claude, Bob)
+# Install for agents that support skills natively (Claude, Bob, agy)
 install_skill_agent() {
     local agent="$1"
     local skills_root="$HOME/.$agent/skills"
@@ -1007,7 +1009,7 @@ install_for_agent() {
     local agent="$1"
 
     case "$agent" in
-        claude|bob)
+        claude|bob|agy)
             install_skill_agent "$agent"
             ;;
         gemini)

@@ -20,6 +20,7 @@ Determine the rules directory based on the agent that invoked this command:
 | Gemini CLI | `~/.gemini/rules/`                    |
 | OpenCode   | `~/.config/opencode/rules/`           |
 | Codex      | `~/.codex/oss-helper/rules/`          |
+| agy        | `~/.agy/oss-helper/rules/`            |
 
 Project rule files will be written to `<RULES_DIR>/<project>/`.
 
