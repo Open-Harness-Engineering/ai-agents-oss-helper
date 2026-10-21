@@ -26,5 +26,7 @@ jobs:
         run: bash scripts/test-session-footprint.sh
       - name: Run the oss-security-case routing test (mocked agents)
         run: node tests/workflows/oss-security-case.test.mjs
+      - name: Check the move of installed rules out of ~/.claude/rules
+        run: bash scripts/test-rules-migration.sh
       - name: Check the Claude workflow install
         run: bash scripts/test-claude-workflow-install.sh

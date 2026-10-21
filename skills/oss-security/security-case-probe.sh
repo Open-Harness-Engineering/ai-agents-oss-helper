@@ -103,24 +103,39 @@ show "gitEmail" g config user.email
 
 section "rules"
 rules_dir=""
-if [ -n "$repo_root" ] && [ -d "$repo_root/.oss-ai-helper-rules" ]; then
-    rules_dir="$repo_root/.oss-ai-helper-rules"
-    echo "source: project-local $rules_dir"
-else
-    rules_root="${OSS_RULES_DIR:-$HOME/.claude/rules}"
-    slugs="$(remotes | awk '{ print $3 }')"
-    for info in "$rules_root"/*/project-info.md; do
+
+# find_rules <rules-root>: the installed rule set whose Remote pattern matches a remote of the clone.
+find_rules() {
+    local info pattern
+    for info in "$1"/*/project-info.md; do
         [ -f "$info" ] || continue
         pattern="$(grep -m1 -E '\*\*Remote pattern:\*\*' "$info" | sed -E 's/.*\*\*Remote pattern:\*\*[[:space:]]*//; s/`//g; s/^ *//; s/ *$//')"
         [ -n "$pattern" ] || continue
         if printf '%s\n' "$slugs" | grep -F -x -i -q -- "$pattern"; then
             rules_dir="$(dirname "$info")"
             echo "source: installed rules $rules_dir (Remote pattern: $pattern)"
-            break
+            return 0
         fi
     done
+    return 1
+}
+
+if [ -n "$repo_root" ] && [ -d "$repo_root/.oss-ai-helper-rules" ]; then
+    rules_dir="$repo_root/.oss-ai-helper-rules"
+    echo "source: project-local $rules_dir"
+else
+    slugs="$(remotes | awk '{ print $3 }')"
+    if [ -n "${OSS_RULES_DIR:-}" ]; then
+        rules_roots="$OSS_RULES_DIR"
+        find_rules "$OSS_RULES_DIR"
+    else
+        # Installed rules live in ~/.claude/oss-helper/rules/; ~/.claude/rules/ holds them on installs
+        # that install.sh has not migrated yet.
+        rules_roots="$HOME/.claude/oss-helper/rules or $HOME/.claude/rules"
+        find_rules "$HOME/.claude/oss-helper/rules" || find_rules "$HOME/.claude/rules"
+    fi
     if [ -z "$rules_dir" ]; then
-        echo "source: NONE (no .oss-ai-helper-rules/ in the clone, and no project-info.md under $rules_root has a Remote pattern matching a remote)"
+        echo "source: NONE (no .oss-ai-helper-rules/ in the clone, and no project-info.md under $rules_roots has a Remote pattern matching a remote)"
     fi
 fi
 if [ -n "$rules_dir" ]; then
