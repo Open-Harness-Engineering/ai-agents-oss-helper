@@ -366,6 +366,11 @@ function issueKeyOf(s) {
   return s.config.tracker === 'GitHub' ? '#' + issueNum(k) : k
 }
 function lines(s) { return ((s.config.security || {}).lines || []).slice() }
+// A case is tied to the mail archive only when it has case threads the maintainer named with
+// threads=. A report given as a file (or a paste) with no threads= is not in the archive, so the
+// loader does not search it, triage leaves it out of the prior-work search, the reply drafts fall
+// back to "check your mail", and nothing is mirrored. threads= attaches the archive on any run.
+function archiveLinked(s) { return !!(s.config.mailArchive && ((s.report && s.report.threads) || []).length) }
 
 // The backport targets of the effective verdict, and whether they are still unknown.
 function targetsInfo(s) {
@@ -539,13 +544,13 @@ function loadPrompt(a) {
    - If it does not exist: mkdir -p <caseDir>/nodes <caseDir>/cve <caseDir>/work, and chmod 700 <casesRoot> and <caseDir>. Then get the report: ${sources.length ? sources.join('; ') : 'NO report source was given, so return initialized=false with error "no report: pass report=<file> or threads=<thread id>"'}.
    - If it exists and a report file was given while report.txt is already there, do not overwrite report.txt; add a warning.${threads.length ? `
    - If it exists and report-meta.json lacks some of the thread ids ${JSON.stringify(threads)}: add them to its "threads" list, read them with the mail archive's thread-reading tool, append their messages to <caseDir>/report-threads.txt (report.txt stays as it is), and fill in "via", "receivedAt" and "participants" where they are empty.` : ''}
-   - If report-meta.json is missing, write it: {"threads": [...], "subject", "reporter", "reporterEmail", "reporterHandle", "via", "receivedAt", "participants": [...]}. Take what report.txt shows. With a mail archive and no thread id, search it for the reporter's thread and any forwarded thread, by sender address and by distinctive subject words; use full thread ids.
+   - If report-meta.json is missing, write it: {"threads": [...], "subject", "reporter", "reporterEmail", "reporterHandle", "via", "receivedAt", "participants": [...]}. Take what report.txt shows. Set "threads" to the ids in ${JSON.stringify(threads)} (an empty list when none were given); do not search the mail archive for this report's thread, even when one is configured. A case is tied to the archive only by the thread ids the maintainer passes with threads=.
 3. The probe's case section prints <caseDir>/report-meta.json, <caseDir>/decisions.json ({} when missing) and every <caseDir>/nodes/*.json; read them yourself only if it could not. Return the node files as an object keyed by file name without ".json", exactly as they are; do not summarize or edit them.
 4. Live facts. Read-only, one request each:
    - today: date -u +%F.
    - The main PR number is ${a.decision && a.decision.pr ? a.decision.pr : 'decisions.decisions.pr, else nodes.fix.pr'}. If there is one: gh pr view <n> --repo <repo> --json number,state,isDraft,mergedAt,mergeCommit,url,reviewDecision -> live.mainPr.
    - The issue is ${a.decision && a.decision.issue ? a.decision.issue : 'decisions.decisions.issue, else nodes.issue.key'}. If there is one: its status, assignee and fix versions (Jira: one GET of /rest/api/2/issue/<key>?fields=status,assignee,fixVersions; GitHub: gh issue view <n> --repo <repo> --json state,assignees,milestone) -> live.issue; and every PR that names it, including backports opened by others: gh pr list --repo <repo> --state all --search "<the issue key, or the main PR number for GitHub>" --json number,title,state,baseRefName,headRefName,author,url -> live.relatedPrs.
-   - With a mail archive: live.archiveNewest = the date of the newest message it holds (from its status tool, if it has one); live.replyEvidence = messages in the case threads sent by the maintainer (git config user.email, or another address the operator preferences give) after the report: {date, threadId, firstLine}. When the verdict (decisions.decisions.verdict${a.decision && a.decision.verdict ? ' = ' + a.decision.verdict : ''}, else nodes.triage.recommendedVerdict) is VALID and no CVE id is decided${a.decision && a.decision.cve ? ' (one is: skip this)' : ''}, live.cveCandidates: if the project's CNA announces reservations on a list the archive holds (the operator preferences say how to recognize them), the reservations newer than the report whose title matches nodes.triage.suggestedCveTitle: {cve, titlePrefix, date, threadId}.
+   - With a mail archive: live.archiveNewest = the date of the newest message it holds (from its status tool, if it has one). Only when report-meta.json lists case threads (ids the maintainer passed with threads=): live.replyEvidence = the maintainer's messages in those threads (git config user.email, or another address the operator preferences give) after the report: {date, threadId, firstLine}; with no case threads there is nothing about this report to search, so omit replyEvidence. When the verdict (decisions.decisions.verdict${a.decision && a.decision.verdict ? ' = ' + a.decision.verdict : ''}, else nodes.triage.recommendedVerdict) is VALID and no CVE id is decided${a.decision && a.decision.cve ? ' (one is: skip this)' : ''}, live.cveCandidates: if the project's CNA announces reservations on a list the archive holds (the operator preferences say how to recognize them), the reservations newer than the report whose title matches nodes.triage.suggestedCveTitle: {cve, titlePrefix, date, threadId}.
    - live.releases, only when a CVE id is decided (decisions.decisions.cve${a.decision && a.decision.cve ? ' = ' + a.decision.cve : ''}): for each version in nodes.triage.fixVersionsByLine and each nodes.backport_<line>.fixVersion, whether it is released to the project's distribution channel. If project-security.md says how releases are checked, follow it. Otherwise: for a Maven project, the POM of its main artifact answers 200 on Maven Central (https://repo1.maven.org/maven2/<group path>/<artifact>/<version>/<artifact>-<version>.pom); for npm, npm view <package>@<version> version prints it; for PyPI, https://pypi.org/pypi/<package>/<version>/json answers 200; for crates.io, https://crates.io/api/v1/crates/<crate>/<version> answers 200; else a published (not draft) GitHub release exists for the version's tag. A git tag alone is not a release. Return {"<version>": true|false}.
 Return the structured result, with decisionsFile = the content of decisions.json.`
 }
@@ -566,7 +571,7 @@ TASK: triage the report with the triage guideline, without a maintainer.
 2. Work in a detached worktree: git --git-dir=${c.repoRoot}/.git worktree add --detach ${c.worktreeRoot}/${c.repoBase}-triage-${s.case} ${c.upstreamRemote}/${c.defaultBranch} (fetch first; reuse it if it already exists for this case). Run init.md's project detection from that worktree.
 3. Verify statically. Read the code at the cited refs on ${c.upstreamRemote}/${c.defaultBranch}${lines(s).map(l => ', ' + c.upstreamRemote + '/' + l).join('')}, and at the latest release tags. Do not write anything that performs the reported attack or stands up an attacker-controlled endpoint. When reading is not conclusive, a logic-only check is fine: a standalone class or script that calls the code, with no network. If you ran nothing, write "no runtime reproduction" in the triage.
 4. Search for prior work before you decide:
-   - the history of the cited files, one read-only issue-tracker search${c.mailArchive ? ', and the mail archive (search by reporter and by subject, and note how fresh it is, since an archive can lag)' : ''};
+   - the history of the cited files, one read-only issue-tracker search${archiveLinked(s) ? ', and the case threads in the mail archive (search by reporter and by subject, and note how fresh it is, since an archive can lag)' : ''};
    - ${c.notesDir ? 'the maintainer\'s notes: grep -il the component, class and option names in ' + c.notesDir + '/*.md and read the hits. They record earlier reports, duplicates, sibling CVEs, rulings, and what must never be cited to a reporter;' : 'the project\'s published advisories, for earlier reports in the same area;'}
    - whether the defect is already fixed on ${c.defaultBranch}, or in a sibling component on the same code path.
 5. Classify against the project's security model or threat model, when it has one (look for a security-model or threat-model page in the docs, or SECURITY.md), into exactly one verdict:
@@ -600,9 +605,9 @@ Agree only if you could not refute the verdict. missedFacts lists the facts the 
 
 function draftReplyPrompt(s, verdict, ruled) {
   const c = s.config
-  const threads = c.mailArchive
+  const threads = archiveLinked(s)
     ? `Then read every case thread listed in report-meta.json in the mail archive (the reporter's own thread and any forwarded thread, where the maintainers' replies may sit). Note whether the maintainer has already replied, and compare the archive's freshness with the report date: a stale archive proves nothing.`
-    : 'There is no mail archive here, so say in the header that the maintainer must check their mail for an earlier reply.'
+    : 'This report is not tied to a mail-archive thread, so say in the header that the maintainer must check their mail for an earlier reply.'
   return `${preamble(s, 'draftReply')}
 
 NODE: draftReply
@@ -680,7 +685,7 @@ function replyPrompt(s) {
 NODE: reply
 TASK: finalize the reply to the reporter for the ruled verdict ${d.verdict}. Write ${s.caseDir}/reply-final.txt from ${s.caseDir}/reply-draft.txt. Send nothing.
 - Fill in the placeholders: <CVE-ID> = ${d.cve || 'not applicable'}, <ISSUE> = ${issueKeyOf(s) || 'not applicable'}. For HARDENING or DEFENSE_IN_DEPTH you may also give the fix PR (${pr ? 'https://github.com/' + c.repo + '/pull/' + pr : 'none yet'}); for VALID, never point at public work before the advisory.
-- ${c.mailArchive ? 'Re-read the case threads in the mail archive first. If the maintainer has already answered, do not repeat it: write only what is new, or say in the header that no reply is needed.' : 'Keep the header line telling the maintainer to check their mail for an earlier reply.'}
+- ${archiveLinked(s) ? 'Re-read the case threads in the mail archive first. If the maintainer has already answered, do not repeat it: write only what is new, or say in the header that no reply is needed.' : 'Keep the header line telling the maintainer to check their mail for an earlier reply.'}
 - Check the final text against the never-cite list, and check that every CVE id in it is either published (by the rule above) or this case's own reserved id.
 - Keep the maintainer header; the maintainer sends the reply.
 Return forVerdict, forCve (the CVE id you used, or null) and forIssue (the issue key you used, or null).`
@@ -914,7 +919,7 @@ function plan(s, fresh) {
     const waitFor = P.cve ? (cve ? null : 'the CVE id') : (P.issue && !key ? 'the issue' : null)
     if (waitFor) info.push(`The final reply waits for ${waitFor}.`)
     else if (!replyCurrent(n.reply, V, P, cve, key)) ready.push('reply')
-    else gates.push(gate('send-reply', 'Send reply-final.txt to the reporter (check the thread for any earlier answer first).', 'done=reply'))
+    else gates.push(gate('send-reply', `Send reply-final.txt to the reporter (check ${archiveLinked(s) ? 'the thread' : 'your mail'} for any earlier answer first).`, 'done=reply'))
   }
 
   // The fix on the default branch.
