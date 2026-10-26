@@ -342,6 +342,17 @@ Project rule files are no longer bundled with this repository. They live in
 [`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects)
 and are installed on demand via the Install Info guideline.
 
+## Releases and versioning
+
+This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Notable changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
+
+Releases are cut by pushing a `vMAJOR.MINOR.PATCH` tag (for example `v1.0.0`). A
+GitHub Actions workflow (`.github/workflows/release.yml`) then publishes the
+matching [GitHub Release](https://github.com/Open-Harness-Engineering/ai-agents-oss-helper/releases)
+with generated notes. The `curl … | bash` installer always tracks the latest
+state of `main`.
+
 ## Contributing
 
 1. Fork the repository
