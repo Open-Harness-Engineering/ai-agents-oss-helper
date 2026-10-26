@@ -9,8 +9,8 @@
 ```
 
 - `<case>` - a slug for the report (lowercase letters, digits and dashes, for example `xml-entities-source-body`). Required, positional. One case is one report.
-- `report=` - the report as a local file, on the first run of a case.
-- `threads=` - one or more mail-archive thread ids, when the operator preferences name an MCP server that archives the project's private security list (step 5). It works on the first run and later, to attach more threads.
+- `report=` - the report as a local file, on the first run of a case. A file report (the same holds for a report pasted into the conversation) is not tied to the mail archive: with an archive configured but no `threads=`, nothing searches it for this report - the loader does not look for its thread, triage leaves it out of the prior-work search, there is no reply-evidence and nothing is recorded on a thread - and the reply drafts tell the maintainer to check their mail for an earlier reply. Pass `threads=` to tie the case to the archive.
+- `threads=` - one or more mail-archive thread ids, when the operator preferences name an MCP server that archives the project's private security list (step 5). Only the threads named here tie a case to the archive. It works on the first run and later, to attach more threads; from then on the case uses the archive as usual (reply-evidence, and the ruling recorded on the threads). The CNA reservation lookup for the CVE id reads the archive's reservation announcements, not this report, so it is unaffected either way.
 - `verdict=`, `cve=`, `issue=`, `pr=`, `credit=`, `targets=`, `fix-model=` and `template=` - maintainer decisions. They are sticky: the case remembers them.
 - `approve=` - lets this run publish what the maintainer has reviewed: `issue` (create the sanitized issue), `pr` (push and open the fix PR), `backports` (push and open the backport and upgrade-note PRs). An approval counts for one run only, and never for a draft or branch produced in that same run.
 - `done=reply` - the maintainer has sent the reply to the reporter.
@@ -138,7 +138,7 @@ The case keeps no configuration of its own. Every run resolves it again from the
 | `OSS_JIRA_USER` | the Jira user of `$JIRA_TOKEN` | Assignee for a Jira issue |
 | `OSS_CVE_BACKUP_REPO` | _(none)_ | The private draft repository: the CVE drafts are archived there, after the CVE-draft guideline (`draft-cve.md`) verifies it is private. Unset, the drafts stay local in the case directory only. |
 
-- **Operator preferences**: a free-text Markdown file, given verbatim to every node, for habits that belong to the maintainer rather than the project. It is also where a maintainer names a mail archive: an MCP server that reads the project's private security list, which the workflow then uses to fetch report threads, check for earlier replies and record the ruling. For example:
+- **Operator preferences**: a free-text Markdown file, given verbatim to every node, for habits that belong to the maintainer rather than the project. It is also where a maintainer names a mail archive: an MCP server that reads the project's private security list, which the workflow then uses - for the threads named with `threads=` - to read the discussion, check for earlier replies and record the ruling. A report given only as a file is not tied to the archive. For example:
 
 ```text
 - Sign every commit with git commit -S.

@@ -190,7 +190,7 @@ function makeSim(rec, config) {
   console.log('\nGitHub project without project-security.md')
   const { sim, disk, runIt } = makeSim('VALID', GITHUB_PROJECT)
   let r = await runIt({ report: '/tmp/report.txt' })
-  check(/There is no mail archive here/.test(sim.prompts['draft:reply'] || ''), 'without a mail archive, the reply draft tells the maintainer to check their mail')
+  check(/check their mail/.test(sim.prompts['draft:reply'] || '') && !/read every case thread/.test(sim.prompts['draft:reply'] || ''), 'without a mail archive, the reply draft tells the maintainer to check their mail')
   r = await runIt({ decision: { verdict: 'VALID', cve: 'CVE-2026-22222' }, approve: { issue: true } })
   check(gateIds(r).includes('fix-model') && !r.ran.includes('issue'), 'an unknown fix model stops the issue path and asks')
   check(r.next.includes('fix-model=public'), 'the next command proposes a fix model: ' + r.next)
@@ -267,6 +267,19 @@ function makeSim(rec, config) {
   check(r.ran.includes('triage') && sim.opts.load.model === undefined && sim.opts.persist.model === undefined, 'economy=off: the loader and the persistence step inherit the session model')
   r = await runIt({ options: { economy: 'no' } })
   check(r.error === 'invalid arguments', 'a non-boolean economy option is rejected before any agent runs')
+}
+
+// ---- A file report with a mail archive configured but no threads= stays off the archive -----
+{
+  console.log('\nFile report, mail archive configured, no threads')
+  const { sim, disk, runIt } = makeSim('VALID', JIRA_PROJECT) // JIRA_PROJECT names a mail archive
+  disk.report.threads = [] // the report arrived as a file; no threads= was passed
+  await runIt({ report: '/tmp/report.txt' })
+  check(/do not search the mail archive for this report/.test(sim.prompts.load) && !/search it for the reporter/.test(sim.prompts.load), 'the loader does not search the archive for a file report')
+  check(!/an archive can lag/.test(sim.prompts.triage) && !/search by reporter and by subject/.test(sim.prompts.triage), 'triage leaves the mail archive out of the prior-work search')
+  check(/check their mail/.test(sim.prompts['draft:reply']) && !/read every case thread/.test(sim.prompts['draft:reply']), 'the reply draft falls back to the check-your-mail header')
+  await runIt({ decision: { verdict: 'VALID' } })
+  check(sim.mirrors.length === 0, 'nothing is recorded in the archive for a file report with no threads')
 }
 
 // ---- Argument validation and plan mode ------------------------------------------------------
