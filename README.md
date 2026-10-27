@@ -44,6 +44,24 @@ cd ai-agents-oss-helper
 ./install.sh           # All agents
 ```
 
+### Installing a specific version
+
+By default the installer fetches the latest assets from `main`. To install from
+a published release tag instead, pass `--version` (or set the
+`OSS_HELPER_VERSION` environment variable). This applies to remote
+(`curl | bash`) installs:
+
+```bash
+# Pin a release with a flag
+curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash -s -- --version v1.0.0
+
+# ...or with an environment variable
+curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | OSS_HELPER_VERSION=v1.0.0 bash
+```
+
+A local `./install.sh` run installs the files from your current checkout, so to
+pin a version from a clone, check out the tag first (`git checkout v1.0.0`).
+
 ## How It Works
 
 The helper provides guidelines that are project-agnostic. Project-specific configuration is stored in rule files with three files per project:

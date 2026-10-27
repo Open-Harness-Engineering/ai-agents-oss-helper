@@ -12,11 +12,27 @@
 #   ./install.sh codex        # Install to codex only
 #   ./install.sh agy          # Install to agy only
 #
+# Options:
+#   --version <tag>           Install assets from a release tag instead of main.
+#                             Remote installs only (curl | bash); or set
+#                             OSS_HELPER_VERSION. Example:
+#                             curl -fsSL .../main/install.sh | bash -s -- --version v1.0.0
+#
 
 set -euo pipefail
 
 # Configuration
-BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main}"
+# Release ref to install assets from (used for remote installs, e.g. curl | bash).
+# Precedence: --version flag > OSS_HELPER_VERSION env var > default "main".
+OSS_HELPER_REF="${OSS_HELPER_VERSION:-main}"
+# BASE_URL may be set explicitly to override the derived URL (e.g. tests, mirrors);
+# an explicit value takes precedence over OSS_HELPER_REF / --version.
+if [[ -n "${BASE_URL:-}" ]]; then
+    BASE_URL_EXPLICIT=true
+else
+    BASE_URL_EXPLICIT=false
+fi
+BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/$OSS_HELPER_REF}"
 AGENTS=("claude" "bob" "gemini" "opencode" "codex" "agy")
 
 # Shared initialization file (copied into each skill directory during install)
@@ -1024,29 +1040,94 @@ install_for_agent() {
     esac
 }
 
+# Print usage/help.
+usage() {
+    cat <<USAGE
+AI Agent OSS Helper - Installer
+
+Usage: install.sh [--version <tag>] [agent]
+
+Agents: ${AGENTS[*]}
+  (omit the agent to install for all of them)
+
+Options:
+  --version <tag>   Install assets from a release tag instead of the latest
+                    main. Applies to remote installs (curl | bash); can also
+                    be set via the OSS_HELPER_VERSION environment variable.
+  -h, --help        Show this help and exit.
+
+Examples:
+  curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash -s -- --version v1.0.0
+  OSS_HELPER_VERSION=v1.0.0 ./install.sh claude
+USAGE
+}
+
 # Main
 main() {
     local agents_to_install=()
+    local selected_agent=""
 
     # Parse arguments
-    if [[ $# -eq 0 ]]; then
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --version)
+                if [[ $# -lt 2 ]]; then
+                    error "--version requires a tag argument (e.g. --version v1.0.0)"
+                    exit 1
+                fi
+                OSS_HELPER_REF="$2"
+                shift 2
+                ;;
+            --version=*)
+                OSS_HELPER_REF="${1#*=}"
+                shift
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -*)
+                error "Unknown option: $1"
+                usage
+                exit 1
+                ;;
+            *)
+                if [[ -n "$selected_agent" ]]; then
+                    error "Unexpected argument: $1"
+                    echo "Valid agents: ${AGENTS[*]}"
+                    exit 1
+                fi
+                selected_agent="$1"
+                shift
+                ;;
+        esac
+    done
+
+    # Derive BASE_URL from the chosen ref unless BASE_URL was set explicitly.
+    if [[ "$BASE_URL_EXPLICIT" == "false" ]]; then
+        BASE_URL="https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/$OSS_HELPER_REF"
+    fi
+
+    # Resolve which agents to install.
+    if [[ -z "$selected_agent" ]]; then
         agents_to_install=("${AGENTS[@]}")
     else
         local valid=false
         for agent in "${AGENTS[@]}"; do
-            if [[ "$1" == "$agent" ]]; then
+            if [[ "$selected_agent" == "$agent" ]]; then
                 valid=true
                 break
             fi
         done
 
         if [[ "$valid" == "false" ]]; then
-            error "Unknown agent: $1"
+            error "Unknown agent: $selected_agent"
             echo "Valid agents: ${AGENTS[*]}"
             exit 1
         fi
 
-        agents_to_install=("$1")
+        agents_to_install=("$selected_agent")
     fi
 
     echo ""
