@@ -11,6 +11,7 @@ on:
       - "skills/**/*.sh"
       - "install.sh"
       - "scripts/test-*.sh"
+      - "scripts/build-docs.mjs"
       - ".github/workflows/workflow-tests.yml"
 
 permissions:
@@ -33,3 +34,5 @@ jobs:
         run: bash scripts/test-claude-workflow-install.sh
       - name: Test the helper scripts (stand-in gh)
         run: bash scripts/test-helper-scripts.sh
+      - name: Test the docs site generator
+        run: bash scripts/test-build-docs.sh

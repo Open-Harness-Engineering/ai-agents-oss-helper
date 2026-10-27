@@ -4,6 +4,12 @@ A collection of skills for AI coding agents (Claude, Bob, Gemini, OpenCode, Code
 
 For agents that support skills natively (Claude, Bob, Codex, agy), the helper is installed as 6 focused, user-invocable skills — just describe what you want to do (or invoke `/oss-*` directly) and the agent follows the appropriate guidelines automatically. For other agents (Gemini, OpenCode), individual commands are generated from the same guidelines.
 
+## Documentation
+
+Browse the full command and workflow reference at
+[open-harness-engineering.github.io/ai-agents-oss-helper](https://open-harness-engineering.github.io/ai-agents-oss-helper/),
+generated from the guidelines and published via GitHub Pages.
+
 ## Getting Started
 
 Any project can use the helper by adding an `.oss-ai-helper-rules/` directory to its repository root with three rule files:
