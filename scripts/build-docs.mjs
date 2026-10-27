@@ -7,6 +7,10 @@
 //     - install.sh            GUIDELINE_COMMANDS registry -> the /oss-* commands
 //     - skills/<id>/SKILL.md   frontmatter description      -> per-skill blurb
 //     - workflows/*.js         `export const meta`          -> the workflows
+//     - docs/reference.json    authored summaries + usage examples (merged in)
+//
+//   Every registry command must have a docs/reference.json entry; the build
+//   fails otherwise, so new commands cannot ship undocumented.
 //
 //   Usage: node scripts/build-docs.mjs   (run from the repository root)
 
@@ -24,6 +28,19 @@ const REPO_URL = `https://github.com/${REPO}`
 
 const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+const usageBlock = (usage) =>
+  usage && usage.length
+    ? `<pre class="usage"><code>${usage.map(esc).join('\n')}</code></pre>`
+    : ''
+
+// --- reference content (authored summaries + usage examples) ---------------
+
+function readReference() {
+  const p = join(ROOT, 'docs', 'reference.json')
+  const ref = JSON.parse(readFileSync(p, 'utf8'))
+  return { commands: ref.commands || {}, workflows: ref.workflows || {} }
+}
 
 // --- commands (install.sh GUIDELINE_COMMANDS) ------------------------------
 
@@ -102,20 +119,23 @@ function readWorkflows() {
 
 // --- render ----------------------------------------------------------------
 
-function render(commandGroups, workflows) {
+function render(commandGroups, workflows, reference) {
   const totalCommands = [...commandGroups.values()].reduce((n, c) => n + c.length, 0)
 
   const commandsHtml = [...commandGroups.entries()]
     .map(([skill, cmds]) => {
       const blurb = skillBlurb(skill)
       const rows = cmds
-        .map(
-          (c) => `        <div class="cmd">
+        .map((c) => {
+          const ref = reference.commands[c.command] || {}
+          const summary = ref.summary || c.description
+          return `        <div class="cmd">
           <code class="name">/${esc(c.command)}</code>
-          <p class="desc">${esc(c.description)}</p>
+          <p class="desc">${esc(summary)}</p>
+          ${usageBlock(ref.usage)}
           <p class="meta"><span class="skill">${esc(skill)}</span> · <span class="file">${esc(c.file)}</span></p>
         </div>`
-        )
+        })
         .join('\n')
       return `      <section class="group" id="${esc(skill)}">
         <h3><code>${esc(skill)}</code> <span class="count">${cmds.length}</span></h3>
@@ -127,6 +147,7 @@ ${rows}
 
   const workflowsHtml = workflows
     .map((w) => {
+      const ref = reference.workflows[w.name] || {}
       const phases = (w.phases || [])
         .map(
           (p) =>
@@ -135,7 +156,8 @@ ${rows}
         .join('\n')
       return `      <section class="group" id="wf-${esc(w.name)}">
         <h3><code>/${esc(w.name)}</code></h3>
-        <p class="desc">${esc(w.description || '')}</p>
+        <p class="desc">${esc(ref.summary || w.description || '')}</p>
+        ${usageBlock(ref.usage)}
         ${w.whenToUse ? `<p class="when"><strong>When to use:</strong> ${esc(w.whenToUse)}</p>` : ''}
         ${phases ? `<p class="meta">Phases</p>\n        <ol class="phases">\n${phases}\n        </ol>` : ''}
       </section>`
@@ -153,7 +175,7 @@ ${rows}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OSS Helper — Commands &amp; Workflows</title>
-<meta name="description" content="Reference for the AI Agents OSS Helper commands and workflows.">
+<meta name="description" content="Usage and reference for the AI Agents OSS Helper commands and workflows.">
 <style>
   :root {
     --bg: #ffffff; --fg: #1b1f24; --muted: #596273; --line: #e3e7ee;
@@ -194,8 +216,13 @@ ${rows}
   .blurb { color: var(--muted); margin: 0 0 14px; }
   .cmd { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin: 8px 0; }
   .cmd .name { color: var(--code); font-weight: 600; }
-  .cmd .desc, .group > .desc { margin: 6px 0 4px; }
-  .cmd .meta, .when { color: var(--muted); font-size: .85rem; margin: 2px 0 0; }
+  .cmd .desc, .group > .desc { margin: 6px 0 8px; }
+  .cmd .meta, .when { color: var(--muted); font-size: .85rem; margin: 6px 0 0; }
+  .usage {
+    background: var(--code-bg); color: var(--code); border-radius: 6px;
+    padding: 10px 12px; margin: 8px 0; overflow-x: auto; font-size: .85rem; line-height: 1.5;
+  }
+  .usage code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
   .phases { margin: 6px 0 0; padding-left: 22px; }
   .phases li { margin: 3px 0; }
   footer { border-top: 1px solid var(--line); margin-top: 40px; color: var(--muted); font-size: .9rem; }
@@ -230,7 +257,7 @@ ${rows}
     </p>
 
     <h2>Commands <span class="count">${totalCommands}</span></h2>
-    <p class="section-note">Grouped by the skill that provides them.</p>
+    <p class="section-note">Grouped by the skill that provides them. Arguments shown in the examples are illustrative.</p>
 ${commandsHtml}
 
     <h2>Workflows</h2>
@@ -240,7 +267,7 @@ ${workflowsHtml}
 
   <footer>
     <div class="wrap">
-      Generated from <code>install.sh</code> and <code>workflows/*.js</code> on ${new Date().toISOString().slice(0, 10)}.
+      Generated from <code>install.sh</code>, <code>docs/reference.json</code> and <code>workflows/*.js</code> on ${new Date().toISOString().slice(0, 10)}.
       <a href="${REPO_URL}">${REPO}</a>
     </div>
   </footer>
@@ -251,6 +278,7 @@ ${workflowsHtml}
 
 // --- main ------------------------------------------------------------------
 
+const reference = readReference()
 const commandGroups = readCommands()
 const workflows = readWorkflows()
 const totalCommands = [...commandGroups.values()].reduce((n, c) => n + c.length, 0)
@@ -260,8 +288,23 @@ if (totalCommands === 0) {
   process.exit(1)
 }
 
+// Every registry command must be documented in docs/reference.json.
+const missing = []
+for (const cmds of commandGroups.values()) {
+  for (const c of cmds) {
+    const ref = reference.commands[c.command]
+    if (!ref || !ref.usage || ref.usage.length === 0) missing.push(c.command)
+  }
+}
+if (missing.length) {
+  console.error(
+    `build-docs: ${missing.length} command(s) missing a docs/reference.json entry with usage: ${missing.join(', ')}`
+  )
+  process.exit(1)
+}
+
 mkdirSync(OUT, { recursive: true })
-writeFileSync(join(OUT, 'index.html'), render(commandGroups, workflows))
+writeFileSync(join(OUT, 'index.html'), render(commandGroups, workflows, reference))
 writeFileSync(join(OUT, '.nojekyll'), '')
 
 console.log(

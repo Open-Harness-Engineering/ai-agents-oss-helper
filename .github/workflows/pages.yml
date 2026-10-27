@@ -9,6 +9,7 @@ on:
       - "skills/**/SKILL.md"
       - "workflows/**"
       - "scripts/build-docs.mjs"
+      - "docs/reference.json"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 

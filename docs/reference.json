@@ -1,0 +1,158 @@
+{
+  "_comment": "Usage examples and fuller descriptions for the docs site. Every command in install.sh's GUIDELINE_COMMANDS must have an entry here (enforced by scripts/build-docs.mjs). `summary` overrides the registry one-liner; `usage` is a list of example invocations.",
+  "commands": {
+    "oss-fix-issue": {
+      "summary": "Takes an issue from the project's tracker through to a pull request: parses the reference, branches with the project's naming convention, implements the fix (delegating to a coding agent when one is available), and opens the PR.",
+      "usage": ["/oss-fix-issue 42", "/oss-fix-issue https://github.com/org/repo/issues/42", "/oss-fix-issue 42 sign=none build=full"]
+    },
+    "oss-analyze-issue": {
+      "summary": "Investigates an issue without changing code: reproduces the problem, locates the relevant code, and reports the findings and a suggested approach.",
+      "usage": ["/oss-analyze-issue 42", "/oss-analyze-issue https://github.com/org/repo/issues/42"]
+    },
+    "oss-create-issue": {
+      "summary": "Creates a new issue in the project's tracker (GitHub or Jira), gathering the title, type and details and confirming before filing.",
+      "usage": ["/oss-create-issue", "/oss-create-issue flaky timeout in the connection-pool test"]
+    },
+    "oss-list-issues": {
+      "summary": "Lists the issues currently assigned to you in the project's tracker.",
+      "usage": ["/oss-list-issues"]
+    },
+    "oss-find-task": {
+      "summary": "Finds an issue to contribute to, matched to an experience level through the project's task labels (e.g. good first issue, help wanted).",
+      "usage": ["/oss-find-task", "/oss-find-task beginner"]
+    },
+    "oss-fix-backlog-task": {
+      "summary": "Fixes a task tracked in a Backlog.md file (requires the Backlog MCP server). The backlog repository path is mandatory and is never assumed.",
+      "usage": ["/oss-fix-backlog-task TASK-001 repo=../my-backlog"]
+    },
+    "oss-triage-issue": {
+      "summary": "Maintainer-side triage of a filed issue: assesses validity, scope and labels and recommends next steps.",
+      "usage": ["/oss-triage-issue 42"]
+    },
+    "oss-create-multi-repo-issue": {
+      "summary": "Creates linked issues across several repositories for a change that spans more than one repo, cross-referencing them.",
+      "usage": ["/oss-create-multi-repo-issue"]
+    },
+    "oss-fix-multi-repo-issue": {
+      "summary": "Fixes an issue whose work spans multiple repositories, coordinating branches and PRs across them from one canonical issue.",
+      "usage": ["/oss-fix-multi-repo-issue org/repo#42"]
+    },
+    "oss-review-pr": {
+      "summary": "Reviews a pull request against the project's rules and contribution standards, reporting findings constructively.",
+      "usage": ["/oss-review-pr 138", "/oss-review-pr https://github.com/org/repo/pull/138"]
+    },
+    "oss-address-review": {
+      "summary": "Addresses the review feedback on one of your pull requests, applying the changes and replying to the comments.",
+      "usage": ["/oss-address-review 138"]
+    },
+    "oss-review-prs": {
+      "summary": "Reviews a batch of the repository's open PRs in one pass, summarising each.",
+      "usage": ["/oss-review-prs"]
+    },
+    "oss-pr-status": {
+      "summary": "Reports a PR's CI checks, review state and merge readiness; defaults to the PR for the current branch when none is given.",
+      "usage": ["/oss-pr-status 138", "/oss-pr-status"]
+    },
+    "oss-list-pr-status": {
+      "summary": "Lists all your open PRs with a CI / review / merge-readiness summary for each.",
+      "usage": ["/oss-list-pr-status"]
+    },
+    "oss-list-prs": {
+      "summary": "Lists all open PRs in the repository for browsing and review selection.",
+      "usage": ["/oss-list-prs"]
+    },
+    "oss-merge-pr": {
+      "summary": "Merges a PR after verifying CI is green, discussions are resolved and approvals are met; squash-merges and deletes the branch.",
+      "usage": ["/oss-merge-pr 138"]
+    },
+    "oss-backport-pr": {
+      "summary": "Cherry-picks a merged PR onto a maintenance/release branch. The target branch is required; the remote defaults to origin.",
+      "usage": ["/oss-backport-pr 138 branch=1.x", "/oss-backport-pr 138 branch=1.x remote=upstream"]
+    },
+    "oss-fix-ci-errors": {
+      "summary": "Downloads a failed CI run's reports, identifies the errors and fixes them; defaults to the latest failed run when no run id is given.",
+      "usage": ["/oss-fix-ci-errors", "/oss-fix-ci-errors 1234567890"]
+    },
+    "oss-fix-sonarcloud": {
+      "summary": "Fixes SonarCloud issues for a given rule using the project's component key; can target a specific branch.",
+      "usage": ["/oss-fix-sonarcloud java:S1118", "/oss-fix-sonarcloud S1192 branch=fix/sonar"]
+    },
+    "oss-fix-github-alert": {
+      "summary": "Fixes a GitHub security or quality alert of a given type: code-scanning, dependabot or secret-scanning.",
+      "usage": ["/oss-fix-github-alert dependabot", "/oss-fix-github-alert code-scanning limit=5"]
+    },
+    "oss-quick-fix": {
+      "summary": "Applies a quick fix with no tracked issue (CI tweak, docs, dependency bump, ...), using the quick-fix branch and commit convention.",
+      "usage": ["/oss-quick-fix bump actions/checkout to v6", "/oss-quick-fix fix a typo in the README"]
+    },
+    "oss-triage-security-report": {
+      "summary": "Triages an inbound security vulnerability report: assesses validity and scope and recommends a verdict.",
+      "usage": ["/oss-triage-security-report ./report.txt"]
+    },
+    "oss-security-case": {
+      "summary": "Drives one security report end to end (triage, reporter reply, CVE reservation, sanitized issue, fix, backports and CVE draft), stopping at every maintainer gate. Runs as a Claude Code workflow (see Workflows below).",
+      "usage": ["/oss-security-case xml-entities report=./report.txt", "/oss-security-case xml-entities verdict=VALID approve=issue"]
+    },
+    "oss-analyze-third-party-cve": {
+      "summary": "Analyses the project's exposure to a CVE in a third-party dependency: checks the affected version ranges and maps the vulnerable APIs to actual project usage.",
+      "usage": ["/oss-analyze-third-party-cve CVE-2025-12345"]
+    },
+    "oss-draft-cve": {
+      "summary": "Drafts a project-specific CVE advisory page plus the matching CVE Record Format JSON, mirroring a template. The CVE id and template are required.",
+      "usage": ["/oss-draft-cve CVE-2026-12345 template=./advisory-template.md", "/oss-draft-cve CVE-2026-12345 template=<url> fix_pr=138"]
+    },
+    "oss-create-security-advisory": {
+      "summary": "Opens a private GitHub security advisory (GHSA) to report a vulnerability, guiding through the required fields.",
+      "usage": ["/oss-create-security-advisory"]
+    },
+    "oss-update-gh-advisory-db": {
+      "summary": "Populates GitHub Advisory Database entries for the project's already-published CVEs.",
+      "usage": ["/oss-update-gh-advisory-db", "/oss-update-gh-advisory-db CVE-2025-12345"]
+    },
+    "oss-security-scan": {
+      "summary": "Scans the codebase for security vulnerabilities and reports findings; can be narrowed to a path.",
+      "usage": ["/oss-security-scan", "/oss-security-scan src/main/java"]
+    },
+    "oss-add-project": {
+      "summary": "Adds a new project to the OSS Helper by generating its rule files from a name and a short description.",
+      "usage": ["/oss-add-project wanaku a Java MCP router built on Quarkus"]
+    },
+    "oss-install-info": {
+      "summary": "Installs a project's rule files from the known-projects repository for the current repo.",
+      "usage": ["/oss-install-info"]
+    },
+    "oss-create-rules": {
+      "summary": "Generates project rule files by auto-inspecting a repository (build tool, conventions, trackers).",
+      "usage": ["/oss-create-rules org/repo", "/oss-create-rules https://github.com/org/repo"]
+    },
+    "oss-update-knowledge": {
+      "summary": "Updates a project's rule files from a URL (such as a CONTRIBUTING page) or a free-text description of its conventions.",
+      "usage": ["/oss-update-knowledge https://github.com/org/repo/blob/main/CONTRIBUTING.md", "/oss-update-knowledge squash-merge only, build with Maven"]
+    },
+    "oss-workspace-init": {
+      "summary": "Initialises a multi-repo workspace so the helper can operate across several related repositories.",
+      "usage": ["/oss-workspace-init"]
+    },
+    "oss-workspace-status": {
+      "summary": "Reports the status of every repository in the workspace (branch, local changes, sync state).",
+      "usage": ["/oss-workspace-status"]
+    },
+    "oss-qe-create-test-plan": {
+      "summary": "Creates a test plan for a project feature or component, written to <name>.md; optional guidance scopes it.",
+      "usage": ["/oss-qe-create-test-plan operator-basic-tests", "/oss-qe-create-test-plan connector-smoke focus on error paths"]
+    },
+    "oss-qe-verify": {
+      "summary": "Executes an existing test plan and tracks results; accepts a plan name or a file path, plus optional phase guidance.",
+      "usage": ["/oss-qe-verify operator-basic-tests", "/oss-qe-verify ./plans/connector-smoke.md"]
+    },
+    "oss-qe-module-audit": {
+      "summary": "Deep-audits a module family for bugs, antipatterns, inconsistencies, missing features and new ideas.",
+      "usage": ["/oss-qe-module-audit camel-kafka", "/oss-qe-module-audit the connector modules"]
+    }
+  },
+  "workflows": {
+    "oss-security-case": {
+      "usage": ["/oss-security-case xml-entities report=./report.txt", "/oss-security-case xml-entities verdict=VALID approve=issue,pr", "/oss-security-case xml-entities status"]
+    }
+  }
+}
