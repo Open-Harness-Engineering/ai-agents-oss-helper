@@ -12,6 +12,7 @@ on:
       - "install.sh"
       - "scripts/test-*.sh"
       - "scripts/build-docs.mjs"
+      - "docs/reference.json"
       - ".github/workflows/workflow-tests.yml"
 
 permissions:

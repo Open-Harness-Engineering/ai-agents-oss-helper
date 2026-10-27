@@ -23,6 +23,10 @@ done < <(grep -oE '"oss-[a-z0-9-]+\|[^|]+\|oss-[a-z0-9-]+\|[^"]+"' install.sh | 
 # The workflow must be documented.
 grep -q "oss-security-case" site/index.html || fail "workflow oss-security-case missing from the site"
 
+# Usage examples (from docs/reference.json) must render.
+grep -q 'class="usage"' site/index.html || fail "no usage blocks rendered"
+grep -q '/oss-backport-pr 138 branch=1.x' site/index.html || fail "expected command usage example missing"
+
 # No generation artefacts leaked into the output.
 ! grep -qE 'undefined|\[object Object\]|\$\{' site/index.html || fail "generation artefact leaked into the site"
 
