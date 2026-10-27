@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release, e.g. v1.0.0 (created on the selected branch if it does not exist yet)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -18,9 +24,22 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --title "${GITHUB_REF_NAME}" \
-            --generate-notes \
-            --verify-tag
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # Manual run: GITHUB_REF_NAME is the branch, so use the supplied tag.
+            # gh creates the tag at the checked-out commit if it does not exist.
+            gh release create "$INPUT_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$INPUT_TAG" \
+              --target "$GITHUB_SHA" \
+              --generate-notes
+          else
+            # Tag push: release the tag that triggered the run.
+            gh release create "$GITHUB_REF_NAME" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes \
+              --verify-tag
+          fi
