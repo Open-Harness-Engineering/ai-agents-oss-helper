@@ -140,7 +140,7 @@ The case keeps no configuration of its own. Every run resolves it again from the
 | `OSS_SECURITY_NOTES_DIR` | _(none)_ | A directory of Markdown notes the triage searches for earlier reports and rulings |
 | `OSS_CVE_RECORDS_DIR` | _(none)_ | Where to copy the drafted CVE5 JSON as well |
 | `OSS_JIRA_USER` | the Jira user of `$JIRA_TOKEN` | Assignee for a Jira issue |
-| `OSS_CVE_BACKUP_REPO` | _(none)_ | The private draft repository: the CVE drafts are archived there, after the CVE-draft guideline (`draft-cve.md`) verifies it is private. Unset, the drafts stay local in the case directory only. |
+| `OSS_CVE_BACKUP_REPO` | _(none)_ | The private draft repository: the CVE drafts are archived there, after the CVE-draft guideline (`draft-cve.md`) verifies it is private. The workflow archives them with a script, `cve/archive-cve.sh`; when the agent may not run it, the final gate hands it to the maintainer. Unset, the drafts stay local in the case directory only. |
 
 - **Operator preferences**: a free-text Markdown file, given verbatim to every node, for habits that belong to the maintainer rather than the project. It is also where a maintainer names a mail archive: an MCP server that reads the project's private security list, which the workflow then uses - for the threads named with `threads=` - to read the discussion, check for earlier replies and record the ruling. A report given only as a file is not tied to the archive. For example:
 

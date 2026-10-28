@@ -75,7 +75,7 @@ keep = {
     'reply': ['forVerdict', 'forCve', 'forIssue', 'file', 'alreadyReplied'],
     'fix': ['worktree', 'branch', 'commits', 'build', 'guideNote', 'guideFile', 'lintHard', 'lintSoft', 'prBodyFile', 'prScript', 'pr', 'url'],
     'docSync': ['worktree', 'branch', 'commit', 'files', 'prBodyFile', 'pr', 'url'],
-    'cveDraft': ['forCve', 'files', 'archived', 'checklistFile'],
+    'cveDraft': ['forCve', 'files', 'archived', 'archiveScript', 'checklistFile'],
 }
 backport = ['line', 'localBranch', 'worktree', 'commits', 'straight', 'adaptations', 'fixVersion', 'prBodyFile', 'pr', 'url']
 try:
