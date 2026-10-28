@@ -121,6 +121,15 @@ function makeSim(rec, config) {
   check(digestScript && python3, 'the routing test runs on the probe\'s digest of the node files' + (python3 ? '' : ' (python3 missing: full files)'))
 }
 
+// ---- The calling session stays small --------------------------------------------------------
+{
+  console.log('\nCalling session')
+  check(/WORKFLOW_COMMANDS="oss-security-case"/.test(installer), 'the Claude command reads the guideline without the skill\'s initialization')
+  check(/workflow mode skips the skill's initialization steps/.test(guideline), 'the guideline says workflow mode needs no initialization')
+  check(/from the workflow's return value only/.test(guideline) && /Do not read the case files, query the tracker or the forge/.test(guideline), 'the relay uses the return value only')
+  check(/with one tool call that writes the file and replaces the case's line in the memory index/.test(guideline), 'the memory pointer is stored in one tool call')
+}
+
 // ---- Jira project with project-security.md: the full VALID lifecycle -----------------------
 {
   console.log('\nJira project, VALID lifecycle')

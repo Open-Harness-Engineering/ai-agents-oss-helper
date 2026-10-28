@@ -49,6 +49,8 @@ A VALID fix follows the project's fix model. With `public`, a neutral public iss
 
 ### 3. Workflow mode
 
+The workflow's loader detects the project and loads its rules and configuration itself, so workflow mode skips the skill's initialization steps.
+
 #### 3.1 Build the arguments
 
 Map the command arguments onto the workflow's `args`:
@@ -72,18 +74,20 @@ Run the command from a clone of the project, or pass `repo=<absolute path>` as `
 
 #### 3.2 Run the workflow
 
-Invoking this command is the maintainer's opt-in to run the workflow. Call the Workflow tool with `{name: "oss-security-case", args: <object>}`. If the name is not found, which happens when the workflow was installed during the current session, call it with `{scriptPath: "<home>/.claude/workflows/oss-security-case.js", args: <object>}` instead. The workflow runs in the background: wait for its notification.
+Invoking this command is the maintainer's opt-in to run the workflow. Call the Workflow tool with `{name: "oss-security-case", args: <object>}` directly, without checking for the file first. If the name is not found, which happens when the workflow was installed during the current session, call it with `{scriptPath: "<home>/.claude/workflows/oss-security-case.js", args: <object>}` instead. The workflow runs in the background: wait for its notification.
 
 #### 3.3 Relay the result
 
-Tell the maintainer:
+Tell the maintainer, from the workflow's return value only:
 
 - the verdict: the ruling, the triage recommendation, and the challenge outcome;
 - which nodes ran;
 - what is waiting on them, giving each gate's text and unblock hint verbatim;
 - the `next` command and the path of `STATUS.md`.
 
-If the agent keeps a persistent memory, store the result's `memory` pointer (`file`, `content`, `indexLine`) there, so that later sessions find the case. Keep embargoed details out of anything public.
+The return value carries all of it. Do not read the case files, query the tracker or the forge, or re-check what the workflow reported: the maintainer reads `STATUS.md` and the files it lists, and the next run reads the case again anyway.
+
+If the agent keeps a persistent memory, store the result's `memory` pointer (`file`, `content`, `indexLine`) there with one tool call that writes the file and replaces the case's line in the memory index, or adds it, so that later sessions find the case. Keep embargoed details out of anything public.
 
 ### 4. Manual mode
 
