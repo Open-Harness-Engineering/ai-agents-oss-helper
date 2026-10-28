@@ -45,7 +45,7 @@ export const meta = {
 //
 // Cost: every node is a fresh subagent that starts with the session's full context, and a tool call that
 // runs longer than five minutes expires that context's prompt cache, so the preamble keeps every call under
-// four minutes, the loader starts from a read-only probe script instead of probing one command at a time,
+// three minutes, the loader starts from a read-only probe script instead of probing one command at a time,
 // and the mechanical nodes run on cheaper models (MODEL_TIERS; options.economy = false turns that off).
 // The case state reaches the script only through the loader's output, so the probe reduces the node files to
 // a digest of the fields the script reads; the nodes read the full records from nodes/ themselves.
@@ -538,7 +538,7 @@ Rules for every node:
 - ${lineText}
 - Only PUBLISHED CVEs may be named in anything a reporter or the public reads. ${published} Never name an unpublished CVE id, a sibling finding or another embargoed report there.
 - Scratch files (calculators, fetched pages, mock servers, copies of payloads) go in ${s.caseDir}/work/, never in /tmp or a session scratchpad.
-- Keep every tool call under four minutes. Builds, test runs and other long commands go to the background and are polled in slices of at most 240 seconds (for example timeout 240 tail --pid=<pid> -f /dev/null, then read the log), because a call that runs longer than five minutes expires the prompt cache and bills the whole context again.
+- Keep every tool call under three minutes. Builds, test runs and other long commands go to the background and are polled in slices of at most 180 seconds (for example timeout 180 tail --pid=<pid> -f /dev/null, then read the log). The prompt cache expires five minutes after the start of your previous request, and your own turn counts as well as the tool call: a longer gap bills the whole context again.
 - You never send email, reserve CVE ids, merge PRs, or publish or sign advisories. Those are the maintainer's actions.
 - Issue-tracker writes, git push and PR creation happen only in the nodes whose task says so. If the permission system refuses one of them, do not retry it and do not reshape the request: report it.
 ${record}${prefs}`
@@ -735,7 +735,7 @@ Overrides:
 - Implement the "Fix plan" in ${s.caseDir}/triage.md. Keep the change minimal. Name new tests for the behaviour (for example ...PathNormalizationTest), never for the attack, and follow the module's test conventions.
 - Prove the test: it must fail on the unfixed code for the reason the fix addresses, not with a compile error and not as a vacuous pass. Revert only the production change, run the test, restore the change.
 ${guide}
-- Build, test and format with the guideline's build workflow and project-standards.md${c.buildCommand ? ' (build: ' + c.buildCommand + ')' : ''}. Commit every regenerated file; git status must be clean at the end. Run one build at a time; start long builds in the background and poll them in slices of at most 240 seconds, as the rules above say, never in one long wait.
+- Build, test and format with the guideline's build workflow and project-standards.md${c.buildCommand ? ' (build: ' + c.buildCommand + ')' : ''}. Commit every regenerated file; git status must be clean at the end. Run one build at a time; start long builds in the background and poll them in slices of at most 180 seconds, as the rules above say, never in one long wait.
 - Commit message in the project's fix format${c.commitFormatFix ? ' ("' + c.commitFormatFix + '")' : ''}, with a neutral description, ending with the co-author trailer your attribution settings require. Sign the commit if the operator preferences ask for it. No session id anywhere.
 - ${lintRule(s)} Apply it to the commit message, to the added lines of the diff, and to the test class and method names. Fix the hard hits; list the soft hits.
 - Write ${s.caseDir}/pr-body.md: the problem in functional terms, the change, the tests; any attribution the project's agent instructions require; the last line is exactly "${PR_FOOTER}".
@@ -776,7 +776,7 @@ Overrides:
 - Worktree: git --git-dir=${c.repoRoot}/.git worktree add -b backport/${pr}-to-${sh} ${wt} ${c.upstreamRemote}/${line}. Cherry-pick with -x.
 ${guide}
 - Adapt to ${line} where needed, using the "Backport notes" of ${s.caseDir}/triage.md (test framework versions, annotations or generated files missing on older lines). Anything beyond a mechanical port makes straight=false; list the adaptations.
-- Build and test per project-standards.md, in the background and polled in slices of at most 240 seconds; generated files must come from this branch's own build, never copied from ${c.defaultBranch}. git status must be clean at the end.
+- Build and test per project-standards.md, in the background and polled in slices of at most 180 seconds; generated files must come from this branch's own build, never copied from ${c.defaultBranch}. git status must be clean at the end.
 - Commit with the original message, the "(cherry picked from commit <sha>)" line and the co-author trailer your attribution settings require; sign it if the operator preferences ask for it.
 - fixVersion: ${line}'s next unreleased version from its build file, moved to the next patch if that version is already tagged or has a release branch.
 - Write ${s.caseDir}/backport-${sh}-pr-body.md: "Backport of #${pr}" with the original title, whether it is straight or adapted (list the adaptations), any attribution the project requires, and last "${PR_FOOTER}".
