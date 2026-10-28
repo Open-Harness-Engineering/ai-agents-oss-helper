@@ -70,7 +70,7 @@ keep = {
     'challengeCode': ['agree', 'proposedVerdict', 'reasons', 'missedFacts', 'lens'],
     'draftReply': ['forVerdict', 'file', 'alreadyReplied'],
     'draftCve': ['file'],
-    'draftIssue': ['forVerdict', 'payloadFile', 'scriptFile', 'lintHard', 'lintSoft', 'missingVersions'],
+    'draftIssue': ['forVerdict', 'title', 'payloadFile', 'scriptFile', 'lintHard', 'lintSoft', 'missingVersions'],
     'issue': ['key', 'url'],
     'reply': ['forVerdict', 'forCve', 'forIssue', 'file', 'alreadyReplied'],
     'fix': ['worktree', 'branch', 'commits', 'build', 'guideNote', 'guideFile', 'lintHard', 'lintSoft', 'prBodyFile', 'prScript', 'pr', 'url'],
