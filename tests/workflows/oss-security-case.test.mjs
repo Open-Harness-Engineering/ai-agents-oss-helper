@@ -350,6 +350,17 @@ function makeSim(rec, config) {
   check(sim.mirrors.length === 0, 'nothing is recorded in the archive for a file report with no threads')
 }
 
+// ---- A loader that leaves repoBase out ------------------------------------------------------
+{
+  console.log('\nMissing repoBase')
+  const noBase = Object.assign({}, JIRA_PROJECT)
+  delete noBase.repoBase
+  const { sim, runIt } = makeSim('VALID', noBase)
+  await runIt({ report: '/tmp/report.txt' })
+  check(/\/work\/server-triage-demo /.test(sim.prompts.triage) && !/undefined/.test(sim.prompts.triage), 'the triage worktree is named after the clone directory when the loader leaves repoBase out')
+  check(/required: \['repoRoot', 'repoBase'/.test(src), 'the loader schema requires repoBase')
+}
+
 // ---- Argument validation and plan mode ------------------------------------------------------
 {
   console.log('\nArguments and plan mode')

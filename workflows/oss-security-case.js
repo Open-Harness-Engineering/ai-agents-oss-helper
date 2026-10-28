@@ -105,7 +105,7 @@ const DONE_ERR = { type: 'string', enum: ['done', 'error'] }
 
 const CONFIG_SCHEMA = {
   type: 'object',
-  required: ['repoRoot', 'repo', 'upstreamRemote', 'defaultBranch', 'tracker', 'worktreeRoot', 'casesRoot', 'skillsRoot', 'security'],
+  required: ['repoRoot', 'repoBase', 'repo', 'upstreamRemote', 'defaultBranch', 'tracker', 'worktreeRoot', 'casesRoot', 'skillsRoot', 'security'],
   properties: {
     repoRoot: STR,
     repo: STR,
@@ -1294,6 +1294,8 @@ function normalize(st, base) {
   const config = Object.assign({}, base, st.config)
   config.security = Object.assign({ present: false }, st.config && st.config.security ? st.config.security : base.security)
   if (typeof config.operatorNotes !== 'string') config.operatorNotes = ''
+  // repoBase names every worktree of the case; a loader that left it out must not produce "undefined-triage-...".
+  if (!config.repoBase && config.repoRoot) config.repoBase = String(config.repoRoot).replace(/\/+$/, '').split('/').pop()
   return {
     case: c,
     caseDir: st.caseDir || config.casesRoot + '/' + c,
