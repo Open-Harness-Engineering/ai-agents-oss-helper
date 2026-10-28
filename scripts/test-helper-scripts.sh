@@ -274,4 +274,43 @@ expect "$test_root/add-again.out" "already listed"
 [ "$(tail -2 "$list")" = "$(printf 'CVE-2020-0002  # another\nCVE-2021-0003  # no package')" ] || fail "add did not append on a line of its own"
 bash "$skip" filter < /dev/null 2> /dev/null || fail "filter failed on the installed list"
 
-echo 'PASS: oss-init.sh, pr-report.sh and skip-list.sh ship with the skills and behave as the guidelines expect'
+# --- security-case-probe.sh: the digest of the node files -------------------------------------
+
+probe="$test_home/.claude/skills/oss-security/security-case-probe.sh"
+cmp "$repo_root/skills/oss-security/security-case-probe.sh" "$probe"
+cases="$test_root/cases"
+mkdir -p "$cases/demo/nodes"
+cat > "$cases/demo/nodes/triage.json" <<'EOF'
+{"status": "done", "recommendedVerdict": "VALID", "fixVersionsByLine": {"main": "3.0.0"}, "summary": "LONG TRIAGE SUMMARY", "backportNotes": "LONG BACKPORT NOTES"}
+EOF
+cat > "$cases/demo/nodes/challengeCode.json" <<'EOF'
+{"status": "done", "agree": false, "proposedVerdict": "HARDENING", "reasons": ["first reason", "SECOND REASON"], "missedFacts": ["A MISSED FACT"]}
+EOF
+cat > "$cases/demo/nodes/backport_release-1.x.json" <<'EOF'
+{"status": "local", "line": "release-1.x", "worktree": "/w/bp", "adaptations": ["older test framework"], "fixVersion": "1.9.4", "tests": "LONG TEST REPORT"}
+EOF
+echo '{}' > "$cases/demo/decisions.json"
+OSS_SECURITY_CASES_DIR="$cases" bash "$probe" demo "$test_root" > "$test_root/probe.out" 2>&1
+expect "$test_root/probe.out" "--- nodes digest"
+expect "$test_root/probe.out" '"recommendedVerdict": "VALID"'
+expect "$test_root/probe.out" '"fixVersion": "1.9.4"'
+expect "$test_root/probe.out" '"older test framework"'
+expect "$test_root/probe.out" '"first reason"'
+expect "$test_root/probe.out" "A MISSED FACT"
+if grep -Eq "LONG TRIAGE SUMMARY|LONG BACKPORT NOTES|SECOND REASON|LONG TEST REPORT" "$test_root/probe.out"; then
+    fail "the digest kept a field the workflow does not read"
+fi
+if grep -Fq -- "--- file $cases/demo/nodes/" "$test_root/probe.out"; then fail "the probe printed the node files besides the digest"; fi
+echo '{"decisions": {"verdict": "VALID"}}' > "$cases/demo/decisions.json"
+OSS_SECURITY_CASES_DIR="$cases" bash "$probe" demo "$test_root" > "$test_root/probe-ruled.out" 2>&1
+if grep -Fq "A MISSED FACT" "$test_root/probe-ruled.out"; then fail "the digest kept the missed facts after the verdict was ruled"; fi
+# When the digest cannot be computed, the probe prints the node files themselves.
+mkdir -p "$test_root/nopython"
+printf '#!/bin/sh\necho "no python here" >&2\nexit 1\n' > "$test_root/nopython/python3"
+chmod +x "$test_root/nopython/python3"
+PATH="$test_root/nopython:$PATH" OSS_SECURITY_CASES_DIR="$cases" bash "$probe" demo "$test_root" > "$test_root/probe-fallback.out" 2>&1
+expect "$test_root/probe-fallback.out" "nodes digest: ERROR"
+expect "$test_root/probe-fallback.out" "--- file $cases/demo/nodes/triage.json"
+expect "$test_root/probe-fallback.out" "LONG TRIAGE SUMMARY"
+
+echo 'PASS: oss-init.sh, pr-report.sh, skip-list.sh and security-case-probe.sh ship with the skills and behave as the guidelines expect'

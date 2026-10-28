@@ -1,6 +1,8 @@
 // Offline test of workflows/oss-security-case.js: the workflow runs against mocked agents, so no
 // model, network, tracker or forge is touched.  Run with: node tests/workflows/oss-security-case.test.mjs
-import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -18,6 +20,22 @@ const clone = x => JSON.parse(JSON.stringify(x))
 let failures = 0
 const check = (cond, msg) => { if (!cond) { failures++; console.log('  FAIL: ' + msg) } else console.log('  ok: ' + msg) }
 const gateIds = r => (r.waitingOn || []).map(g => g.id)
+
+// The mocked loader returns what the real one returns: the probe's digest of the node files, computed by the
+// python embedded in security-case-probe.sh. Without python3 the probe prints the full files, and so does this.
+const digestScript = (probe.match(/python3 - "\$1" <<'PY'\n([\s\S]*?)\nPY\n/) || [])[1]
+let python3 = true
+try { execFileSync('python3', ['-c', 'pass']) } catch { python3 = false }
+function probeDigest(disk) {
+  if (!digestScript || !python3) return clone(disk.nodes)
+  const dir = mkdtempSync(join(tmpdir(), 'seccase-'))
+  try {
+    mkdirSync(join(dir, 'nodes'))
+    for (const [name, record] of Object.entries(disk.nodes)) writeFileSync(join(dir, 'nodes', name + '.json'), JSON.stringify(record))
+    writeFileSync(join(dir, 'decisions.json'), JSON.stringify(disk.decisions || {}))
+    return JSON.parse(execFileSync('python3', ['-', dir], { input: digestScript }).toString())
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+}
 
 const JIRA_PROJECT = {
   repoRoot: '/work/server', repo: 'example/server', repoBase: 'server', upstreamRemote: 'origin', defaultBranch: 'main', shallow: true,
@@ -49,7 +67,7 @@ function makeSim(rec, config) {
     if (lane) { sim.active[lane]++; sim.maxActive[lane] = Math.max(sim.maxActive[lane], sim.active[lane]) }
     await sleep(5)
     try {
-      if (label === 'load') return { initialized: true, caseDir, today: '2026-01-15', config: clone(config), report: disk.report, decisionsFile: clone(disk.decisions), nodes: clone(disk.nodes), live: clone(sim.live) }
+      if (label === 'load') return { initialized: true, caseDir, today: '2026-01-15', config: clone(config), report: disk.report, decisionsFile: clone(disk.decisions), nodes: probeDigest(disk), live: clone(sim.live) }
       if (label === 'triage') return { status: 'done', recommendedVerdict: sim.rec, confidence: 'high', summary: 'consumer echoes exception', files: [caseDir + '/triage.md'], components: ['http-server'], fixVersionsByLine: { main: '3.0.0', 'release-2.x': '2.5.1', 'release-1.x': '1.9.4' }, neverCite: ['CVE-2026-99999'], denyTerms: ['payload-x'], cvssVector: 'AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N', cvssScore: 5.3, cwe: 'CWE-209', suggestedCveTitle: 'Example: Information Disclosure via Unmuted Exceptions' }
       if (label.startsWith('challenge:')) return { status: 'done', agree: label === 'challenge:scope', proposedVerdict: label === 'challenge:code' ? 'HARDENING' : undefined, reasons: ['default codec writes nothing'], missedFacts: label === 'challenge:code' ? ['a non-default codec is needed'] : [] }
       if (label === 'draft:reply') return { status: 'done', forVerdict: prompt.match(/for the verdict (\w+)/)[1], file: caseDir + '/reply-draft.txt' }
@@ -100,6 +118,7 @@ function makeSim(rec, config) {
   check(!banned.test(guideline), 'the guideline names no local tool, local path or specific foundation')
   check(!banned.test(probe), 'the probe script names no local tool, local path or specific foundation')
   check(installer.includes('skills/oss-security/security-case-probe.sh'), 'the installer ships the probe with the oss-security skill')
+  check(digestScript && python3, 'the routing test runs on the probe\'s digest of the node files' + (python3 ? '' : ' (python3 missing: full files)'))
 }
 
 // ---- Jira project with project-security.md: the full VALID lifecycle -----------------------
@@ -115,7 +134,8 @@ function makeSim(rec, config) {
   check(r.next === '/oss-security-case demo verdict=VALID', 'next command proposes the recommended verdict: ' + r.next)
   check(/release-2\.x, release-1\.x/.test(sim.prompts.triage) && /cna\.example\.org/.test(sim.prompts['draft:cve-fields']), 'project-security.md lines and CNA reach the prompts')
   check(/read every case thread/.test(sim.prompts['draft:reply']), 'with a mail archive, the reply draft reads the case threads')
-  check(sim.opts.load.model === 'claude-sonnet-5-5' && sim.opts.persist.model === 'claude-haiku-5-5', 'the loader and the persistence step run on cheaper models')
+  check(sim.opts.load.model === 'claude-haiku-5-5' && sim.opts.persist.model === 'claude-haiku-5-5', 'the loader and the persistence step run on Haiku')
+  check(/between "--- nodes digest" and "--- end nodes digest": return that JSON object as nodes/.test(sim.prompts.load), 'the loader returns the probe\'s digest, not the node files')
   check(sim.opts.triage.model === undefined && sim.opts['challenge:code'].model === undefined && sim.opts['draft:reply'].model === undefined, 'triage, the challenge lenses and the drafts keep the session model')
   check(/security-case-probe\.sh demo /.test(sim.prompts.load), 'the loader starts from the probe script')
   check(/slices of at most 240 seconds/.test(sim.prompts.triage), 'every node is told to keep tool calls under the cache TTL')
@@ -126,6 +146,7 @@ function makeSim(rec, config) {
   check(!r.ran.includes('reply'), 'the VALID reply waits for the CVE id')
   check(sim.opts['fix:PROJ-123'].model === undefined && sim.opts['issue:create'].model === 'claude-sonnet-5-5', 'the fix keeps the session model; the issue creation runs on Sonnet')
   check(/slices of at most 240 seconds, as the rules above say/.test(sim.prompts['fix:PROJ-123']), 'the fix node polls builds in slices under the cache TTL')
+  check(!/consumer echoes exception/.test(sim.prompts['fix:PROJ-123']) && /\/demo\/nodes\/<node>\.json/.test(sim.prompts['fix:PROJ-123']), 'the case facts leave the triage text out and point at the full records')
   check(gateIds(r).includes('cve') && gateIds(r).includes('approve-pr'), 'run 2 stops at the cve and approve-pr gates')
   check(sim.mirrors.join() === 'ACCEPTED', 'the ruling is recorded in the mail archive once, as ACCEPTED')
 
@@ -146,6 +167,7 @@ function makeSim(rec, config) {
   check(!r.ran.includes('cveDraft') && gateIds(r).includes('release'), 'the CVE draft waits for the release, not for the merge')
   check(sim.maxActive.heavy === 1, 'build-heavy nodes never ran concurrently')
   check(/polled in slices of at most 240 seconds/.test(sim.prompts['backport:release-1.x']) && sim.opts['backport:release-1.x'].model === undefined, 'backports poll builds in slices and keep the session model')
+  check(/"Backport notes" of \/path\/to\/security-cases\/demo\/triage\.md/.test(sim.prompts['backport:release-1.x']), 'backports read their notes from triage.md')
   check(gateIds(r).includes('approve-backports'), 'stops at approve-backports')
 
   r = await runIt({ approve: { backports: true } })
