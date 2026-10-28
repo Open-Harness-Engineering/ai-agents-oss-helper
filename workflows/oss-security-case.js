@@ -808,7 +808,7 @@ NODE: docSync
 TASK: write the per-line upgrade or migration notes for the backports of ${key} on ${c.defaultBranch}, following the project's rule: "${c.upgradeGuidePolicy}". The main PR #${mainPrOf(s)} added its note to ${f.guideFile || 'the current guide'}.
 - Worktree: git --git-dir=${c.repoRoot}/.git worktree add -b docs/${lineShort(key)}-guide-sync ${c.worktreeRoot}/${c.repoBase}-docsync-${num} ${c.upstreamRemote}/${c.defaultBranch}.
 - For each of ${lineList.join(', ')}: add the note to that line's guide on ${c.defaultBranch}, in the section for the patch release that ships the fix (create the section, newest first, if it is missing). Insert between two existing notes, never at the end of the file. Word it for that line: what is true on ${c.defaultBranch} may not be true on an older line.
-- Commit with a neutral message in the project's format, the co-author trailer your attribution settings require, signed if the operator preferences ask for it.
+- Commit with a neutral message in the project's format, the co-author trailer your attribution settings require, signed if the operator preferences ask for it. This commit changes documentation only: do not build or run tests for it, whatever the operator preferences say about building before a commit (that habit is for code changes, and the backports may be building now).
 - ${lintRule(s)}
 - Write ${s.caseDir}/docsync-pr-body.md: the notes it adds, the backport PRs it accompanies (by number, once they exist), that it merges after them, any attribution the project requires, and last "${PR_FOOTER}".
 Return status "local" with worktree, branch, commit, files and prBodyFile.`

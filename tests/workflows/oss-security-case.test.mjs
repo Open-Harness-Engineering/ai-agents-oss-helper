@@ -192,6 +192,7 @@ function makeSim(rec, config) {
   check(/polled in slices of at most 240 seconds/.test(sim.prompts['backport:release-1.x']) && sim.opts['backport:release-1.x'].model === undefined, 'backports poll builds in slices and keep the session model')
   check(/"Backport notes" of \/path\/to\/security-cases\/demo\/triage\.md/.test(sim.prompts['backport:release-1.x']), 'backports read their notes from triage.md')
   check(gateIds(r).includes('approve-backports'), 'stops at approve-backports')
+  check(/changes documentation only: do not build or run tests for it/.test(sim.prompts.docsync), 'the upgrade-note sync does not build its docs-only commit')
   check(disk.nodes.docSync && disk.nodes.docSync.branch === 'docs/PROJ-123-guide-sync', 'a node that did not write its record gets it from the persistence step')
 
   r = await runIt({ approve: { backports: true } })
