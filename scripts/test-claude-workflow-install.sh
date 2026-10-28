@@ -27,6 +27,18 @@ done
 cmp "$repo_root/skills/oss-security/security-case.md" "$test_home/.claude/skills/oss-security/security-case.md"
 grep -Fq 'security-case.md' "$test_home/.claude/commands/oss-security-case.md"
 
+# The workflow's loader resolves the project itself: in workflow mode the command reads the guideline without
+# running the skill's initialization, and both files it names are installed.
+case_cmd="$test_home/.claude/commands/oss-security-case.md"
+grep -Fq "In workflow mode (its step 2), skip the skill's initialization steps" "$case_cmd"
+if grep -q '^Invoke the oss-security skill' "$case_cmd"; then
+    echo "FAIL: the oss-security-case command still runs the skill's initialization first" >&2
+    exit 1
+fi
+for path in $(grep -oE '~/\.claude/skills/[a-z-]+/[a-z-]+\.md' "$case_cmd"); do
+    [[ -f "$test_home/${path:2}" ]]
+done
+
 # Report commands run in a forked context: the body names the files a fresh sub-agent needs and
 # passes the arguments. Commands that stop at a gate or ask questions stay inline.
 for cmd in oss-list-prs oss-list-pr-status oss-pr-status oss-list-issues oss-analyze-issue oss-workspace-status; do

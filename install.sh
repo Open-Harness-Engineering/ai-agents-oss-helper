@@ -204,6 +204,11 @@ GUIDELINE_COMMANDS=(
 FORKED_COMMANDS="oss-list-prs oss-list-pr-status oss-pr-status oss-list-issues oss-analyze-issue oss-workspace-status"
 FORK_NOTE='You run in a forked context: a fresh sub-agent that sees none of the conversation that started you, and whose tool calls stay out of it. Your final message is all the user sees, so make it the complete report the guideline describes. You cannot ask questions while you work: where the guideline asks the user to choose or to answer, end the report with that question, and the conversation that started you takes the answer.'
 
+# Claude commands that drive a Claude Code workflow. The workflow's loader resolves the project, its rules and
+# its configuration itself, so in workflow mode the command reads the guideline directly instead of running the
+# skill's initialization first; manual mode still runs it.
+WORKFLOW_COMMANDS="oss-security-case"
+
 # Old rule files to clean up (relative paths under rules/)
 OLD_RULE_FILES=(
     "project-info.md"
@@ -518,6 +523,9 @@ generate_skill_agent_command() {
                         "$skill_name" "$skill_name" "$guideline_file"
                     printf 'Arguments: $ARGUMENTS\n\n'
                     printf '%s\n' "$FORK_NOTE"
+                elif [[ " $WORKFLOW_COMMANDS " == *" $(basename "$dest" .md) "* ]]; then
+                    printf 'Read and follow the guideline in `~/.claude/skills/%s/%s`. In workflow mode (its step 2), skip the skill'"'"'s initialization steps: the workflow'"'"'s loader resolves the project and its rules itself. In manual mode, first follow the initialization steps in `~/.claude/skills/%s/init.md`.\n' \
+                        "$skill_name" "$guideline_file" "$skill_name"
                 else
                     printf 'Invoke the %s skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$skill_name" "$guideline_file"
                 fi
