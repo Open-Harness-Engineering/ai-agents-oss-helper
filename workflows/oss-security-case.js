@@ -697,7 +697,7 @@ NODE: issue
 TASK: create the sanitized issue. The maintainer reviewed ${s.caseDir}/issue-draft.json and approved it.
 1. Check that it does not exist yet: one search for its title in the issue tracker. If it exists, return status "exists" with the key.
 2. Lint the draft again. ${lintRule(s)} On any hard hit, create nothing and return status "error" with the hits.
-3. Run the hand-off script once: bash ${s.caseDir}/issue-create.sh. If the permission system refuses the call, or the call fails, do not retry and do not reshape the request: return status "handoff", so that the maintainer runs "! bash ${s.caseDir}/issue-create.sh" themselves.
+3. Run the hand-off script once: bash ${s.caseDir}/issue-create.sh. ${asWritten('it')} If the permission system refuses the call, or the call fails, do not retry and do not reshape the request: return status "handoff", so that the maintainer runs "! bash ${s.caseDir}/issue-create.sh" themselves.
 4. On success, confirm with one read (status, assignee, fix versions or labels) and return the key${s.config.tracker === 'GitHub' ? ' as "#<number>"' : ''} and URL.`
 }
 
@@ -712,6 +712,12 @@ TASK: finalize the reply to the reporter for the ruled verdict ${d.verdict}. Wri
 - Check the final text against the never-cite list, and check that every CVE id in it is either published (by the rule above) or this case's own reserved id.
 - Keep the maintainer header; the maintainer sends the reply.
 Return forVerdict, forCve (the CVE id you used, or null) and forIssue (the issue key you used, or null).`
+}
+
+// The operator's permission rules match commands as written: the same push or hand-off script, reworded with a cd, a
+// relative path or a chained command, can be refused where the written form is allowed.
+function asWritten(what, each) {
+  return `Run ${what} exactly as written here (filling in only the <placeholders>), ${each ? 'each ' : ''}in a tool call of its own: absolute paths, no cd, and nothing chained before or after. The operator's permission rules match commands as written, so a reworded command can be refused where this one is allowed.`
 }
 
 function prCapNote(s) {
@@ -755,6 +761,7 @@ TASK: publish the fix that the maintainer approved: push ${branch} from ${f.work
 3. ${c.pushRemote ? 'git -C ' + f.worktree + ' push -u ' + c.pushRemote + ' ' + branch + '.' + (c.pushRemote !== c.upstreamRemote ? ' Never push the branch to ' + c.upstreamRemote + ', the upstream repository.' : '') : 'No push remote is known (no fork remote for the operator and no OSS_PUSH_REMOTE): stop with status "local" and blockedReason "no push remote".'}
 4. gh pr create --repo ${c.repo} --base ${c.defaultBranch} --head ${headRef(s, branch)} --title "<the commit subject>" --body-file ${f.prBodyFile || s.caseDir + '/pr-body.md'}. Not a draft.
 5. Reviewers: at least two active maintainers who changed the touched files in the last year (gh api "repos/${c.repo}/commits?path=<file>&per_page=50" --jq '.[].author.login'), excluding ${c.login || 'the operator'} and bots: gh pr edit <n> --add-reviewer <a>,<b>.
+${asWritten('the push and the gh pr create of steps 3 and 4', true)}
 If a push or the PR creation is refused, return status "local" with blockedReason "permission: the maintainer can run ! bash ${f.prScript || s.caseDir + '/pr-create.sh'}".
 Return status "pr-open" with pr (the number), url and reviewers.`
 }
@@ -795,6 +802,7 @@ TASK: publish the backport that the maintainer approved: push ${b.localBranch} f
 4. ${c.pushRemote ? 'git -C ' + b.worktree + ' push -u ' + c.pushRemote + ' ' + b.localBranch + ' (never to the upstream remote unless it is the push remote).' : 'No push remote is known: stop with status "local" and blockedReason "no push remote".'}
 5. gh pr create --repo ${c.repo} --base ${line} --head ${headRef(s, b.localBranch)} --title "[backport ${line}] <the title of #${pr}>" --label backport --body-file ${b.prBodyFile || s.caseDir + '/backport-' + lineShort(line) + '-pr-body.md'}. If the label does not exist, create the PR without it.
 6. Reviewers: ${b.straight ? 'none, because this is a straight cherry-pick of a reviewed PR (unless the project rules say otherwise)' : 'at least two maintainers, as for the main PR, because the port was adapted'}.
+${asWritten('the push and the gh pr create of steps 4 and 5', true)}
 If a push or the PR creation is refused, return status "local" with blockedReason "permission" and the two commands for the maintainer.
 Return line "${line}", status "pr-open", pr and url.`
 }
@@ -826,6 +834,7 @@ TASK: publish the upgrade-note sync that the maintainer approved: push ${ds.bran
 3. ${c.pushRemote ? 'git -C ' + ds.worktree + ' push -u ' + c.pushRemote + ' ' + ds.branch + '.' : 'No push remote is known: stop with status "local" and blockedReason "no push remote".'}
 4. gh pr create --repo ${c.repo} --base ${c.defaultBranch} --head ${headRef(s, ds.branch)} --title "<the commit subject>" --body-file ${ds.prBodyFile || s.caseDir + '/docsync-pr-body.md'}. Make the body name the backport PRs (${bps || 'none recorded'}) and say that it merges after them.
 5. Reviewers: two maintainers, as for the main PR.
+${asWritten('the push and the gh pr create of steps 3 and 4', true)}
 Return status "pr-open", pr and url.`
 }
 
