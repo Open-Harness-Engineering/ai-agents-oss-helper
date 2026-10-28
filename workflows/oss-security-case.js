@@ -1333,7 +1333,8 @@ if (typeof a.case !== 'string' || !/^[a-z0-9][a-z0-9-]{1,60}$/.test(a.case)) {
 const argProblems = validateArgs(a)
 if (argProblems.length) return { case: a.case, error: 'invalid arguments', problems: argProblems }
 
-const loaded = await agent(loadPrompt(a), { label: 'load', phase: 'Load', schema: LOAD_SCHEMA, effort: 'medium', model: modelFor(a.options, 'load') })
+// The loader copies the probe's output into its result: low effort, like the persistence step.
+const loaded = await agent(loadPrompt(a), { label: 'load', phase: 'Load', schema: LOAD_SCHEMA, effort: 'low', model: modelFor(a.options, 'load') })
 if (!loaded || !loaded.initialized || !loaded.config) {
   return { case: a.case, error: (loaded && loaded.error) || 'the loader failed', warnings: (loaded && loaded.warnings) || [] }
 }

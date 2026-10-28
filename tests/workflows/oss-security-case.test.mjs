@@ -155,6 +155,7 @@ function makeSim(rec, config) {
   check(/release-2\.x, release-1\.x/.test(sim.prompts.triage) && /cna\.example\.org/.test(sim.prompts['draft:cve-fields']), 'project-security.md lines and CNA reach the prompts')
   check(/read every case thread/.test(sim.prompts['draft:reply']), 'with a mail archive, the reply draft reads the case threads')
   check(sim.opts.load.model === 'claude-haiku-5-5' && sim.opts.persist.model === 'claude-haiku-5-5', 'the loader and the persistence step run on Haiku')
+  check(sim.opts.load.effort === 'low' && sim.opts.persist.effort === 'low', 'the loader and the persistence step run at low effort')
   check(/between "--- nodes digest" and "--- end nodes digest": return that JSON object as nodes/.test(sim.prompts.load), 'the loader returns the probe\'s digest, not the node files')
   check(sim.opts.triage.model === undefined && sim.opts['challenge:code'].model === undefined && sim.opts['draft:reply'].model === undefined, 'triage, the challenge lenses and the drafts keep the session model')
   check(/security-case-probe\.sh demo /.test(sim.prompts.load), 'the loader starts from the probe script')
