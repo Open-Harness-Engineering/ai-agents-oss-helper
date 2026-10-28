@@ -72,6 +72,8 @@ const DENY_SOFT = ['attack', 'bypass', 'malicious', 'payload', 'injection', 'tra
 
 const PR_FOOTER = '🤖 Generated with [Claude Code](https://claude.com/claude-code)'
 const MAX_WAVES = 6
+// The fields a publish step owns: its result updates only these on the prepared node record.
+const PUBLISH_FIELDS = ['status', 'pr', 'url', 'reviewers', 'blockedReason']
 
 // Cheaper models for the mechanical nodes. Cache reads cost the same on every tier, so the saving sits in
 // the writes and the output of the short nodes: the loader, the persistence step, the issue creation, the
@@ -441,12 +443,17 @@ function fixVersionsFor(s, verdict) {
   return [byLine.main || byLine[s.config.defaultBranch]].concat(targets.map(l => byLine[l])).filter(Boolean)
 }
 
+// The challenge results with their lens, which the node name gives.
+function lenses(n) {
+  return [['scope', n.challengeScope], ['code', n.challengeCode]].filter(x => x[1])
+}
+
 function challengeNote(n) {
-  const cs = [n.challengeScope, n.challengeCode].filter(Boolean)
+  const cs = lenses(n)
   if (!cs.length) return ''
-  const against = cs.filter(c => c.agree === false)
+  const against = cs.filter(([, c]) => c.agree === false)
   if (!against.length) return cs.length === 2 ? '; both challenge lenses agree' : '; one challenge lens agrees'
-  return '; CONTESTED: ' + against.map(c => `the ${c.lens || '?'} lens proposes ${c.proposedVerdict || '?'} (${oneLine((c.reasons || [])[0])})`).join('; ')
+  return '; CONTESTED: ' + against.map(([lens, c]) => `the ${lens} lens proposes ${c.proposedVerdict || '?'} (${oneLine((c.reasons || [])[0])})`).join('; ')
 }
 
 function reporterTerms(s) {
@@ -491,7 +498,7 @@ function caseFacts(s) {
 function preamble(s, nodeFile) {
   const c = s.config, sec = c.security || {}
   const record = nodeFile
-    ? `- As your last step, write the object you return, as pretty JSON, to ${s.caseDir}/nodes/${nodeFile}.json.`
+    ? `- As your last step, write the object you return, as pretty JSON, to ${s.caseDir}/nodes/${nodeFile}.json. That file is this node's record: the workflow does not write it again.`
     : '- Do not write node files; the workflow records your result.'
   const lineText = sec.lines && sec.lines.length
     ? `The supported lines are ${c.defaultBranch} plus ${sec.lines.join(', ')}.${sec.eol && sec.eol.length ? ' End of life, although the branches may still exist: ' + sec.eol.join(', ') + '.' : ''}`
@@ -835,7 +842,7 @@ function persistPrompt(s, p) {
     ? `5. Mail archive (${s.config.mailArchive}): for each thread id in ${JSON.stringify(p.mirror.threads)}, record the triage state "${p.mirror.state}" with the archive's tool for triage states, and add the note ${JSON.stringify(p.mirror.note)} with its tool for notes, both with author "${author}". Skip whichever tool the archive does not have.`
     : '5. No mail-archive update in this run.'
   return `You are the persistence step of the "oss-security-case" workflow, case "${s.case}". Write exactly what is given below and nothing else.
-1. For each key K of NODES, write ${s.caseDir}/nodes/K.json with the value, pretty-printed (overwrite). For each name in REMOVE, delete ${s.caseDir}/nodes/<name>.json if it exists.
+1. For each key K of NODES, write ${s.caseDir}/nodes/K.json with the value, pretty-printed (overwrite). Each node of CHECK wrote ${s.caseDir}/nodes/K.json itself: write that file with the value only if it is missing or is not valid JSON. For each name in REMOVE, delete ${s.caseDir}/nodes/<name>.json if it exists.
 2. Write ${s.caseDir}/decisions.json with DECISIONS, pretty-printed.
 3. Write ${s.caseDir}/STATUS.md with the text between the STATUS markers, verbatim.
 4. Append each LOG entry as one line to ${s.caseDir}/log.md, prefixed with the time from date -u +%FT%TZ.
@@ -843,6 +850,8 @@ ${mirror}
 Return written (the paths) and errors.
 
 NODES = ${JSON.stringify(p.nodes, null, 2)}
+
+CHECK = ${JSON.stringify(p.check || {}, null, 2)}
 
 REMOVE = ${JSON.stringify(p.remove)}
 
@@ -1057,22 +1066,29 @@ async function runAction(s, action, run) {
   const spec = nodeSpec(s, id, mode)
   const res = await agent(spec.prompt, { label: spec.label, phase: spec.phase, schema: spec.schema, effort: spec.effort, model: modelFor(s.options, mode === 'publish' ? 'publish' : id) })
   const prev = s.nodes[id]
-  let out
+  // A node that ran to the end wrote its own record (the preamble); the persistence step writes the ones the
+  // script makes or changes: publish merges, failed agents, a triage without a verdict.
+  let out, ownRecord = false
   if (!res) {
     out = mode === 'publish'
       ? Object.assign({}, prev, { blockedReason: 'the publish agent failed' })
       : { status: id === 'triage' || id.indexOf('challenge') === 0 || id.indexOf('draft') === 0 || id === 'reply' ? 'error' : 'blocked', error: 'agent failed', blockedReason: 'agent failed' }
+  } else if (mode === 'publish') {
+    // A publish owns the PR fields only; the prepared record (branch, worktree, adaptations) stays as it was.
+    out = Object.assign({}, prev, pick(res, PUBLISH_FIELDS))
+    if (!res.blockedReason) delete out.blockedReason
   } else {
-    out = mode === 'publish' ? Object.assign({}, prev, res) : res
+    out = res
+    ownRecord = true
   }
   if (id === 'triage' && out.status === 'done' && VERDICTS.indexOf(out.recommendedVerdict) < 0) {
     out.status = 'error'
     out.error = 'no verdict returned'
+    ownRecord = false
   }
-  if (id === 'challengeScope') out.lens = 'scope'
-  if (id === 'challengeCode') out.lens = 'code'
-  out.at = s.today
   s.nodes[id] = out
+  if (ownRecord) run.ownRecords.add(id)
+  else run.ownRecords.delete(id)
   run.fresh.add(id)
   run.ran.push(action)
   run.log.push(`${action}: ${out.status || 'done'}${out.blockedReason && out.status !== 'pr-open' ? ' (' + oneLine(out.blockedReason) + ')' : ''}`)
@@ -1144,7 +1160,7 @@ function renderStatus(s, p, ran) {
   L.push('', '## Next run', '', '    ' + nextCommand(s, p))
   if (p.info.length) { L.push('', '## Notes', ''); p.info.forEach(x => L.push('- ' + x)) }
   const missed = []
-  for (const ch of [n.challengeScope, n.challengeCode]) if (ch) (ch.missedFacts || []).forEach(f => missed.push(`- (${ch.lens} lens) ${f}`))
+  for (const [lens, ch] of lenses(n)) (ch.missedFacts || []).forEach(f => missed.push(`- (${lens} lens) ${f}`))
   if (missed.length) { L.push('', '## Facts the challenge lenses say the triage missed', ''); missed.forEach(x => L.push(x)) }
   L.push('', '## This run', '')
   if (ran.length) ran.forEach(x => {
@@ -1326,7 +1342,7 @@ const configProblems = validateAgainstConfig(s)
 if (configProblems.length) return { case: a.case, error: 'invalid arguments for this project', problems: configProblems }
 if (a.decision || a.approve || a.done) s.history.push({ at: s.today, decision: a.decision || null, approve: a.approve || null, done: a.done || null })
 
-const run = { fresh: new Set(), tried: new Set(), ran: [], log: [] }
+const run = { fresh: new Set(), tried: new Set(), ran: [], log: [], ownRecords: new Set() }
 const removed = []
 if (s.options.retriage) {
   for (const k of ['triage', 'challengeScope', 'challengeCode', 'draftReply', 'draftCve', 'draftIssue']) {
@@ -1359,12 +1375,13 @@ if (V && s.config.mailArchive && s.mirrored.verdict !== V && (s.report.threads |
 }
 
 const status = renderStatus(s, final, run.ran)
-const changed = {}
-run.fresh.forEach(id => { changed[id] = s.nodes[id] })
+const changed = {}, check = {}
+run.fresh.forEach(id => { (run.ownRecords.has(id) ? check : changed)[id] = s.nodes[id] })
 const persisted = await agent(persistPrompt(s, {
   nodes: changed,
+  check,
   // A node the retriage dropped and this run produced again is rewritten, not deleted.
-  remove: removed.filter(k => !(k in changed)),
+  remove: removed.filter(k => !run.fresh.has(k)),
   decisions: { decisions: s.decisions, done: s.done, options: { public: s.options.public }, mirrored: s.mirrored, history: s.history },
   log: run.log,
   status,

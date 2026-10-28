@@ -37,9 +37,16 @@ const GITHUB_PROJECT = Object.assign({}, JIRA_PROJECT, {
 function makeSim(rec, config) {
   const caseDir = config.casesRoot + '/demo'
   const disk = { nodes: {}, decisions: {}, report: { subject: 'component: exception echoed', reporter: 'Jane Doe', reporterEmail: 'jane@example.org', via: 'security team', threads: config.mailArchive ? ['thread-0001'] : [] }, status: '' }
-  const sim = { rec, live: {}, active: { heavy: 0, publish: 0 }, maxActive: { heavy: 0, publish: 0 }, mirrors: [], prompts: {}, opts: {} }
+  const sim = { rec, live: {}, active: { heavy: 0, publish: 0 }, maxActive: { heavy: 0, publish: 0 }, mirrors: [], prompts: {}, opts: {}, forgetful: new Set(), persisted: null }
   const between = (p, a, b) => { const i = p.indexOf(a); const j = b ? p.indexOf(b, i + a.length) : p.length; return p.slice(i + a.length, j) }
+  // As a real node does, an agent writes its own record to the file its prompt names (unless it is forgetful).
   async function agent(prompt, opts) {
+    const result = await respond(prompt, opts)
+    const own = prompt.match(/write the object you return, as pretty JSON, to \S+\/nodes\/([\w.-]+)\.json\./)
+    if (own && result && !sim.forgetful.has(opts.label)) disk.nodes[own[1]] = clone(result)
+    return result
+  }
+  async function respond(prompt, opts) {
     const label = opts.label
     sim.prompts[label] = prompt
     sim.opts[label] = opts
@@ -67,17 +74,21 @@ function makeSim(rec, config) {
         const line = label.slice('backport:'.length)
         return { status: 'local', line, localBranch: 'backport/28001-to-' + line, worktree: '/work/bp-' + line, straight: line !== 'release-1.x', adaptations: line === 'release-1.x' ? ['older test framework'] : [], fixVersion: line === 'release-1.x' ? '1.9.4' : '2.5.1', prBodyFile: caseDir + '/bp.md' }
       }
-      if (/^backport:.*:publish$/.test(label)) return { status: 'pr-open', line: label.split(':')[1], pr: label.includes('release-2.x') ? 28002 : 28003 }
+      if (/^backport:.*:publish$/.test(label)) return { status: 'pr-open', line: label.split(':')[1], pr: label.includes('release-2.x') ? 28002 : 28003, adaptations: ['PR count rechecked', 'no label'] }
       if (label === 'docsync') return { status: 'local', worktree: '/work/docsync', branch: 'docs/PROJ-123-guide-sync', commit: 'def456', files: ['guide-2.x.md', 'guide-1.x.md'], prBodyFile: caseDir + '/docsync.md' }
       if (label === 'docsync:publish') return { status: 'pr-open', pr: 28004 }
       if (label === 'cve:draft') return { status: 'drafted', forCve: prompt.match(/for (CVE-\d{4}-\d+) with/)[1], files: [caseDir + '/cve/x.md'], archived: true, checklistFile: caseDir + '/cve/CHECKLIST.md' }
       if (label === 'persist') {
-        const nodes = JSON.parse(between(prompt, 'NODES = ', '\n\nREMOVE = '))
+        const hasCheck = prompt.includes('\n\nCHECK = ')
+        const nodes = JSON.parse(between(prompt, 'NODES = ', hasCheck ? '\n\nCHECK = ' : '\n\nREMOVE = '))
+        const checked = hasCheck ? JSON.parse(between(prompt, 'CHECK = ', '\n\nREMOVE = ')) : {}
         const remove = JSON.parse(between(prompt, 'REMOVE = ', '\n\nDECISIONS = '))
         const decisions = JSON.parse(between(prompt, 'DECISIONS = ', '\n\nLOG = '))
         JSON.parse(between(prompt, 'LOG = ', '\n\n<<<STATUS'))
         Object.assign(disk.nodes, nodes)
+        for (const [k, v] of Object.entries(checked)) if (!disk.nodes[k]) disk.nodes[k] = v
         for (const r of remove) delete disk.nodes[r]
+        sim.persisted = { nodes: Object.keys(nodes), checked: Object.keys(checked) }
         disk.decisions = decisions
         disk.status = between(prompt, '<<<STATUS\n', '\nSTATUS>>>')
         const m = prompt.match(/record the triage state "(\w+)"/)
@@ -119,6 +130,8 @@ function makeSim(rec, config) {
   check(sim.opts.triage.model === undefined && sim.opts['challenge:code'].model === undefined && sim.opts['draft:reply'].model === undefined, 'triage, the challenge lenses and the drafts keep the session model')
   check(/security-case-probe\.sh demo /.test(sim.prompts.load), 'the loader starts from the probe script')
   check(/slices of at most 240 seconds/.test(sim.prompts.triage), 'every node is told to keep tool calls under the cache TTL')
+  check(sim.persisted.nodes.length === 0 && sim.persisted.checked.length === 6, 'every node of run 1 wrote its own record; the persistence step only checks them')
+  check(/\(code lens\) a non-default codec is needed/.test(disk.status), 'the lens of a missed fact comes from the node name')
 
   r = await runIt({ decision: { verdict: 'VALID' }, approve: { issue: true } })
   check(r.ran.includes('issue') && r.ran.includes('fix'), 'run 2 creates the issue, then prepares the fix')
@@ -141,18 +154,23 @@ function makeSim(rec, config) {
   check(r.ran.length === 0 && gateIds(r).includes('merge'), 'a run before the merge does nothing and still waits for it')
 
   sim.live = { mainPr: { number: 28001, state: 'MERGED' } }
+  sim.forgetful.add('docsync')
   r = await runIt({ done: { reply: true } })
   check(['backport_release-2.x', 'backport_release-1.x', 'docSync'].every(x => r.ran.includes(x)), 'after the merge: both backports and the note sync')
   check(!r.ran.includes('cveDraft') && gateIds(r).includes('release'), 'the CVE draft waits for the release, not for the merge')
   check(sim.maxActive.heavy === 1, 'build-heavy nodes never ran concurrently')
   check(/polled in slices of at most 240 seconds/.test(sim.prompts['backport:release-1.x']) && sim.opts['backport:release-1.x'].model === undefined, 'backports poll builds in slices and keep the session model')
   check(gateIds(r).includes('approve-backports'), 'stops at approve-backports')
+  check(disk.nodes.docSync && disk.nodes.docSync.branch === 'docs/PROJ-123-guide-sync', 'a node that did not write its record gets it from the persistence step')
 
   r = await runIt({ approve: { backports: true } })
   check(r.ran.join() === 'backport_release-2.x:publish,backport_release-1.x:publish,docSync:publish', 'backport PRs open first, then the note-sync PR, in one run')
   check(sim.maxActive.publish === 1, 'PR-opening nodes never ran concurrently')
   check(gateIds(r).join() === 'release', 'only the release is left before the CVE draft')
   check(disk.nodes['backport_release-1.x'].worktree === '/work/bp-release-1.x', 'publish results merge into the prepared node record')
+  const bp = disk.nodes['backport_release-1.x']
+  check(bp.pr === 28003 && bp.status === 'pr-open' && bp.adaptations.join() === 'older test framework', 'a publish result updates only the PR fields: the backport keeps its adaptations')
+  check(sim.persisted.nodes.includes('backport_release-1.x') && !sim.persisted.checked.includes('backport_release-1.x'), 'publish merges are written by the persistence step')
 
   sim.live = { mainPr: { number: 28001, state: 'MERGED' }, releases: { '3.0.0': true, '2.5.1': true, '1.9.4': false } }
   r = await runIt({})
