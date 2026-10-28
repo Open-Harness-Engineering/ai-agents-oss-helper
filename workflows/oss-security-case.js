@@ -47,6 +47,8 @@ export const meta = {
 // runs longer than five minutes expires that context's prompt cache, so the preamble keeps every call under
 // four minutes, the loader starts from a read-only probe script instead of probing one command at a time,
 // and the mechanical nodes run on cheaper models (MODEL_TIERS; options.economy = false turns that off).
+// The case state reaches the script only through the loader's output, so the probe reduces the node files to
+// a digest of the fields the script reads; the nodes read the full records from nodes/ themselves.
 
 // ---------------------------------------------------------------------------------------------
 // Policy
@@ -73,12 +75,12 @@ const DENY_SOFT = ['attack', 'bypass', 'malicious', 'payload', 'injection', 'tra
 const PR_FOOTER = '🤖 Generated with [Claude Code](https://claude.com/claude-code)'
 const MAX_WAVES = 6
 
-// Cheaper models for the mechanical nodes. Cache reads cost the same on every tier, so the saving sits in
-// the writes and the output of the short nodes: the loader, the persistence step, the issue creation, the
-// final reply and the nodes that push and open PRs. The judgement nodes (triage, challenge lenses, drafts,
-// fix, backports, CVE draft) keep the session model. options.economy === false runs every node on it.
+// Cheaper models for the mechanical nodes. The loader and the persistence step copy and write what the probe
+// and the script hand them: Haiku. The issue creation, the final reply and the nodes that push and open PRs
+// run scripts and gh commands: Sonnet. The judgement nodes (triage, challenge lenses, drafts, fix, backports,
+// CVE draft) keep the session model. options.economy === false runs every node on it.
 const MODEL_TIERS = { light: 'claude-sonnet-5-5', mechanical: 'claude-haiku-5-5' }
-const NODE_TIER = { load: 'light', persist: 'mechanical', issue: 'light', reply: 'light', publish: 'light' }
+const NODE_TIER = { load: 'mechanical', persist: 'mechanical', issue: 'light', reply: 'light', publish: 'light' }
 function modelFor(options, node) {
   if (options && options.economy === false) return undefined
   const tier = NODE_TIER[node]
@@ -479,7 +481,7 @@ function caseFacts(s) {
     mainPrState: mainPrState(s),
     credit: d.credit || t.credit || null,
     backportTargets: targetsOf(s),
-    triage: pick(t, ['summary', 'components', 'modules', 'cwe', 'cvssVector', 'cvssScore', 'suggestedCveTitle', 'affected', 'fixVersionsByLine', 'introducedBy', 'duplicateOf', 'neverCite', 'guideNoteLikely', 'backportNotes', 'worktree']),
+    triage: pick(t, ['cwe', 'cvssVector', 'cvssScore', 'suggestedCveTitle', 'affected', 'fixVersionsByLine', 'duplicateOf', 'neverCite', 'guideNoteLikely', 'worktree']),
     fix: pick(n.fix || {}, ['status', 'worktree', 'branch', 'commits', 'pr', 'url', 'guideNote', 'guideFile']),
   }, null, 2)
 }
@@ -506,6 +508,8 @@ function preamble(s, nodeFile) {
 
 Case facts:
 ${caseFacts(s)}
+
+The full record of each node is in ${s.caseDir}/nodes/<node>.json, and the triage's analysis in ${s.caseDir}/triage.md: read them when your task needs more than these facts.
 
 Rules for every node:
 - Embargo. The report is private until the advisory is published. Nothing that marks the change as a security fix may reach a public place: the issue tracker, the forge (commit messages, branch names, PR text, review comments), test names, code comments, mailing lists. Public text describes the change in functional terms only. Case material stays in ${s.caseDir}.
@@ -545,7 +549,7 @@ function loadPrompt(a) {
    - If it exists and a report file was given while report.txt is already there, do not overwrite report.txt; add a warning.${threads.length ? `
    - If it exists and report-meta.json lacks some of the thread ids ${JSON.stringify(threads)}: add them to its "threads" list, read them with the mail archive's thread-reading tool, append their messages to <caseDir>/report-threads.txt (report.txt stays as it is), and fill in "via", "receivedAt" and "participants" where they are empty.` : ''}
    - If report-meta.json is missing, write it: {"threads": [...], "subject", "reporter", "reporterEmail", "reporterHandle", "via", "receivedAt", "participants": [...]}. Take what report.txt shows. Set "threads" to the ids in ${JSON.stringify(threads)} (an empty list when none were given); do not search the mail archive for this report's thread, even when one is configured. A case is tied to the archive only by the thread ids the maintainer passes with threads=.
-3. The probe's case section prints <caseDir>/report-meta.json, <caseDir>/decisions.json ({} when missing) and every <caseDir>/nodes/*.json; read them yourself only if it could not. Return the node files as an object keyed by file name without ".json", exactly as they are; do not summarize or edit them.
+3. The probe's case section prints <caseDir>/report-meta.json, <caseDir>/decisions.json ({} when missing) and a digest of the node files between "--- nodes digest" and "--- end nodes digest": return that JSON object as nodes, exactly as printed. If the probe printed the node files themselves instead of a digest, return them as an object keyed by file name without ".json", exactly as they are. Read the files yourself only if the probe could not; never summarize or edit them.
 4. Live facts. Read-only, one request each:
    - today: date -u +%F.
    - The main PR number is ${a.decision && a.decision.pr ? a.decision.pr : 'decisions.decisions.pr, else nodes.fix.pr'}. If there is one: gh pr view <n> --repo <repo> --json number,state,isDraft,mergedAt,mergeCommit,url,reviewDecision -> live.mainPr.
@@ -752,7 +756,7 @@ Overrides:
 - Commits: gh pr view ${pr} --repo ${c.repo} --json commits,mergeCommit,files. A squash merge is the single merge commit; a rebase merge put several commits on ${c.defaultBranch}: cherry-pick those copies, oldest first. Compare the PR's file list with what you picked.
 - Worktree: git --git-dir=${c.repoRoot}/.git worktree add -b backport/${pr}-to-${sh} ${wt} ${c.upstreamRemote}/${line}. Cherry-pick with -x.
 ${guide}
-- Adapt to ${line} where needed, using the triage's "Backport notes" (test framework versions, annotations or generated files missing on older lines). Anything beyond a mechanical port makes straight=false; list the adaptations.
+- Adapt to ${line} where needed, using the "Backport notes" of ${s.caseDir}/triage.md (test framework versions, annotations or generated files missing on older lines). Anything beyond a mechanical port makes straight=false; list the adaptations.
 - Build and test per project-standards.md, in the background and polled in slices of at most 240 seconds; generated files must come from this branch's own build, never copied from ${c.defaultBranch}. git status must be clean at the end.
 - Commit with the original message, the "(cherry picked from commit <sha>)" line and the co-author trailer your attribution settings require; sign it if the operator preferences ask for it.
 - fixVersion: ${line}'s next unreleased version from its build file, moved to the next patch if that version is already tagged or has a release branch.

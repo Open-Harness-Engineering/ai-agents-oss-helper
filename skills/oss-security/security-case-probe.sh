@@ -6,7 +6,8 @@
 # Prints, in "=== section" blocks, what the loader otherwise collects one command at a time: the clone
 # (root, remotes, default branch, shallow flag), the operator (gh login, git identity, the upstream and
 # push remotes), the project's rule files, the environment variables the workflow reads and the directories
-# they resolve to, the operator preferences, and the case directory with its JSON files. Every command is
+# they resolve to, the operator preferences, and the case directory with its JSON files (the node files as a
+# digest of the fields the workflow reads, when python3 is available). Every command is
 # guarded: a failure prints an ERROR marker and the probe goes on, so the exit code is 0 whenever the
 # arguments are valid. Nothing is written. Secrets are reported as set or unset, never printed. The report
 # itself is not printed either; only its size is.
@@ -52,6 +53,54 @@ slug_of() {
 }
 
 lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+
+# digest_nodes <case dir>: every nodes/*.json reduced to the fields the workflow script reads, as one JSON
+# object keyed by node name. The loader returns it as the case's nodes; the full records stay in nodes/ for
+# the nodes that need them. The missed facts of the challenge lenses are kept until the verdict is ruled.
+digest_nodes() {
+    python3 - "$1" <<'PY'
+import glob, json, os, sys
+
+case_dir = sys.argv[1]
+common = ['status', 'error', 'blockedReason', 'at']
+keep = {
+    'triage': ['recommendedVerdict', 'confidence', 'cwe', 'cvssVector', 'cvssScore', 'suggestedCveTitle', 'affected',
+               'fixVersionsByLine', 'credit', 'duplicateOf', 'neverCite', 'denyTerms', 'guideNoteLikely', 'worktree', 'files'],
+    'challengeScope': ['agree', 'proposedVerdict', 'reasons', 'missedFacts', 'lens'],
+    'challengeCode': ['agree', 'proposedVerdict', 'reasons', 'missedFacts', 'lens'],
+    'draftReply': ['forVerdict', 'file', 'alreadyReplied'],
+    'draftCve': ['file'],
+    'draftIssue': ['forVerdict', 'payloadFile', 'scriptFile', 'lintHard', 'lintSoft', 'missingVersions'],
+    'issue': ['key', 'url'],
+    'reply': ['forVerdict', 'forCve', 'forIssue', 'file', 'alreadyReplied'],
+    'fix': ['worktree', 'branch', 'commits', 'build', 'guideNote', 'guideFile', 'lintHard', 'lintSoft', 'prBodyFile', 'prScript', 'pr', 'url'],
+    'docSync': ['worktree', 'branch', 'commit', 'files', 'prBodyFile', 'pr', 'url'],
+    'cveDraft': ['forCve', 'files', 'archived', 'checklistFile'],
+}
+backport = ['line', 'localBranch', 'worktree', 'commits', 'straight', 'adaptations', 'fixVersion', 'prBodyFile', 'pr', 'url']
+try:
+    with open(os.path.join(case_dir, 'decisions.json')) as fh:
+        ruled = bool((json.load(fh).get('decisions') or {}).get('verdict'))
+except (OSError, ValueError):
+    ruled = False
+digest = {}
+for path in sorted(glob.glob(os.path.join(case_dir, 'nodes', '*.json'))):
+    name = os.path.basename(path)[:-len('.json')]
+    with open(path) as fh:
+        record = json.load(fh)
+    fields = backport if name.startswith('backport_') else keep.get(name)
+    if fields is None or not isinstance(record, dict):
+        digest[name] = record
+        continue
+    d = {k: record[k] for k in common + fields if k in record}
+    if name.startswith('challenge'):
+        d['reasons'] = (record.get('reasons') or [])[:1]
+        if ruled:
+            d.pop('missedFacts', None)
+    digest[name] = d
+print(json.dumps(digest, indent=1, sort_keys=True))
+PY
+}
 
 # A git command in the clone when one was found, else in the current directory.
 repo_root=""
@@ -223,9 +272,16 @@ if [ -d "$case_dir" ]; then
     fi
     dump "$case_dir/report-meta.json"
     dump "$case_dir/decisions.json"
-    for f in "$case_dir"/nodes/*.json; do
-        if [ -f "$f" ]; then dump "$f"; fi
-    done
+    if command -v python3 >/dev/null 2>&1 && digest="$(digest_nodes "$case_dir" 2>&1)"; then
+        echo "--- nodes digest (the fields the workflow reads; the full records are in $case_dir/nodes/)"
+        printf '%s\n' "$digest"
+        echo "--- end nodes digest"
+    else
+        [ -n "${digest:-}" ] && echo "nodes digest: ERROR $(printf '%s' "$digest" | tail -1)"
+        for f in "$case_dir"/nodes/*.json; do
+            if [ -f "$f" ]; then dump "$f"; fi
+        done
+    fi
     if [ -f "$case_dir/STATUS.md" ]; then echo "STATUS.md: present ($(wc -c < "$case_dir/STATUS.md" | tr -d ' ') bytes)"; fi
 else
     echo "the case directory does not exist yet: the loader creates it"
