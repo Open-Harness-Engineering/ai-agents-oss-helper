@@ -79,7 +79,7 @@ function makeSim(rec, config) {
       if (label.startsWith('challenge:')) return { status: 'done', agree: label === 'challenge:scope', proposedVerdict: label === 'challenge:code' ? 'HARDENING' : undefined, reasons: ['default codec writes nothing'], missedFacts: label === 'challenge:code' ? ['a non-default codec is needed'] : [] }
       if (label === 'draft:reply') return { status: 'done', forVerdict: prompt.match(/for the verdict (\w+)/)[1], file: caseDir + '/reply-draft.txt' }
       if (label === 'draft:cve-fields') return { status: 'done', file: caseDir + '/cve-reservation.md' }
-      if (label === 'draft:issue') return { status: 'done', forVerdict: prompt.match(/Your result's forVerdict is (\w+)/)[1], payloadFile: caseDir + '/issue-draft.json', scriptFile: caseDir + '/issue-create.sh', lintHard: [], lintSoft: ['leak'] }
+      if (label === 'draft:issue') return { status: 'done', forVerdict: prompt.match(/Your result's forVerdict is (\w+)/)[1], title: sim.noTitle ? undefined : 'tool - Stop echoing exception messages to clients', payloadFile: caseDir + '/issue-draft.json', scriptFile: caseDir + '/issue-create.sh', lintHard: [], lintSoft: ['leak'] }
       if (label === 'issue:create') return { status: 'created', key: config.tracker === 'Jira' ? 'PROJ-123' : '#42', url: 'https://tracker.example.org/x' }
       if (label === 'reply:final') {
         const cve = (prompt.match(/<CVE-ID> = (CVE-\d{4}-\d+)/) || [])[1] || null
@@ -259,6 +259,23 @@ function makeSim(rec, config) {
   check(disk.decisions.decisions.fixModel === 'public', 'the fix model is sticky')
   const bad = await runIt({ decision: { issue: 'PROJ-1' } })
   check(bad.error && /GitHub issues/.test(bad.problems.join()), 'a Jira key is rejected for a GitHub project')
+}
+
+// ---- A fix-branch pattern with a slug: the slug comes from the sanitized issue title ---------
+{
+  console.log('\nFix-branch slug')
+  const slugged = Object.assign({}, GITHUB_PROJECT, { fixBranchPattern: 'fix/<ISSUE_NUMBER>-<short-slug>', security: { present: true, lines: [], fixModel: 'public' } })
+  const branchOf = p => (p.match(/worktree add -b (\S+)/) || [])[1]
+  let { sim, runIt } = makeSim('VALID', slugged)
+  await runIt({ report: '/tmp/report.txt' })
+  await runIt({ decision: { verdict: 'VALID', cve: 'CVE-2026-44444' }, approve: { issue: true } })
+  check(branchOf(sim.prompts['fix:#42'] || '') === 'fix/42-tool-stop-echoing-exception-messages-to', 'the slug comes from the issue title, cut at 40 characters: ' + branchOf(sim.prompts['fix:#42'] || ''))
+  ;({ sim, runIt } = makeSim('VALID', slugged))
+  sim.noTitle = true
+  await runIt({ report: '/tmp/report.txt' })
+  await runIt({ decision: { verdict: 'VALID', cve: 'CVE-2026-44444' }, approve: { issue: true } })
+  check(branchOf(sim.prompts['fix:#42'] || '') === 'fix/42-fix', 'without a title the slug is a neutral word: ' + branchOf(sim.prompts['fix:#42'] || ''))
+  check(!/security-fix/.test(src), 'no fix branch is named security-fix')
 }
 
 // ---- A fix coordinated through a private GitHub security advisory ----------------------------

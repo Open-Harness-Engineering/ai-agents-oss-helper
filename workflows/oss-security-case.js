@@ -250,6 +250,7 @@ const DRAFT_ISSUE_SCHEMA = {
   properties: {
     status: DONE_ERR,
     forVerdict: VERDICT,
+    title: STR,
     payloadFile: STR,
     scriptFile: STR,
     summary: STR,
@@ -395,11 +396,22 @@ function fixModelOf(s) {
   return s.decisions.fixModel || (s.config.security || {}).fixModel || null
 }
 
+// A branch name is public before disclosure, so the slug comes from the sanitized issue title, which passed the
+// public-text lint, and is a neutral word when there is none (an issue the maintainer filed by hand).
+function slugOf(title) {
+  let slug = ''
+  for (const word of String(title || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    if (slug.length + word.length + 1 > 40) break
+    slug = slug ? slug + '-' + word : word
+  }
+  return slug || 'fix'
+}
+
 function branchFor(s) {
   const key = issueKeyOf(s), num = issueNum(key)
   const pattern = s.config.fixBranchPattern || 'fix/<ISSUE_ID>'
   const id = s.config.tracker === 'GitHub' ? num : key
-  return pattern.replace(/<ISSUE_ID>/g, id).replace(/<ISSUE_NUMBER>/g, num).replace(/<short-slug>/g, 'security-fix')
+  return pattern.replace(/<ISSUE_ID>/g, id).replace(/<ISSUE_NUMBER>/g, num).replace(/<short-slug>/g, slugOf((s.nodes.draftIssue || {}).title))
 }
 function headRef(s, branch) {
   const c = s.config
@@ -675,7 +687,7 @@ Read ${c.skillsRoot}/oss-issues/create-issue.md (${c.tracker} path) and the "Fix
 - ${body}
 - ${lintRule(s)} Apply it to the title and the description.
 chmod +x the script: the maintainer may run it as "! bash ${s.caseDir}/issue-create.sh".
-Your result's forVerdict is ${verdict}.`
+Your result's title is the issue's title, which also names the fix branch. Your result's forVerdict is ${verdict}.`
 }
 
 function issuePrompt(s) {
