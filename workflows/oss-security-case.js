@@ -347,6 +347,7 @@ const CVEDRAFT_SCHEMA = {
     omittedBlocks: STRS,
     todos: STRS,
     archived: BOOL,
+    archiveScript: STR,
     checklistFile: STR,
   },
 }
@@ -849,7 +850,7 @@ Arguments for the guideline:
 - cve_id=${d.cve}
 - template=${template ? template + ' (the maintainer configured it, so fetching it needs no further confirmation)' : '<none configured>: look at the operator preferences for a template; if none is given, stop with status "blocked" and blockedReason "template: pass template=<url or path>"'}
 - triage_ref=${s.caseDir}/triage.md, fix_pr=${pr}
-- backup_repo: as the guideline resolves it (OSS_CVE_BACKUP_REPO). Its privacy gate is mandatory. Make any clone of it under ${s.caseDir}/cve/ and delete the clone afterwards.
+- backup_repo: as the guideline resolves it (OSS_CVE_BACKUP_REPO). Do not run the guideline's archive step (step 10) command by command: write it as a script, ${s.caseDir}/cve/archive-cve.sh, that follows the step. It stops unless gh repo view <the repository> --json isPrivate answers true (the privacy gate is mandatory), clones the repository into ${s.caseDir}/cve/backup-clone, copies the drafts into <cve_id>/ there with the layout the step gives, commits (signed if the operator preferences ask for it) and pushes, deletes the clone, and prints the commit. chmod +x it, then run it: bash ${s.caseDir}/cve/archive-cve.sh. ${asWritten('it')} If the run is refused or fails, do not retry and do not reshape it: return archived=false with archiveScript, and the maintainer runs the script.
 Where the drafts go: they are written to ${s.caseDir}/cve/ and stay there. When a private draft repository is configured (the backup_repo above) and its privacy gate confirms it is private, they are also archived there, and archived=true. With none configured, they stay local only, and archived=false. Never push them to any other remote, and never open a pull request with them: signing the advisory and opening the publication PR are the maintainer's steps.
 Overrides:
 - Step 4: do not wait for the skeleton to be confirmed; put it in the checklist.
@@ -858,7 +859,7 @@ Overrides:
 - Credit: ${JSON.stringify(d.credit || (s.nodes.triage || {}).credit || 'TODO: ask the maintainer')}.
 - Do not sign, publish, open PRs, touch the publication repository${sec.publicationLocation ? ' (' + sec.publicationLocation + ')' : ''}, or drive the CNA tool.
 - Write ${s.caseDir}/cve/CHECKLIST.md: the step 8 checklist, the JSON blocks you omitted and why, the template skeleton, and the remaining TODOs.
-Return status "drafted" with forCve, files, omittedBlocks, todos, archived and checklistFile; or status "blocked" with the reason.`
+Return status "drafted" with forCve, files, omittedBlocks, todos, archived, archiveScript (when you wrote one) and checklistFile; or status "blocked" with the reason.`
 }
 
 function persistPrompt(s, p) {
@@ -1013,9 +1014,9 @@ function plan(s, fresh) {
     else if (pending && pending.length && !dn.release) gates.push(gate('release', `The CVE draft, its signing and the publication PR wait for the release of ${pending.join(', ')}.`, 'wait for the release, then run again (or done=release)'))
     else {
       const cd = n.cveDraft
-      if (!cd || cd.forCve !== cve || o.redraftCve || (cd.status === 'blocked' && o.retry)) ready.push('cveDraft')
+      if (!cd || cd.forCve !== cve || (o.redraftCve && !fresh.has('cveDraft')) || (cd.status === 'blocked' && o.retry)) ready.push('cveDraft')
       else if (cd.status === 'blocked') gates.push(gate('cve-draft-blocked', `The CVE draft is blocked: ${oneLine(cd.blockedReason)}.`, /template/.test(cd.blockedReason || '') ? 'template=<url or path>, then retry' : 'retry'))
-      else gates.push(gate('cve-record', `The fixed versions are released, and the drafts are in cve/${cd.archived ? ' and in the private draft repository' : ' (local only)'}. Work through cve/CHECKLIST.md, load cve/${cve}.cve5.json into ${sec.cna ? 'the CNA tool of ' + sec.cna : 'your CNA tool'}, sign the advisory text${sec.signing ? ' (' + oneLine(sec.signing) + ')' : ''}, and open the publication PR${sec.publicationLocation ? ' for ' + sec.publicationLocation : ''} yourself. Then send the reporter the final notice and remove the case worktrees.`, 'redraft-cve to refresh the draft'))
+      else gates.push(gate('cve-record', `The fixed versions are released, and the drafts are in cve/${cd.archived ? ' and in the private draft repository' : cd.archiveScript ? ' (local only: archiving them to the private draft repository was refused; run ! bash ' + cd.archiveScript + ')' : ' (local only)'}. Work through cve/CHECKLIST.md, load cve/${cve}.cve5.json into ${sec.cna ? 'the CNA tool of ' + sec.cna : 'your CNA tool'}, sign the advisory text${sec.signing ? ' (' + oneLine(sec.signing) + ')' : ''}, and open the publication PR${sec.publicationLocation ? ' for ' + sec.publicationLocation : ''} yourself. Then send the reporter the final notice and remove the case worktrees.`, 'redraft-cve to refresh the draft'))
     }
   }
 

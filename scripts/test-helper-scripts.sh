@@ -289,6 +289,9 @@ EOF
 cat > "$cases/demo/nodes/backport_release-1.x.json" <<'EOF'
 {"status": "local", "line": "release-1.x", "worktree": "/w/bp", "adaptations": ["older test framework"], "fixVersion": "1.9.4", "tests": "LONG TEST REPORT"}
 EOF
+cat > "$cases/demo/nodes/cveDraft.json" <<'EOF'
+{"status": "drafted", "archived": false, "archiveScript": "/cases/demo/cve/archive-cve.sh", "todos": ["LONG TODO LIST"]}
+EOF
 echo '{}' > "$cases/demo/decisions.json"
 OSS_SECURITY_CASES_DIR="$cases" bash "$probe" demo "$test_root" > "$test_root/probe.out" 2>&1
 expect "$test_root/probe.out" "--- nodes digest"
@@ -297,7 +300,8 @@ expect "$test_root/probe.out" '"fixVersion": "1.9.4"'
 expect "$test_root/probe.out" '"older test framework"'
 expect "$test_root/probe.out" '"first reason"'
 expect "$test_root/probe.out" "A MISSED FACT"
-if grep -Eq "LONG TRIAGE SUMMARY|LONG BACKPORT NOTES|SECOND REASON|LONG TEST REPORT" "$test_root/probe.out"; then
+expect "$test_root/probe.out" '"archiveScript": "/cases/demo/cve/archive-cve.sh"'
+if grep -Eq "LONG TRIAGE SUMMARY|LONG BACKPORT NOTES|SECOND REASON|LONG TEST REPORT|LONG TODO LIST" "$test_root/probe.out"; then
     fail "the digest kept a field the workflow does not read"
 fi
 if grep -Fq -- "--- file $cases/demo/nodes/" "$test_root/probe.out"; then fail "the probe printed the node files besides the digest"; fi

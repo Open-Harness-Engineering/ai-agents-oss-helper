@@ -95,7 +95,7 @@ function makeSim(rec, config) {
       if (/^backport:.*:publish$/.test(label)) return { status: 'pr-open', line: label.split(':')[1], pr: label.includes('release-2.x') ? 28002 : 28003, adaptations: ['PR count rechecked', 'no label'] }
       if (label === 'docsync') return { status: 'local', worktree: '/work/docsync', branch: 'docs/PROJ-123-guide-sync', commit: 'def456', files: ['guide-2.x.md', 'guide-1.x.md'], prBodyFile: caseDir + '/docsync.md' }
       if (label === 'docsync:publish') return { status: 'pr-open', pr: 28004 }
-      if (label === 'cve:draft') return { status: 'drafted', forCve: prompt.match(/for (CVE-\d{4}-\d+) with/)[1], files: [caseDir + '/cve/x.md'], archived: true, checklistFile: caseDir + '/cve/CHECKLIST.md' }
+      if (label === 'cve:draft') return { status: 'drafted', forCve: prompt.match(/for (CVE-\d{4}-\d+) with/)[1], files: [caseDir + '/cve/x.md'], archived: !sim.archiveRefused, archiveScript: caseDir + '/cve/archive-cve.sh', checklistFile: caseDir + '/cve/CHECKLIST.md' }
       if (label === 'persist') {
         const hasCheck = prompt.includes('\n\nCHECK = ')
         const nodes = JSON.parse(between(prompt, 'NODES = ', hasCheck ? '\n\nCHECK = ' : '\n\nREMOVE = '))
@@ -220,6 +220,11 @@ function makeSim(rec, config) {
   check(/in the private draft repository/.test(((r.waitingOn || []).find(g => g.id === 'cve-record') || {}).text || ''), 'the final gate says where the drafts are')
   check(/Waiting on you/.test(disk.status) && /CNA tool/.test(disk.status) && /archived to the private draft repository/.test(disk.status), 'STATUS.md is rendered and says where the drafts are')
   check(r.memory && r.memory.file === 'project_seccase_demo.md', 'a memory pointer is returned')
+  check(/write it as a script, \/path\/to\/security-cases\/demo\/cve\/archive-cve\.sh/.test(sim.prompts['cve:draft'] || '') && /bash \/path\/to\/security-cases\/demo\/cve\/archive-cve\.sh\. Run it exactly as written here/.test(sim.prompts['cve:draft'] || ''), 'the CVE draft archives through a script it runs exactly as written')
+  sim.archiveRefused = true
+  r = await runIt({ options: { redraftCve: true } })
+  const recordGate = ((r.waitingOn || []).find(g => g.id === 'cve-record') || {}).text || ''
+  check(/archiving them to the private draft repository was refused; run ! bash \/path\/to\/security-cases\/demo\/cve\/archive-cve\.sh/.test(recordGate), 'a refused archive leaves a hand-off in the final gate')
 
   const bad = await runIt({ decision: { backportTargets: ['release-0.x'] } })
   check(bad.error && /end of life/.test(bad.problems.join()), 'an EOL line from project-security.md is rejected as a target')
