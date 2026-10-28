@@ -165,6 +165,7 @@ function makeSim(rec, config) {
 
   r = await runIt({ decision: { verdict: 'VALID' }, approve: { issue: true } })
   check(r.ran.includes('issue') && r.ran.includes('fix'), 'run 2 creates the issue, then prepares the fix')
+  check(/issue-create\.sh\. Run it exactly as written here .*in a tool call of its own: absolute paths, no cd, and nothing chained/.test(sim.prompts['issue:create'] || ''), 'the issue node runs the hand-off script exactly as written')
   check(/worktree add -b fix\/PROJ-123 /.test(sim.prompts['fix:PROJ-123']), 'the fix branch follows the project pattern')
   check(!r.ran.includes('reply'), 'the VALID reply waits for the CVE id')
   check(sim.opts['fix:PROJ-123'].model === undefined && sim.opts['issue:create'].model === 'claude-sonnet-5-5', 'the fix keeps the session model; the issue creation runs on Sonnet')
@@ -177,6 +178,7 @@ function makeSim(rec, config) {
   check(r.ran.includes('reply') && r.ran.includes('fix:publish'), 'run 3 finalizes the reply and opens the PR')
   check(/--head maintainer:fix\/PROJ-123/.test(sim.prompts['fix:publish']), 'the PR head points at the fork')
   check(sim.opts['fix:publish'].model === 'claude-sonnet-5-5' && sim.opts['reply:final'].model === 'claude-sonnet-5-5', 'the publish node and the final reply run on Sonnet')
+  check(/exactly as written here \(filling in only the <placeholders>\), each in a tool call of its own: absolute paths, no cd/.test(sim.prompts['fix:publish'] || ''), 'the fix publish node runs its commands exactly as written')
   check(gateIds(r).includes('send-reply') && gateIds(r).includes('merge'), 'run 3 waits for the reply to be sent and for the merge')
   check(disk.decisions.decisions.verdict === 'VALID' && disk.decisions.decisions.cve === 'CVE-2026-11111', 'decisions are sticky across runs')
   check(sim.mirrors.length === 1, 'no second record for the same ruling')
@@ -199,6 +201,7 @@ function makeSim(rec, config) {
   r = await runIt({ approve: { backports: true } })
   check(r.ran.join() === 'backport_release-2.x:publish,backport_release-1.x:publish,docSync:publish', 'backport PRs open first, then the note-sync PR, in one run')
   check(sim.maxActive.publish === 1, 'PR-opening nodes never ran concurrently')
+  check(['backport:release-1.x:publish', 'docsync:publish'].every(l => /the push and the gh pr create of steps \d and \d exactly as written here/.test(sim.prompts[l] || '')), 'the backport and note-sync publish nodes run their commands exactly as written')
   check(gateIds(r).join() === 'release', 'only the release is left before the CVE draft')
   check(disk.nodes['backport_release-1.x'].worktree === '/work/bp-release-1.x', 'publish results merge into the prepared node record')
   const bp = disk.nodes['backport_release-1.x']
