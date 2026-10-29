@@ -108,7 +108,7 @@ Read `STATUS.md`, `decisions.json` and `nodes/*.json` in the case directory. The
 | fix | issue created | the fix-issue guideline (`fix-issue.md`) in a new worktree, up to a local commit | branch, commit, `pr-body.md`, `pr-create.sh` |
 | fix (publish) | fix local, PR approved | push to the fork remote and open the PR | the PR number |
 | **gate: merge** | PR open | human review and merge | merged PR |
-| backports | PR merged | the backport guideline (`backport-pr.md`), one worktree per supported line, one build at a time | local branches, then PRs once approved |
+| backports | PR merged | the backport guideline (`backport-pr.md`), one worktree per supported line, one build at a time; for each line, first run the guideline's existing-backport search and skip any line already carried by an open or merged backport (a bot or another maintainer may have opened one) | local branches, or `already open (#N)` for a line already ported; then PRs once approved |
 | upgrade-note sync | backports open, and the project keeps upgrade notes on the default branch | add the per-line notes on the default branch | PR, after the backport PRs |
 | **gate: release** | fix merged | every fixed version (default branch and each supported line) released to the project's distribution channel | released versions |
 | CVE draft | VALID, CVE reserved, fixed versions released | the CVE-draft guideline (`draft-cve.md`), output in `cve/`, archived only to a verified-private draft repository when one is configured | advisory page, signing plaintext, CVE5 JSON, `cve/CHECKLIST.md` |
@@ -169,7 +169,7 @@ You MUST:
 - Work in dedicated worktrees, never in the maintainer's checkout, and run one build at a time.
 - Name only published CVEs in anything a reporter or the public reads.
 - Push to the fork remote, and recount any PR-volume cap from the project's agent instructions right before opening each PR.
-- Hold backports until the main PR is merged, and check for backport PRs opened by others before preparing one.
+- Hold backports until the main PR is merged, and for each supported line search for a backport already opened (a bot or another maintainer may have opened one) before preparing it; skip a line that already has one, recording it as `already open (#N)` instead of opening a duplicate.
 - Draft the CVE advisory only after every fixed version is released, keep the drafts in the case directory, and archive them only to a configured draft repository verified as private.
 
 You MUST NOT:
