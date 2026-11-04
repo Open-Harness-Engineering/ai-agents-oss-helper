@@ -1,0 +1,58 @@
+{
+  "home": "index.md",
+  "sections": [
+    {
+      "title": "Get started",
+      "index": "get-started/index.md",
+      "pages": [
+        "get-started/install.md"
+      ]
+    },
+    {
+      "title": "Manage installations",
+      "index": "manage/index.md",
+      "pages": [
+        "manage/upgrade.md",
+        "manage/remove-legacy.md",
+        "manage/preferences.md"
+      ]
+    },
+    {
+      "title": "Maintenance task guides",
+      "index": "use/index.md",
+      "pages": [
+        "use/run-tasks.md",
+        "use/security-case.md"
+      ]
+    },
+    {
+      "title": "Configure projects",
+      "index": "configure/index.md",
+      "pages": [
+        "configure/add-project.md",
+        "configure/rule-loading.md",
+        "configure/rules-repositories.md"
+      ]
+    },
+    {
+      "title": "Look up commands and agents",
+      "index": "reference/index.md",
+      "pages": [
+        "reference/commands.md",
+        "reference/agent-support.md"
+      ]
+    },
+    {
+      "title": "Contribute to OSS Helper",
+      "index": "contributing/index.md",
+      "pages": [
+        "contributing/contribute.md",
+        "contributing/skill-sources.md",
+        "contributing/build-locally.md",
+        "contributing/source-layout.md",
+        "contributing/releases.md",
+        "contributing/write-docs.md"
+      ]
+    }
+  ]
+}
