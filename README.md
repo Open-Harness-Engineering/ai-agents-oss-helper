@@ -71,21 +71,24 @@ the native skills command above for remote installation; the repository root
 contains editable sources, while `plugin/skills/` contains assembled skills.
 See the [Gemini skill installer](https://geminicli.com/docs/cli/skills/).
 
-### Bob Shell extension adapter
+### Bob Shell installation
 
-For Bob Shell clients that support extensions:
+Clone the repository and install the Bob assets:
 
 ```bash
-bob extensions install https://github.com/Open-Harness-Engineering/ai-agents-oss-helper
+git clone https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git
+cd ai-agents-oss-helper
+./install.sh bob
 ```
 
-The adapter follows the [Keycloak skills pattern](https://github.com/lhanusov/keycloak-ai-skills):
-`bob-extension.json` loads `BOB.md`, which routes requests to the assembled
-`plugin/skills/` directories. The shared `plugin/` bundle can also be passed to a
-local extension installer. This adapter is structurally checked; the Bob Shell
-client available for testing here does not expose `extensions`, so live Bob
-extension installation remains unverified. Use `./install.sh bob` with older
-clients. This does not install a Bob IDE plugin.
+Or install without keeping a checkout:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash -s -- bob
+```
+
+Start a new Bob Shell session after installing. This installs Bob Shell assets,
+not a Bob IDE plugin.
 
 ### Compatibility installer
 
@@ -233,6 +236,18 @@ gemini extensions update oss-helper
 
 Confirm replacement or update prompts, then restart Gemini.
 
+### Bob Shell
+
+From your checkout, pull the latest changes and rerun the installer:
+
+```bash
+git pull --ff-only
+./install.sh bob
+```
+
+For an installation without a checkout, rerun the Bob `curl` command above.
+Start a new Bob Shell session after updating.
+
 ### Compatibility and local installations
 
 From your source checkout, update and rerun the installer for the agent you use:
@@ -251,9 +266,7 @@ If you registered a local checkout as a marketplace during testing, run
 `git pull --ff-only` and `./build.sh claude` there. Restart Claude to reload its
 local bundle; for Codex, rerun `codex plugin add oss-helper@ai-agents-oss-helper`
 and start a new session. The Git marketplace refresh steps above are not needed
-for local sources. For Bob Shell extension installations, use your client's
-extension updater; that update path remains unverified here. Older Bob clients
-can use `./install.sh bob`.
+for local sources.
 
 ## How It Works
 
