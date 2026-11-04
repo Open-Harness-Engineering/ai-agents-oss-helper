@@ -1,0 +1,13 @@
+{
+  "name": "ai-agents-oss-helper",
+  "owner": {
+    "name": "Open Harness Engineering"
+  },
+  "plugins": [
+    {
+      "name": "oss-helper",
+      "source": "./plugin"
+    }
+  ],
+  "description": "Open source maintenance skills, commands, agents and workflows"
+}

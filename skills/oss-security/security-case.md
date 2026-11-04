@@ -44,7 +44,7 @@ A VALID fix follows the project's fix model. With `public`, a neutral public iss
 
 ### 2. Choose the mode
 
-- **Workflow mode** - the agent is Claude Code, has the Workflow tool, and the `oss-security-case` workflow is installed (`~/.claude/workflows/oss-security-case.js`, installed by `install.sh claude`). Follow step 3.
+- **Workflow mode** - the agent is Claude Code, has the Workflow tool, and the `oss-security-case` workflow is installed (bundled under `workflows/oss-security-case.js`). Follow step 3.
 - **Manual mode** - any other agent, or Claude Code without the Workflow tool. Follow step 4. It drives the same graph and the same case directory by hand, one node at a time.
 
 ### 3. Workflow mode
@@ -70,11 +70,11 @@ Map the command arguments onto the workflow's `args`:
 | `economy=off` | `options: {economy: false}` |
 | `status`, `plan` | `mode: "status"`, `mode: "plan"` |
 
-Run the command from a clone of the project, or pass `repo=<absolute path>` as `args.repo`.
+Set the internal `args.skillsRoot` to the absolute parent of the directory containing this guideline. This locates the bundled skills even when the plugin is cached elsewhere. Run the command from a clone of the project, or pass `repo=<absolute path>` as `args.repo`.
 
 #### 3.2 Run the workflow
 
-Invoking this command is the maintainer's opt-in to run the workflow. Call the Workflow tool with `{name: "oss-security-case", args: <object>}` directly, without checking for the file first. If the name is not found, which happens when the workflow was installed during the current session, call it with `{scriptPath: "<home>/.claude/workflows/oss-security-case.js", args: <object>}` instead. The workflow runs in the background: wait for its notification.
+Invoking this command is the maintainer's opt-in to run the workflow. Call the Workflow tool with `{name: "oss-security-case", args: <object>}` directly, without checking for the file first. If the name is not found, which happens when the workflow was installed during the current session, call it with `{scriptPath: "<skillsRoot>/../workflows/oss-security-case.js", args: <object>}` instead. The workflow runs in the background: wait for its notification.
 
 #### 3.3 Relay the result
 

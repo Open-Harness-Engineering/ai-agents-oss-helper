@@ -27,46 +27,71 @@ Use the Add Project guideline to generate initial rule files for any project. On
 
 ## Installation
 
-### Quick Install (All Agents)
+### Claude Code marketplace
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
+```text
+/plugin marketplace add Open-Harness-Engineering/ai-agents-oss-helper
+/plugin install oss-helper@ai-agents-oss-helper
 ```
 
-### Selective Install
+The marketplace installs the committed `plugin/` bundle; users do not run a build.
+Plugin skills and commands are namespaced, for example `/oss-helper:oss-issues`
+and `/oss-helper:oss-fix-issue 42`.
+
+### Build locally
 
 ```bash
-# Clone the repository
 git clone https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git
 cd ai-agents-oss-helper
-
-# Install for specific agent
-./install.sh claude    # Claude only
-./install.sh bob       # Bob only
-./install.sh gemini    # Gemini CLI only
-./install.sh opencode  # OpenCode only
-./install.sh codex     # Codex only
-./install.sh agy       # agy only
-./install.sh           # All agents
+./build.sh          # All six targets
+./build.sh claude   # plugin/ (committed)
+./build.sh codex    # build/codex/ (ignored)
 ```
 
-### Installing a specific version
+The build uses the current checkout, works offline, and writes only generated
+output inside the project. Check out a release tag before building to select a
+specific version. Rebuild `plugin/` whenever its inputs change; CI checks it for
+drift. For isolated builds, use `./build.sh --output-dir /tmp/oss-plugin claude`.
 
-By default the installer fetches the latest assets from `main`. To install from
-a published release tag instead, pass `--version` (or set the
-`OSS_HELPER_VERSION` environment variable). This applies to remote
-(`curl | bash`) installs:
+Test the Claude bundle locally with `claude --plugin-dir ./plugin`.
+
+### Other agents
+
+Build the target and copy its output to the corresponding directories. The build
+never copies files into your home directory.
+
+| Target | Built directory | Copy destination |
+| --- | --- | --- |
+| Bob | `build/bob/{skills,commands,agents}/` | `~/.bob/{skills,commands,agents}/` |
+| agy | `build/agy/{skills,commands,agents}/` | `~/.agy/{skills,commands,agents}/` |
+| Gemini | `build/gemini/{commands,agents}/` | `~/.gemini/{commands,agents}/` |
+| OpenCode | `build/opencode/{commands,agents}/` | `~/.config/opencode/{commands,agents}/` |
+| Codex | `build/codex/skills/` | `~/.agents/skills/` |
+| Codex | `build/codex/agents/` | `~/.codex/agents/` |
+
+For example:
 
 ```bash
-# Pin a release with a flag
-curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash -s -- --version v1.0.0
-
-# ...or with an environment variable
-curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | OSS_HELPER_VERSION=v1.0.0 bash
+./build.sh codex
+mkdir -p ~/.agents/skills ~/.codex/agents
+cp -R build/codex/skills/. ~/.agents/skills/
+cp -R build/codex/agents/. ~/.codex/agents/
 ```
 
-A local `./install.sh` run installs the files from your current checkout, so to
-pin a version from a clone, check out the tag first (`git checkout v1.0.0`).
+### Remove older installations
+
+Before switching from the old installer, preview the legacy files to remove:
+
+```bash
+./uninstall.sh claude          # Preview only
+./uninstall.sh --yes claude    # Remove legacy Claude assets
+./uninstall.sh --yes           # All six agents
+```
+
+The uninstaller preserves project rules, security case data and unrelated user
+assets. It does not remove marketplace-managed plugins. Remove an installed
+plugin through Claude's `/plugin` manager instead. After removing legacy Claude
+assets, install the marketplace plugin and start a fresh session.
 
 ## How It Works
 
@@ -94,14 +119,14 @@ Each skill is user-invocable — you can invoke it directly via `/oss-issues`, `
 Each skill initializes by loading project rules in this priority order:
 
 1. **Project-local rules** - `.oss-ai-helper-rules/` directory in the repository root. Highest priority, versioned with the project.
-2. **Installed fallback rules** - A subdirectory under the agent's local rules directory (for example `~/.claude/oss-helper/rules/<project>/`) whose `project-info.md` declares a matching `Remote pattern`. Install these on demand with the Install Info guideline. Claude and Bob keep them under `oss-helper/rules/`, not `~/.claude/rules/`, because Claude Code loads every file under `~/.claude/rules/` into every session in every repository. `install.sh` moves rule sets left in the old location.
+2. **Installed fallback rules** - A subdirectory under the agent's local rules directory (for example `~/.claude/oss-helper/rules/<project>/`) whose `project-info.md` declares a matching `Remote pattern`. Install these on demand with the Install Info guideline. Claude and Bob keep them under `oss-helper/rules/`, not `~/.claude/rules/`, because Claude Code loads every file under `~/.claude/rules/` into every session in every repository. Legacy rule sets remain readable in the old location; move them to `oss-helper/rules/` manually to stop Claude from preloading them.
 3. **Auto-discovery** - If no rules exist anywhere, the agent auto-discovers the project's configuration (build tool, conventions, etc.) and generates rule files in `.oss-ai-helper-rules/` so they can be committed and shared.
 
 Projects should adopt project-local rules so that configuration travels with the repository and stays in sync across all contributors and agents.
 
 ### Where the rules come from
 
-Project rules are not bundled with the installer. They live in a separate repository, [`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects), and are installed on demand via the Install Info guideline. This keeps the helper focused on guidelines and lets projects that prefer not to host AI-agent metadata in their source tree have rules hosted centrally instead.
+Project rules are not bundled with the plugin. They live in a separate repository, [`Open-Harness-Engineering/ai-agents-oss-known-projects`](https://github.com/Open-Harness-Engineering/ai-agents-oss-known-projects), and are installed on demand via the Install Info guideline. This keeps the helper focused on guidelines and lets projects that prefer not to host AI-agent metadata in their source tree have rules hosted centrally instead.
 
 ### Helper scripts
 
@@ -272,11 +297,14 @@ An agent re-reads its whole conversation on every turn, and an answer that comes
 
 ### Claude, Bob, agy
 
-Installed as 6 user-invocable skills at `~/.{agent}/skills/oss-{issues,review,ci,security,project,qe}/` plus individual `/oss-*` commands in `~/.{agent}/commands/`. You can either describe what you want in natural language (the agent matches it to a skill automatically), invoke a skill group (e.g. `/oss-issues`), or invoke a specific command directly (e.g. `/oss-fix-issue 42`).
+Claude uses the marketplace plugin and its namespaced commands. Bob and agy use
+6 user-invocable skills copied to `~/.{agent}/skills/oss-{issues,review,ci,security,project,qe}/` plus individual `/oss-*` commands in `~/.{agent}/commands/`. You can either describe what you want in natural language (the agent matches it to a skill automatically), invoke a skill group (e.g. `/oss-issues`), or invoke a specific command directly (e.g. `/oss-fix-issue 42`).
 
 In Claude Code the individual commands are installed with `disable-model-invocation: true`: you type them, but their descriptions stay out of the model's context in every session. Requests in natural language reach the same guidelines through the skill groups. The sub-agent descriptions are kept to a sentence or two for the same reason, since Claude Code lists them in every session too.
 
-For Claude only, the installer also copies the workflows in `workflows/` to `~/.claude/workflows/`. These are scripts for Claude Code's Workflow tool, which runs the subagents of a multi-step guideline in the background. `/oss-security-case` uses one. Claude Code reads the directory when a session starts, so start a new session after installing. Bob and agy install the same guideline and follow it by hand.
+The Claude plugin also bundles the workflows in `workflows/` for Claude Code's
+Workflow tool. `/oss-helper:oss-security-case` uses one. Bob and agy follow the
+same guideline by hand.
 
 ### Gemini CLI
 
@@ -290,13 +318,18 @@ Individual markdown commands with frontmatter are generated and installed to `~/
 
 Installed as 6 skill directories at `~/.agents/skills/oss-{issues,review,ci,security,project,qe}/` with all guideline files as supporting files. Project rule files are installed to `~/.codex/oss-helper/rules/`.
 
-If Codex reports a missing `~/.codex/oss-helper/.oss-init.md`, rerun `./install.sh codex` from an updated checkout, then start a new Codex session. The installer removes stale standalone OSS Helper skills; current skills use their bundled `init.md`.
+If Codex reports a missing `~/.codex/oss-helper/.oss-init.md`, remove the legacy installation with `./uninstall.sh --yes codex`, build and copy the current Codex bundle, then start a new session. Current skills use their bundled `init.md`.
 
 ## Project Structure
 
 ```text
 ai-agents-oss-helper/
-├── install.sh                              # Installation script
+├── build.sh                                # Local asset builder
+├── uninstall.sh                            # Legacy installation cleanup
+├── .claude-plugin/                         # Marketplace catalog
+├── packaging/                              # Plugin metadata template
+├── plugin/                                 # Generated Claude plugin (committed)
+├── build/                                  # Other generated targets (ignored)
 ├── README.md
 ├── workflows/                              # Claude Code workflows (installed for Claude only)
 │   └── oss-security-case.js               # Security report lifecycle graph
@@ -371,20 +404,24 @@ and are installed on demand via the Install Info guideline.
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Notable changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
+Before tagging a release, update the version in `packaging/claude-plugin.json`,
+run `./build.sh claude`, and commit the metadata and regenerated `plugin/` bundle.
+
 Releases are cut by pushing a `vMAJOR.MINOR.PATCH` tag (for example `v1.0.0`). A
 GitHub Actions workflow (`.github/workflows/release.yml`) then publishes the
 matching [GitHub Release](https://github.com/Open-Harness-Engineering/ai-agents-oss-helper/releases)
-with generated notes. The `curl … | bash` installer always tracks the latest
-state of `main`.
+with generated notes. The marketplace reads the committed Claude bundle; local
+builds use the checked-out source version.
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Add or modify guideline files in the appropriate `skills/oss-*/` directory
-4. Update `install.sh` if adding new files
-5. For a Claude Code workflow, add the script to `workflows/` (its `meta.name` must match the file name), list it in `WORKFLOW_FILES` in `install.sh`, give it a guideline that also works by hand for the other agents, and add a test under `tests/workflows/`
-6. Submit a pull request
+4. Update `build.sh` if adding new files
+5. For a Claude Code workflow, add the script to `workflows/` (its `meta.name` must match the file name), list it in `WORKFLOW_FILES` in `build.sh`, give it a guideline that also works by hand for the other agents, and add a test under `tests/workflows/`
+6. Run `./build.sh claude` and include updated `plugin/` output
+7. Submit a pull request
 
 ## License
 

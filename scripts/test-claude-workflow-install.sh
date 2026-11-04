@@ -4,56 +4,63 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
+test_root="$(cd "$test_root" && pwd -P)"
 trap 'rm -rf "$test_root"' EXIT
+# No live GitHub calls while exercising local runtime discovery.
+mkdir -p "$test_root/bin"
+printf '#!/usr/bin/env bash\nexit 1\n' > "$test_root/bin/gh"
+chmod +x "$test_root/bin/gh"
+export PATH="$test_root/bin:$PATH"
 test_home="$test_root/home"
 
 # A workflow that belongs to the user must survive the install.
 mkdir -p "$test_home/.claude/workflows"
 echo "export const meta = { name: 'user-workflow', description: 'not ours' }" > "$test_home/.claude/workflows/user-workflow.js"
 
-HOME="$test_home" bash "$repo_root/install.sh" claude > "$test_root/install.log"
+HOME="$test_home" bash "$repo_root/build.sh" --output-dir "$test_root/claude" claude > "$test_root/install.log"
 
-workflows="$test_home/.claude/workflows"
-cmp "$repo_root/workflows/oss-security-case.js" "$workflows/oss-security-case.js"
-[[ "$(cat "$workflows/user-workflow.js")" == "export const meta = { name: 'user-workflow', description: 'not ours' }" ]]
+workflows="$test_root/claude/workflows"
+sed 's@/oss-security-case@/oss-helper:oss-security-case@g' "$repo_root/workflows/oss-security-case.js" > "$test_root/expected-workflow.js"
+cmp "$test_root/expected-workflow.js" "$workflows/oss-security-case.js"
+[[ "$(cat "$test_home/.claude/workflows/user-workflow.js")" == "export const meta = { name: 'user-workflow', description: 'not ours' }" ]]
 
 # Claude Code looks a saved workflow up by the name in its meta block, so it must match the file name.
 for file in "$repo_root"/workflows/*.js; do
     name="$(basename "$file" .js)"
-    head -1 "$file" | grep -Fq 'export const meta = {'
+    grep -Fq 'export const meta = {' "$file"
     grep -Eq "^  name: '$name'," "$file"
 done
 
-cmp "$repo_root/skills/oss-security/security-case.md" "$test_home/.claude/skills/oss-security/security-case.md"
-grep -Fq 'security-case.md' "$test_home/.claude/commands/oss-security-case.md"
+cmp "$repo_root/skills/oss-security/security-case.md" "$test_root/claude/skills/oss-security/security-case.md"
+grep -Fq 'security-case.md' "$test_root/claude/commands/oss-security-case.md"
 
 # The workflow's loader resolves the project itself: in workflow mode the command reads the guideline without
 # running the skill's initialization, and both files it names are installed.
-case_cmd="$test_home/.claude/commands/oss-security-case.md"
+case_cmd="$test_root/claude/commands/oss-security-case.md"
 grep -Fq "In workflow mode (its step 2), skip the skill's initialization steps" "$case_cmd"
 if grep -q '^Invoke the oss-security skill' "$case_cmd"; then
     echo "FAIL: the oss-security-case command still runs the skill's initialization first" >&2
     exit 1
 fi
-for path in $(grep -oE '~/\.claude/skills/[a-z-]+/[a-z-]+\.md' "$case_cmd"); do
-    [[ -f "$test_home/${path:2}" ]]
+for path in $(grep -oE '\$\{CLAUDE_PLUGIN_ROOT\}/skills/[a-z-]+/[a-z-]+\.md' "$case_cmd"); do
+    [[ -f "${path/'${CLAUDE_PLUGIN_ROOT}'/$test_root/claude}" ]]
 done
 
 # Report commands run in a forked context: the body names the files a fresh sub-agent needs and
 # passes the arguments. Commands that stop at a gate or ask questions stay inline.
 for cmd in oss-list-prs oss-list-pr-status oss-pr-status oss-list-issues oss-analyze-issue oss-workspace-status; do
-    file="$test_home/.claude/commands/$cmd.md"
+    file="$test_root/claude/commands/$cmd.md"
     grep -Fxq 'context: fork' "$file"
     grep -Fxq 'background: false' "$file"
     grep -Fq 'Arguments: $ARGUMENTS' "$file"
-    paths="$(grep -oE '~/\.claude/skills/[a-z-]+/[a-z-]+\.md' "$file")"
+    paths="$(grep -oE '\$\{CLAUDE_PLUGIN_ROOT\}/skills/[a-z-]+/[a-z-]+\.md' "$file")"
     [[ "$(printf '%s\n' "$paths" | wc -l)" -eq 2 ]]
     for path in $paths; do
-        [[ -f "$test_home/${path:2}" ]]
+        [[ -f "${path/'${CLAUDE_PLUGIN_ROOT}'/$test_root/claude}" ]]
     done
 done
 for cmd in oss-fix-issue oss-review-pr oss-merge-pr oss-address-review oss-find-task oss-security-case; do
-    if grep -q '^context: fork' "$test_home/.claude/commands/$cmd.md"; then
+    if grep -q '^context: fork' "$test_root/claude/commands/$cmd.md"; then
         echo "FAIL: $cmd runs in a fork but stops for the user" >&2
         exit 1
     fi
@@ -62,12 +69,12 @@ done
 # The fragments the guidelines reference ship in every skill.
 for skill in oss-issues oss-review oss-ci oss-security oss-project oss-qe; do
     for fragment in _build-workflow.md _issue-ownership.md _operator-preferences.md _checkpoint.md; do
-        cmp "$repo_root/commands/_fragments/$fragment" "$test_home/.claude/skills/$skill/_fragments/$fragment"
+        cmp "$repo_root/commands/_fragments/$fragment" "$test_root/claude/skills/$skill/_fragments/$fragment"
     done
 done
 
 # The loader's probe ships with the skill, parses, and runs read-only against any clone (gh may be absent).
-probe="$test_home/.claude/skills/oss-security/security-case-probe.sh"
+probe="$test_root/claude/skills/oss-security/security-case-probe.sh"
 cmp "$repo_root/skills/oss-security/security-case-probe.sh" "$probe"
 bash -n "$probe"
 env -i HOME="$test_home" PATH="$PATH" bash "$probe" demo-case "$repo_root" > "$test_root/probe.out"
@@ -80,19 +87,19 @@ if env -i HOME="$test_home" PATH="$PATH" bash "$probe" > /dev/null 2>&1; then
 fi
 
 # Bob gets the guideline and its command, but no workflow.
-HOME="$test_home" bash "$repo_root/install.sh" bob > "$test_root/install-bob.log"
-[[ -f "$test_home/.bob/skills/oss-security/security-case.md" ]]
-grep -Fq 'security-case.md' "$test_home/.bob/commands/oss-security-case.md"
-[[ ! -e "$test_home/.bob/workflows" ]]
-if grep -l '^context: fork' "$test_home"/.bob/commands/*.md; then
+HOME="$test_home" bash "$repo_root/build.sh" --output-dir "$test_root/bob" bob > "$test_root/install-bob.log"
+[[ -f "$test_root/bob/skills/oss-security/security-case.md" ]]
+grep -Fq 'security-case.md' "$test_root/bob/commands/oss-security-case.md"
+[[ ! -e "$test_root/bob/workflows" ]]
+if grep -l '^context: fork' "$test_root"/bob/commands/*.md; then
     echo 'FAIL: a Bob command carries the Claude-only context: fork field' >&2
     exit 1
 fi
 
 # agy gets the guideline and its command, but no workflow.
-HOME="$test_home" bash "$repo_root/install.sh" agy > "$test_root/install-agy.log"
-[[ -f "$test_home/.agy/skills/oss-security/security-case.md" ]]
-grep -Fq 'security-case.md' "$test_home/.agy/commands/oss-security-case.md"
-[[ ! -e "$test_home/.agy/workflows" ]]
+HOME="$test_home" bash "$repo_root/build.sh" --output-dir "$test_root/agy" agy > "$test_root/install-agy.log"
+[[ -f "$test_root/agy/skills/oss-security/security-case.md" ]]
+grep -Fq 'security-case.md' "$test_root/agy/commands/oss-security-case.md"
+[[ ! -e "$test_root/agy/workflows" ]]
 
 echo 'PASS: the Claude install ships the oss-security-case workflow, guideline and command; Bob and agy get no workflow'

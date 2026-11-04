@@ -294,7 +294,7 @@ You MUST NOT:
 - Write rule files without user confirmation
 - Skip auto-detection and blindly copy template values for repo-specific fields
 - Modify existing rule files in other projects
-- Modify `install.sh` or `README.md`
+- Modify `build.sh` or `README.md`
 - Create per-project command files
 - Make excessive GitHub API calls — inspect only what is needed
 

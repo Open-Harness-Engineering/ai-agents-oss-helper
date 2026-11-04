@@ -1,2 +1,5 @@
 # Generated documentation site (built in CI, deployed to GitHub Pages)
 /site/
+
+# Local native bundles (Claude plugin/ is committed)
+/build/

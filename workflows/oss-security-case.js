@@ -552,15 +552,15 @@ function loadPrompt(a) {
   if (threads.length) sources.push(`for each mail-archive thread id in ${JSON.stringify(threads)}: read the thread with the mail archive's thread-reading tool, and append each message (From, Date, Subject, body) to <caseDir>/report.txt`)
   return `You are the loader of the "oss-security-case" workflow (OSS Helper), case "${a.case}". You are read-only, except that you create and fill the case directory. Do not build, push, or write to an issue tracker or forge.
 
-1. Configuration. Start with the probe, once: bash ~/.claude/skills/oss-security/security-case-probe.sh ${a.case} ${a.repo ? a.repo : '.'}. It is read-only and prints, in sections, the clone (root, remotes with their org/repo, default branch, shallow flag), the operator (gh login, git identity, the upstream and push remotes it worked out), the project's rule files, the environment variables and the directories they resolve to, the operator preferences, and the case directory with its JSON files. Take every value it answers from that output; run only what it leaves open (an ERROR marker, a missing section, the Jira user, the mail archive, and the live facts of step 4). The definitions below are the contract for each field. Return every value in config; use null when a value is unknown, never guess.
+1. Configuration. Start with the probe, once: run the probe at \`${a.skillsRoot}/oss-security/security-case-probe.sh\` with case \`${a.case}\` and repository \`${a.repo || '.'}\`. It is read-only and prints, in sections, the clone (root, remotes with their org/repo, default branch, shallow flag), the operator (gh login, git identity, the upstream and push remotes it worked out), the project's rule files, the environment variables and the directories they resolve to, the operator preferences, and the case directory with its JSON files. Take every value it answers from that output; run only what it leaves open (an ERROR marker, a missing section, the Jira user, the mail archive, and the live facts of step 4). The definitions below are the contract for each field. Return every value in config; use null when a value is unknown, never guess.
    - repoRoot: the clone root (git rev-parse --show-toplevel in ${a.repo ? a.repo : 'the current working directory'}). If that is not a git repository, return initialized=false with error "run from a clone of the project, or pass repo=<path>". repoBase: its directory name.
-   - Follow steps 1 and 2 of ~/.claude/skills/oss-security/init.md from repoRoot (skip step 3) to find the project's rule files. repo (org/repo) from project-info.md's GitHub repo; upstreamRemote = the git remote whose URL points at that repo; defaultBranch: gh repo view <repo> --json defaultBranchRef --jq .defaultBranchRef.name; shallow: git rev-parse --is-shallow-repository.
+   - Follow steps 1 and 2 of \`${a.skillsRoot}/oss-security/init.md\` from repoRoot (skip step 3) to find the project's rule files. repo (org/repo) from project-info.md's GitHub repo; upstreamRemote = the git remote whose URL points at that repo; defaultBranch: gh repo view <repo> --json defaultBranchRef --jq .defaultBranchRef.name; shallow: git rev-parse --is-shallow-repository.
    - login: gh api /user --jq .login. gitName and gitEmail: git config user.name and user.email. pushRemote: $OSS_PUSH_REMOTE if set, else the remote whose URL points at <login>/<repository name>, else null.
    - tracker (GitHub or Jira), trackerUrl and jiraProject from project-info.md. jiraUser: $OSS_JIRA_USER if set, else, for Jira with $JIRA_TOKEN set, one GET of <REST base>/rest/api/2/myself (field name), else null.
    - fixBranchPattern and commitFormatFix from project-guidelines.md (the fix entries). upgradeGuidePolicy: the project's rule on where upgrade or migration notes go when a fix is backported, quoted from its rule files or agent instructions, else null.
    - buildCommand, testCommand, formatCommand, moduleSpecificBuild, parallelBuild from project-standards.md.
    - security, from project-security.md when the rules include it (present=true): reportingChannel, cna, cnaUrl, advisoryTemplate, publicationLocation, signing, disclosure; lines = the supported maintenance branches as branch names (for example release-2.x); eol = end-of-life branches that still exist; fixModel = "public" when undisclosed fixes go through a neutral public issue and PR, "ghsa" when they go through a private GitHub security advisory, null when the file does not say; denyTerms = any public-text denylist it lists. Without the file: {"present": false}.
-   - worktreeRoot: $OSS_WORKTREE_ROOT, else the parent directory of repoRoot. casesRoot: $OSS_SECURITY_CASES_DIR, else $HOME/.oss-helper/security-cases. cveRecordsDir: $OSS_CVE_RECORDS_DIR, else null. skillsRoot: $HOME/.claude/skills.
+   - worktreeRoot: $OSS_WORKTREE_ROOT, else the parent directory of repoRoot. casesRoot: $OSS_SECURITY_CASES_DIR, else $HOME/.oss-helper/security-cases. cveRecordsDir: $OSS_CVE_RECORDS_DIR, else null. skillsRoot: ${a.skillsRoot} (the bundled skills directory supplied by the caller).
    - prefsFile: $OSS_SECURITY_CASE_PREFS, else $HOME/.config/oss-helper/security-case.md, when that file exists; operatorNotes: its full text ("" when there is none).
    - notesDir: $OSS_SECURITY_NOTES_DIR when it is set and the directory exists, else null.
    - mailArchive: the name of the MCP server that the operator preferences designate as the archive of the project's private security mailing list, when its tools are available to you (check with ToolSearch), else null. Without one there is no mail archive: skip every mail-archive step below.
@@ -1231,6 +1231,7 @@ function threadList(a) {
 function validateArgs(a) {
   const problems = []
   const d = a.decision || {}
+  if (typeof a.skillsRoot !== 'string' || !a.skillsRoot.startsWith('/')) problems.push('skillsRoot must be the absolute bundled skills directory (the parent of the security-case.md directory)')
   if (d.verdict !== undefined && VERDICTS.indexOf(d.verdict) < 0) problems.push(`verdict must be one of ${VERDICTS.join(', ')}`)
   if (d.cve !== undefined && !/^CVE-\d{4}-\d{4,}$/.test(d.cve)) problems.push('cve must look like CVE-YYYY-NNNNN')
   if (d.issue !== undefined && !/^([A-Z][A-Z0-9_]*-\d+|#?\d+)$/.test(String(d.issue))) problems.push('issue must be a Jira key (KEY-123) or a GitHub issue number (#123)')
@@ -1350,6 +1351,8 @@ const loaded = await agent(loadPrompt(a), { label: 'load', phase: 'Load', schema
 if (!loaded || !loaded.initialized || !loaded.config) {
   return { case: a.case, error: (loaded && loaded.error) || 'the loader failed', warnings: (loaded && loaded.warnings) || [] }
 }
+
+loaded.config.skillsRoot = a.skillsRoot
 
 const stored = loaded.decisionsFile || {}
 const s = normalize({

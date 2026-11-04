@@ -5,6 +5,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
+test_root="$(cd "$test_root" && pwd -P)"
 trap 'rm -rf "$test_root"' EXIT
 test_home="$test_root/home"
 fixtures="$test_root/fixtures"
@@ -50,9 +51,19 @@ chmod +x "$test_root/bin/gh"
 export FAKE_GH_DIR="$fixtures"
 export PATH="$test_root/bin:$PATH"
 
-HOME="$test_home" bash "$repo_root/install.sh" claude > "$test_root/install-claude.log"
-HOME="$test_home" bash "$repo_root/install.sh" bob > "$test_root/install-bob.log"
-HOME="$test_home" bash "$repo_root/install.sh" codex > "$test_root/install-codex.log"
+# Copy locally built bundles into the isolated home to exercise runtime helpers.
+for agent in claude bob codex; do
+    bundle="$test_root/bundle-$agent"
+    HOME="$test_home" bash "$repo_root/build.sh" --output-dir "$bundle" "$agent" > "$test_root/build-$agent.log"
+    if [[ "$agent" == codex ]]; then
+        mkdir -p "$test_home/.agents" "$test_home/.codex"
+        cp -R "$bundle/skills" "$test_home/.agents/skills"
+        cp -R "$bundle/agents" "$test_home/.codex/agents"
+    else
+        mkdir -p "$test_home/.$agent"
+        cp -R "$bundle/skills" "$test_home/.$agent/skills"
+    fi
+done
 
 # The scripts ship with their skills, for every agent that installs skill directories.
 for skills in "$test_home/.claude/skills" "$test_home/.bob/skills" "$test_home/.agents/skills"; do

@@ -156,7 +156,7 @@ You MUST NOT:
 - Create per-project command files (all commands are generic)
 - Modify existing project directories without user consent
 - Skip creating any of the three rule files
-- Modify `install.sh`, `SKILL.md`, or `README.md` in `ai-agents-oss-helper` when adding a project (the rules layout no longer requires this)
+- Modify `build.sh`, `SKILL.md`, or `README.md` in `ai-agents-oss-helper` when adding a project (the rules layout no longer requires this)
 
 ### 7. Output
 

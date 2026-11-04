@@ -4,7 +4,7 @@
 // drift from them, and writes a self-contained static site into ./site.
 //
 //   Sources
-//     - install.sh            GUIDELINE_COMMANDS registry -> the /oss-* commands
+//     - build.sh            GUIDELINE_COMMANDS registry -> the /oss-* commands
 //     - skills/<id>/SKILL.md   frontmatter description      -> per-skill blurb
 //     - workflows/*.js         `export const meta`          -> the workflows
 //     - docs/reference.json    authored summaries + usage examples (merged in)
@@ -42,10 +42,10 @@ function readReference() {
   return { commands: ref.commands || {}, workflows: ref.workflows || {} }
 }
 
-// --- commands (install.sh GUIDELINE_COMMANDS) ------------------------------
+// --- commands (build.sh GUIDELINE_COMMANDS) ------------------------------
 
 function readCommands() {
-  const text = readFileSync(join(ROOT, 'install.sh'), 'utf8')
+  const text = readFileSync(join(ROOT, 'build.sh'), 'utf8')
   const re = /^\s*"(oss-[a-z0-9-]+)\|([^|]+)\|(oss-[a-z0-9-]+)\|([^"]+)"/gm
   const groups = new Map() // skill -> [{command, file, description}]
   let m
@@ -267,7 +267,7 @@ ${workflowsHtml}
 
   <footer>
     <div class="wrap">
-      Generated from <code>install.sh</code>, <code>docs/reference.json</code> and <code>workflows/*.js</code> on ${new Date().toISOString().slice(0, 10)}.
+      Generated from <code>build.sh</code>, <code>docs/reference.json</code> and <code>workflows/*.js</code> on ${new Date().toISOString().slice(0, 10)}.
       <a href="${REPO_URL}">${REPO}</a>
     </div>
   </footer>
@@ -284,7 +284,7 @@ const workflows = readWorkflows()
 const totalCommands = [...commandGroups.values()].reduce((n, c) => n + c.length, 0)
 
 if (totalCommands === 0) {
-  console.error('build-docs: no commands parsed from install.sh — aborting')
+  console.error('build-docs: no commands parsed from build.sh — aborting')
   process.exit(1)
 }
 

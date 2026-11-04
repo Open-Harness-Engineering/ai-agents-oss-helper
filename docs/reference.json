@@ -1,5 +1,5 @@
 {
-  "_comment": "Usage examples and fuller descriptions for the docs site. Every command in install.sh's GUIDELINE_COMMANDS must have an entry here (enforced by scripts/build-docs.mjs). `summary` overrides the registry one-liner; `usage` is a list of example invocations.",
+  "_comment": "Usage examples and fuller descriptions for the docs site. Every command in build.sh's GUIDELINE_COMMANDS must have an entry here (enforced by scripts/build-docs.mjs). `summary` overrides the registry one-liner; `usage` is a list of example invocations.",
   "commands": {
     "oss-fix-issue": {
       "summary": "Takes an issue from the project's tracker through to a pull request: parses the reference, branches with the project's naming convention, implements the fix (delegating to a coding agent when one is available), and opens the PR.",

@@ -179,7 +179,7 @@ else
         find_rules "$OSS_RULES_DIR"
     else
         # Installed rules live in ~/.claude/oss-helper/rules/; ~/.claude/rules/ holds them on installs
-        # that install.sh has not migrated yet.
+        # created by older installations; leave migration to the operator.
         rules_roots="$HOME/.claude/oss-helper/rules or $HOME/.claude/rules"
         find_rules "$HOME/.claude/oss-helper/rules" || find_rules "$HOME/.claude/rules"
     fi
@@ -253,7 +253,8 @@ else
     echo "notesDir: <unset>"
 fi
 echo "cveRecordsDir: ${OSS_CVE_RECORDS_DIR:-<unset>}"
-echo "skillsRoot: $HOME/.claude/skills"
+skills_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+echo "skillsRoot: $skills_root"
 
 section "preferences"
 dump "$prefs_file"
