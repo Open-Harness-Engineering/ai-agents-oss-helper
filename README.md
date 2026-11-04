@@ -404,8 +404,14 @@ and are installed on demand via the Install Info guideline.
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Notable changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
-Before tagging a release, update the version in `packaging/claude-plugin.json`,
-run `./build.sh claude`, and commit the metadata and regenerated `plugin/` bundle.
+The marketplace tracks `main`. Both the plugin manifest and marketplace entry
+intentionally omit `version`, so Claude uses the installed directory's commit SHA
+to detect updates between releases. Do not add a fixed version to either manifest.
+See [Claude plugin version resolution](https://code.claude.com/docs/en/plugins/loading#how-claude-code-computes-the-version).
+Claude validation reports an advisory about the omitted version; this is
+intentional, so `--strict` treats that advisory as a failure.
+Before tagging a release, run `./build.sh claude` and commit any regenerated
+`plugin/` output.
 
 Releases are cut by pushing a `vMAJOR.MINOR.PATCH` tag (for example `v1.0.0`). A
 GitHub Actions workflow (`.github/workflows/release.yml`) then publishes the

@@ -68,4 +68,30 @@ ln -s "$test_root/external" "$HOME/.bob/skills"
 if bash "$repo_root/uninstall.sh" --yes bob > /dev/null 2>&1; then fail 'accepted symlinked skills root'; fi
 [[ -d "$test_root/external/oss-issues" ]]
 if bash "$repo_root/uninstall.sh" 'claude bob' > /dev/null 2>&1; then fail 'accepted multiple agents as one'; fi
-echo 'PASS: legacy uninstall preview, selection, preservation, repeatability and symlink refusal'
+# An unsafe early target must not prevent later safe targets from being processed.
+export HOME="$test_root/symlink-home"
+mkdir -p "$HOME" "$test_root/external-config/opencode/skills/oss-issues" "$HOME/.agents/skills/oss-issues" "$HOME/.agy/skills/oss-issues"
+ln -s "$test_root/external-config" "$HOME/.config"
+cp -R "$HOME" "$test_root/symlink-before"
+if bash "$repo_root/uninstall.sh" > "$test_root/symlink-preview.log" 2> "$test_root/symlink-preview.err"; then fail 'preview ignored unsafe target'; fi
+diff -r "$test_root/symlink-before" "$HOME"
+grep -Fq "Would remove $HOME/.agents/skills/oss-issues" "$test_root/symlink-preview.log"
+grep -Fq "Would remove $HOME/.agy/skills/oss-issues" "$test_root/symlink-preview.log"
+grep -Fq 'Refusing symlinked installation directories for opencode' "$test_root/symlink-preview.err"
+if bash "$repo_root/uninstall.sh" --yes > "$test_root/symlink-remove.log" 2> "$test_root/symlink-remove.err"; then fail 'removal ignored unsafe target'; fi
+[[ ! -e "$HOME/.agents/skills/oss-issues" && ! -e "$HOME/.agy/skills/oss-issues" ]]
+[[ -L "$HOME/.config" && -d "$test_root/external-config/opencode/skills/oss-issues" ]]
+# Actual rm failures also produce a failed result while later agents continue.
+export HOME="$test_root/failure-home"
+mkdir -p "$HOME/.claude/skills/oss-issues" "$HOME/.agy/skills/oss-issues" "$test_root/bin"
+real_rm="$(command -v rm)"
+cat > "$test_root/bin/rm" <<'RM'
+#!/usr/bin/env bash
+case "$*" in *'/.claude/skills/oss-issues'*) echo 'simulated removal failure' >&2; exit 41 ;; esac
+exec "$REAL_RM" "$@"
+RM
+chmod +x "$test_root/bin/rm"
+if PATH="$test_root/bin:$PATH" REAL_RM="$real_rm" bash "$repo_root/uninstall.sh" --yes > "$test_root/failure.log" 2> "$test_root/failure.err"; then fail 'ignored rm failure'; fi
+[[ -d "$HOME/.claude/skills/oss-issues" && ! -e "$HOME/.agy/skills/oss-issues" ]]
+grep -Fq 'simulated removal failure' "$test_root/failure.err"
+echo 'PASS: legacy uninstall preview, selection, preservation, repeatability and failure isolation'

@@ -75,7 +75,7 @@ Installed rules are located under the agent's rules directory:
 - Codex: `~/.codex/oss-helper/rules/`
 - agy: `~/.agy/oss-helper/rules/`
 
-For Claude and Bob, when no rule set there matches, also check the old location, `~/.claude/rules/` or `~/.bob/rules/`: older installs may still keep their rules there. Move each project rule directory into `oss-helper/rules/` to stop Claude from loading it globally; the builder and legacy uninstaller preserve project rules. Do not install anything into the old location. Claude Code loads every file under `~/.claude/rules/` into every session, which is why the rules moved.
+For Claude and Bob, when no rule set there matches, also check the old location, `~/.claude/rules/` or `~/.bob/rules/`: older installs may still keep their rules there. Suggest that the user manually move each project rule directory into `oss-helper/rules/` to stop Claude from loading it globally. Do not move rule files during initialization; the builder and legacy uninstaller preserve project rules. Do not install anything into the old location. Claude Code loads every file under `~/.claude/rules/` into every session, which is why the rules moved.
 
 Iterate over the subdirectories of that rules directory and read each `<project>/project-info.md`. If one has a `Remote pattern:` matching `<org>/<repo>` from step 1, that project's rule files are the ones to load:
 

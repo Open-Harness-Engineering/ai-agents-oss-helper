@@ -9,7 +9,7 @@ remove_asset() {
     [[ -e "$path" || -L "$path" ]] || return 0
     listed_assets+=("$path")
     printf '%s %s\n' "$action" "$path"
-    if [[ "$apply" == true ]]; then rm -rf -- "$path"; fi
+    if [[ "$apply" == true ]]; then rm -rf -- "$path" || return 1; fi
 }
 
 uninstall_agent() {
@@ -25,38 +25,38 @@ uninstall_agent() {
         echo "Refusing symlinked installation directories for $agent" >&2
         return 1
     fi
-    for skill in "${SKILL_DIRS[@]}" "${OLD_SKILL_DIRS[@]}"; do remove_asset "$skills/$skill"; done
+    for skill in "${SKILL_DIRS[@]}" "${OLD_SKILL_DIRS[@]}"; do remove_asset "$skills/$skill" || return 1; done
     if [[ "$agent" == codex ]]; then
-        for skill in "${OLD_CODEX_SKILLS[@]}"; do remove_asset "$skills/$skill"; done
+        for skill in "${OLD_CODEX_SKILLS[@]}"; do remove_asset "$skills/$skill" || return 1; done
         for skill in README _common-init _build-workflow; do
             if [[ -f "$skills/$skill/SKILL.md" ]] && grep -Fq 'Before you begin, read and follow the OSS Helper init file at ~/.codex/oss-helper/.oss-init.md.' "$skills/$skill/SKILL.md"; then
-                remove_asset "$skills/$skill"
+                remove_asset "$skills/$skill" || return 1
             fi
         done
     fi
     for file in "${OLD_COMMAND_FILES[@]}"; do
-        remove_asset "$root/commands/$file"
-        [[ "$agent" != gemini ]] || remove_asset "$root/commands/${file%.md}.toml"
+        remove_asset "$root/commands/$file" || return 1
+        [[ "$agent" != gemini ]] || remove_asset "$root/commands/${file%.md}.toml" || return 1
     done
     for entry in "${GUIDELINE_COMMANDS[@]}"; do
         IFS='|' read -r skill guideline command description <<< "$entry"
-        remove_asset "$root/commands/$command.md"
-        [[ "$agent" != gemini ]] || remove_asset "$root/commands/$command.toml"
+        remove_asset "$root/commands/$command.md" || return 1
+        [[ "$agent" != gemini ]] || remove_asset "$root/commands/$command.toml" || return 1
     done
     for file in "${AGENT_FILES[@]}"; do
         file="$(basename "$file")"
         [[ "$agent" != codex ]] || file="${file%.md}.toml"
-        remove_asset "$root/agents/$file"
+        remove_asset "$root/agents/$file" || return 1
     done
     if [[ "$agent" == claude ]]; then
-        for file in "${WORKFLOW_FILES[@]}"; do remove_asset "$root/$file"; done
+        for file in "${WORKFLOW_FILES[@]}"; do remove_asset "$root/$file" || return 1; done
     fi
-    remove_asset "$root/oss-helper/.oss-init.md"
-    remove_asset "$root/commands/.oss-init.md"
+    remove_asset "$root/oss-helper/.oss-init.md" || return 1
+    remove_asset "$root/commands/.oss-init.md" || return 1
 }
 
 main() {
-    local apply=false action='Would remove' selected='' agent valid=false
+    local apply=false action='Would remove' selected='' agent valid=false status=0
     local targets=("${AGENTS[@]}")
     local listed_assets=()
     while [[ $# -gt 0 ]]; do
@@ -79,6 +79,14 @@ main() {
         [[ "$valid" == true ]] || { echo "Unknown agent: $selected" >&2; return 1; }
         targets=("$selected")
     fi
-    for agent in "${targets[@]}"; do uninstall_agent "$agent"; done
+    for agent in "${targets[@]}"; do
+        if uninstall_agent "$agent"; then
+            :
+        else
+            echo "Warning: could not complete legacy removal for $agent; continuing with remaining agents" >&2
+            status=1
+        fi
+    done
+    return "$status"
 }
 main "$@"

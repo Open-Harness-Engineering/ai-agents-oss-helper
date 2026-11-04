@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Claude Code marketplace plugin and local builds for all six supported agents.
+- Preview-first `uninstall.sh` for removing legacy assets while preserving project
+  rules, security case data and unrelated files.
+
+### Removed
+
+- **Breaking:** `install.sh` and the `curl ... | bash` installation path. Use the
+  Claude marketplace, or build locally with `build.sh` and copy the output for
+  other agents. Preview legacy cleanup with `./uninstall.sh [agent]` before
+  adding `--yes` to remove files.
+
 ## [1.0.0] - 2026-10-26
 
 First tagged release. Captures the existing feature set at the point versioning

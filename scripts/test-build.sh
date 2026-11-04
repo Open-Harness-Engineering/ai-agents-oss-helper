@@ -61,7 +61,8 @@ assert catalog['name'] == 'ai-agents-oss-helper'
 assert catalog['owner']['name']
 assert catalog['plugins'][0]['source'] == './plugin'
 assert catalog['plugins'][0]['name'] == manifest['name'] == 'oss-helper'
-assert manifest['version'] and manifest['license'] == 'Apache-2.0'
+assert 'version' not in manifest and 'version' not in catalog['plugins'][0]
+assert manifest['license'] == 'Apache-2.0'
 PYJSON
 
 # A builder refuses to overwrite a directory it does not own.
