@@ -29,9 +29,9 @@ Use the Add Project guideline to generate initial rule files for any project. On
 
 ### Claude Code marketplace
 
-```text
-/plugin marketplace add Open-Harness-Engineering/ai-agents-oss-helper
-/plugin install oss-helper@ai-agents-oss-helper
+```bash
+claude plugin marketplace add Open-Harness-Engineering/ai-agents-oss-helper
+claude plugin install oss-helper@ai-agents-oss-helper
 ```
 
 The Claude marketplace installs the committed `plugin/` bundle; users do not run a build.
@@ -169,9 +169,10 @@ Before switching from the old installer, preview the legacy files to remove:
 ```
 
 The uninstaller preserves project rules, security case data and unrelated user
-assets. It does not remove marketplace-managed plugins. Remove an installed
-plugin through Claude's `/plugin` manager instead. After removing legacy Claude
-assets, install the marketplace plugin and start a fresh session.
+assets. It does not remove marketplace-managed plugins. To remove the Claude
+plugin, run `claude plugin uninstall oss-helper@ai-agents-oss-helper`. After
+removing legacy Claude assets, install the marketplace plugin and start a fresh
+session.
 
 The uninstaller's filename lists cover recent OSS Helper versions. Much older
 installers may have left additional files or directories behind. The uninstaller
@@ -184,6 +185,75 @@ and `~/.claude/workflows/`; the copy destinations above list the other agents.
 You may need to forcefully remove remaining OSS Helper files and directories
 manually. Verify that each item belongs to OSS Helper before deleting it; an
 `oss-*` wildcard can also match unrelated skills or commands.
+
+## Upgrading
+
+Plugins currently follow the latest committed packages on `main`; these steps
+update that source rather than select a numbered plugin release. Git-hosted
+marketplace users do not need to clone the repository or run the builder.
+
+### Claude Code
+
+Refresh the marketplace, then update the installed plugin:
+
+```bash
+claude plugin marketplace update ai-agents-oss-helper
+claude plugin update oss-helper@ai-agents-oss-helper
+```
+
+Start a new Claude session to load the updated plugin.
+
+### Codex
+
+Refresh the marketplace snapshot, then install the updated package:
+
+```bash
+codex plugin marketplace upgrade ai-agents-oss-helper
+codex plugin add oss-helper@ai-agents-oss-helper
+```
+
+Start a new Codex session to load the updated skills.
+
+### Gemini CLI
+
+For skills installed from Git, repeat the native installation command:
+
+```bash
+gemini skills install https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git --path plugin/skills
+```
+
+For an extension installed from a local build, update its source checkout and
+rebuild before refreshing the installed copy:
+
+```bash
+git pull --ff-only
+./build.sh gemini
+gemini extensions update oss-helper
+```
+
+Confirm replacement or update prompts, then restart Gemini.
+
+### Compatibility and local installations
+
+From your source checkout, update and rerun the installer for the agent you use:
+
+```bash
+git pull --ff-only
+./install.sh codex
+```
+
+Replace `codex` with `claude`, `bob`, `gemini`, `opencode` or `agy`, or omit it to
+update all six. No uninstall step is required. For remote-script installations,
+rerun the unpinned installation command above. Omit `--version` and unset
+`OSS_HELPER_VERSION` when you want to follow `main`.
+
+If you registered a local checkout as a marketplace during testing, run
+`git pull --ff-only` and `./build.sh claude` there. Restart Claude to reload its
+local bundle; for Codex, rerun `codex plugin add oss-helper@ai-agents-oss-helper`
+and start a new session. The Git marketplace refresh steps above are not needed
+for local sources. For Bob Shell extension installations, use your client's
+extension updater; that update path remains unverified here. Older Bob clients
+can use `./install.sh bob`.
 
 ## How It Works
 
