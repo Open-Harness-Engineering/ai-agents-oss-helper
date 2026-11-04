@@ -418,6 +418,8 @@ generate_skill_agent_command() {
     local guideline_file="$3"
     local dest="$4"
     local description="$5"
+    local style="${6:-plugin}" skills_path='${CLAUDE_PLUGIN_ROOT}/skills' skill_prefix='oss-helper:'
+    if [[ "$style" == legacy ]]; then skills_path='~/.claude/skills'; skill_prefix=''; fi
 
     # Escape quotes and backslashes for YAML
     description="$(printf '%s' "$description" | sed 's/\\/\\\\/g; s/\"/\\\"/g')"
@@ -444,15 +446,15 @@ generate_skill_agent_command() {
                 if [[ "$forked" == true ]]; then
                     # A fork starts without the conversation: name the files, and pass the arguments
                     # through $ARGUMENTS, which Claude Code substitutes (left unexpanded here on purpose).
-                    printf 'Read and follow the initialization steps in `${CLAUDE_PLUGIN_ROOT}/skills/%s/init.md` to detect the current project and load its configuration. Then read and follow the guideline in `${CLAUDE_PLUGIN_ROOT}/skills/%s/%s`.\n\n' \
-                        "$skill_name" "$skill_name" "$guideline_file"
+                    printf 'Read and follow the initialization steps in `%s/%s/init.md` to detect the current project and load its configuration. Then read and follow the guideline in `%s/%s/%s`.\n\n' \
+                        "$skills_path" "$skill_name" "$skills_path" "$skill_name" "$guideline_file"
                     printf 'Arguments: $ARGUMENTS\n\n'
                     printf '%s\n' "$FORK_NOTE"
                 elif [[ " $WORKFLOW_COMMANDS " == *" $(basename "$dest" .md) "* ]]; then
-                    printf 'Read and follow the guideline in `${CLAUDE_PLUGIN_ROOT}/skills/%s/%s`. In workflow mode (its step 2), skip the skill'"'"'s initialization steps: the workflow'"'"'s loader resolves the project and its rules itself. In manual mode, first follow the initialization steps in `${CLAUDE_PLUGIN_ROOT}/skills/%s/init.md`.\n' \
-                        "$skill_name" "$guideline_file" "$skill_name"
+                    printf 'Read and follow the guideline in `%s/%s/%s`. In workflow mode (its step 2), skip the skill'"'"'s initialization steps: the workflow'"'"'s loader resolves the project and its rules itself. In manual mode, first follow the initialization steps in `%s/%s/init.md`.\n' \
+                        "$skills_path" "$skill_name" "$guideline_file" "$skills_path" "$skill_name"
                 else
-                    printf 'Invoke the oss-helper:%s skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$skill_name" "$guideline_file"
+                    printf 'Invoke the %s%s skill. Follow the initialization steps, then read and follow the `%s` guideline.\n' "$skill_prefix" "$skill_name" "$guideline_file"
                 fi
                 ;;
             *)

@@ -38,6 +38,35 @@ The marketplace installs the committed `plugin/` bundle; users do not run a buil
 Plugin skills and commands are namespaced, for example `/oss-helper:oss-issues`
 and `/oss-helper:oss-fix-issue 42`.
 
+### Compatibility installer
+
+Existing automation can continue using `install.sh`. From a checkout:
+
+```bash
+./install.sh codex    # Install one agent
+./install.sh          # Install all six agents
+```
+
+The existing remote installation path also remains available:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Open-Harness-Engineering/ai-agents-oss-helper/main/install.sh | bash -s -- --version v1.0.0 codex
+```
+
+`--version <tag>`, `--version=<tag>` and `OSS_HELPER_VERSION` select a remote
+version; the flag takes precedence over the environment variable. Without a
+version selection, a checkout uses its local sources and a standalone or piped
+script downloads `main`. Remote installation requires `curl` or `wget` and `tar`.
+The wrapper builds in a temporary directory and copies the selected assets to
+user directories. It preserves unrelated files and project rules; use
+`uninstall.sh` separately to remove obsolete assets.
+
+Direct Claude installations retain `/oss-*` commands and files under
+`~/.claude/`. Choose either that installation or the marketplace plugin to avoid
+duplicate skills and commands. The marketplace remains the recommended Claude
+installation path.
+
 ### Build locally
 
 ```bash
@@ -57,8 +86,9 @@ Test the Claude bundle locally with `claude --plugin-dir ./plugin`.
 
 ### Other agents
 
-Build the target and copy its output to the corresponding directories. The build
-never copies files into your home directory.
+Use `./install.sh <agent>` for automatic installation, or build the target and
+copy its output to the corresponding directories. The build itself never copies
+files into your home directory.
 
 | Target | Built directory | Copy destination |
 | --- | --- | --- |
@@ -336,6 +366,7 @@ If Codex reports a missing `~/.codex/oss-helper/.oss-init.md`, remove the legacy
 
 ```text
 ai-agents-oss-helper/
+├── install.sh                              # Compatibility installation wrapper
 ├── build.sh                                # Local asset builder
 ├── uninstall.sh                            # Legacy installation cleanup
 ├── .claude-plugin/                         # Marketplace catalog
