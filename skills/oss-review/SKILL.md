@@ -1,4 +1,5 @@
 ---
+name: oss-review
 description: >
   Pull request management for open source projects. Covers reviewing PRs,
   addressing review feedback, batch reviewing, checking PR status,

@@ -1,0 +1,9 @@
+{
+  "name": "oss-helper",
+  "description": "Open source maintenance skills, commands, agents and workflows",
+  "author": {
+    "name": "Open Harness Engineering"
+  },
+  "repository": "https://github.com/Open-Harness-Engineering/ai-agents-oss-helper",
+  "license": "Apache-2.0"
+}

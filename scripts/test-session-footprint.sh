@@ -6,6 +6,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
+test_root="$(cd "$test_root" && pwd -P)"
 trap 'rm -rf "$test_root"' EXIT
 test_home="$test_root/home"
 
@@ -14,24 +15,24 @@ fail() {
     exit 1
 }
 
-HOME="$test_home" bash "$repo_root/install.sh" claude > "$test_root/install-claude.log"
-HOME="$test_home" bash "$repo_root/install.sh" bob > "$test_root/install-bob.log"
+HOME="$test_home" bash "$repo_root/build.sh" --output-dir "$test_root/claude" claude > "$test_root/install-claude.log"
+HOME="$test_home" bash "$repo_root/build.sh" --output-dir "$test_root/bob" bob > "$test_root/install-bob.log"
 
 # Every Claude command wrapper is user-only; the skill groups stay model-invocable.
 count=0
-for cmd in "$test_home"/.claude/commands/oss-*.md; do
+for cmd in "$test_root"/claude/commands/oss-*.md; do
     [[ -f "$cmd" ]] || fail "no Claude command wrappers were installed"
     grep -Fxq 'disable-model-invocation: true' "$cmd" || fail "$cmd is model-invocable"
     count=$((count + 1))
 done
-expected="$(grep -cE '^    "oss-[a-z-]+\|[^|]+\|oss-[a-z-]+\|' "$repo_root/install.sh")"
+expected="$(grep -cE '^    "oss-[a-z-]+\|[^|]+\|oss-[a-z-]+\|' "$repo_root/build.sh")"
 [[ "$count" -eq "$expected" ]] || fail "found $count Claude command wrappers, expected $expected"
-if grep -l 'disable-model-invocation' "$test_home"/.claude/skills/oss-*/SKILL.md; then
+if grep -l 'disable-model-invocation' "$test_root"/claude/skills/oss-*/SKILL.md; then
     fail "a skill group is hidden from the model"
 fi
 
 # The field is Claude Code's; Bob's wrappers do not get it.
-if grep -l 'disable-model-invocation' "$test_home"/.bob/commands/oss-*.md; then
+if grep -l 'disable-model-invocation' "$test_root"/bob/commands/oss-*.md; then
     fail "a Bob command wrapper carries the Claude-only disable-model-invocation field"
 fi
 

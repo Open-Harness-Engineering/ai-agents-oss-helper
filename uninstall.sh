@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# Remove known legacy OSS Helper assets, preserving project rules and case data.
+set -euo pipefail
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/build.sh"
+
+remove_asset() {
+    local path="$1" seen
+    for seen in "${listed_assets[@]+"${listed_assets[@]}"}"; do [[ "$seen" != "$path" ]] || return 0; done
+    [[ -e "$path" || -L "$path" ]] || return 0
+    listed_assets+=("$path")
+    printf '%s %s\n' "$action" "$path"
+    if [[ "$apply" == true ]]; then rm -rf -- "$path" || return 1; fi
+}
+
+# Detection only: prefixes suggest possible leftovers but do not establish ownership.
+report_possible_leftovers() {
+    local directory="$1" path seen known
+    for path in "$directory"/*; do
+        [[ -e "$path" || -L "$path" ]] || continue
+        case "${path##*/}" in
+            oss-*) ;;
+            camel-*|wanaku-*|ai-agents-oss-helper-*) [[ "${directory##*/}" == commands ]] || continue ;;
+            *) continue ;;
+        esac
+        known=false
+        for seen in "${listed_assets[@]+"${listed_assets[@]}"}"; do
+            if [[ "$seen" == "$path" ]]; then known=true; break; fi
+        done
+        [[ "$known" == false ]] || continue
+        printf 'Possible leftover (ownership unverified; preserved): %s\n' "$path"
+    done
+}
+
+uninstall_agent() {
+    local agent="$1" root skills entry skill guideline command description file directory
+    case "$agent" in
+        opencode) root="$HOME/.config/opencode" ;;
+        *) root="$HOME/.$agent" ;;
+    esac
+    skills="$root/skills"
+    [[ "$agent" != codex ]] || skills="$HOME/.agents/skills"
+    # Never traverse a symlinked installation root or component directory.
+    if [[ -L "$HOME/.config" && "$agent" == opencode ]] || [[ -L "$HOME/.agents" && "$agent" == codex ]] || [[ -L "$root" || -L "$skills" || -L "$root/commands" || -L "$root/agents" || -L "$root/workflows" || -L "$root/oss-helper" ]]; then
+        echo "Refusing symlinked installation directories for $agent" >&2
+        return 1
+    fi
+    for skill in "${SKILL_DIRS[@]}" "${OLD_SKILL_DIRS[@]}"; do remove_asset "$skills/$skill" || return 1; done
+    if [[ "$agent" == codex ]]; then
+        for skill in "${OLD_CODEX_SKILLS[@]}"; do remove_asset "$skills/$skill" || return 1; done
+        for skill in README _common-init _build-workflow; do
+            if [[ -f "$skills/$skill/SKILL.md" ]] && grep -Fq 'Before you begin, read and follow the OSS Helper init file at ~/.codex/oss-helper/.oss-init.md.' "$skills/$skill/SKILL.md"; then
+                remove_asset "$skills/$skill" || return 1
+            fi
+        done
+    fi
+    for file in "${OLD_COMMAND_FILES[@]}"; do
+        remove_asset "$root/commands/$file" || return 1
+        [[ "$agent" != gemini ]] || remove_asset "$root/commands/${file%.md}.toml" || return 1
+    done
+    for entry in "${GUIDELINE_COMMANDS[@]}"; do
+        IFS='|' read -r skill guideline command description <<< "$entry"
+        remove_asset "$root/commands/$command.md" || return 1
+        [[ "$agent" != gemini ]] || remove_asset "$root/commands/$command.toml" || return 1
+    done
+    for file in "${AGENT_FILES[@]}"; do
+        file="$(basename "$file")"
+        [[ "$agent" != codex ]] || file="${file%.md}.toml"
+        remove_asset "$root/agents/$file" || return 1
+    done
+    if [[ "$agent" == claude ]]; then
+        for file in "${WORKFLOW_FILES[@]}"; do remove_asset "$root/$file" || return 1; done
+    fi
+    remove_asset "$root/oss-helper/.oss-init.md" || return 1
+    remove_asset "$root/commands/.oss-init.md" || return 1
+    for directory in "$skills" "$root/commands" "$root/agents" "$root/workflows"; do
+        report_possible_leftovers "$directory" || return 1
+    done
+}
+
+main() {
+    local apply=false action='Would remove' selected='' agent valid=false status=0
+    local targets=("${AGENTS[@]}")
+    local listed_assets=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --yes) apply=true; action='Removing'; shift ;;
+            --dry-run) apply=false; action='Would remove'; shift ;;
+            -h|--help)
+                echo 'Usage: ./uninstall.sh [--yes|--dry-run] [agent]'
+                echo 'Default: preview legacy OSS Helper removal for all agents.'
+                echo 'Preserves project rules, case data, unrelated assets and marketplace plugins.'
+                echo 'Reports possible unknown leftovers without removing them, including with --yes.'
+                return 0 ;;
+            -*) echo "Unknown option: $1" >&2; return 1 ;;
+            *) [[ -z "$selected" ]] || { echo 'Expected one agent' >&2; return 1; }; selected="$1"; shift ;;
+        esac
+    done
+    if [[ -n "$selected" ]]; then
+        for agent in "${AGENTS[@]}"; do
+            if [[ "$selected" == "$agent" ]]; then valid=true; break; fi
+        done
+        [[ "$valid" == true ]] || { echo "Unknown agent: $selected" >&2; return 1; }
+        targets=("$selected")
+    fi
+    echo 'Warning: removal covers known filenames from recent OSS Helper versions. Older installers may have left other files or directories behind.' >&2
+    echo "Inspect the selected agents' skills, commands, agents and workflows directories. Possible leftovers are reported and preserved; verify ownership before removing any remaining assets manually." >&2
+    for agent in "${targets[@]}"; do
+        if uninstall_agent "$agent"; then
+            :
+        else
+            echo "Warning: could not complete legacy removal for $agent; continuing with remaining agents" >&2
+            status=1
+        fi
+    done
+    return "$status"
+}
+main "$@"

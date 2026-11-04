@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "oss-helper",
+  "version": "@VERSION@",
+  "description": "Open source maintenance skills, commands, agents and workflows",
+  "author": { "name": "Open Harness Engineering" },
+  "repository": "https://github.com/Open-Harness-Engineering/ai-agents-oss-helper",
+  "license": "Apache-2.0",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "OSS Helper",
+        "shortDescription": "Open source project maintenance skills"
+      }
+    }
+  }
+}

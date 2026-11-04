@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "install.sh"
+      - "build.sh"
       - "skills/**/SKILL.md"
       - "workflows/**"
       - "scripts/build-docs.mjs"

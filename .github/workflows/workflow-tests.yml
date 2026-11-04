@@ -6,12 +6,21 @@ on:
       - "main"
     paths:
       - "agents/**"
+      - "commands/**"
+      - "skills/**"
       - "workflows/**"
       - "tests/**"
-      - "skills/**/*.sh"
+      - "build.sh"
       - "install.sh"
-      - "scripts/test-*.sh"
-      - "scripts/build-docs.mjs"
+      - "uninstall.sh"
+      - "plugin/**"
+      - "packaging/**"
+      - ".claude-plugin/**"
+      - ".agents/plugins/**"
+      - "bob-extension.json"
+      - "BOB.md"
+      - "LICENSE"
+      - "scripts/**"
       - "docs/reference.json"
       - ".github/workflows/workflow-tests.yml"
 
@@ -23,17 +32,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-      - name: Check the installer syntax
-        run: bash -n install.sh
-      - name: Check what the Claude install adds to every session
+      - name: Check packaging script syntax
+        run: for script in build.sh install.sh uninstall.sh scripts/test-*.sh; do bash -n "$script"; done
+      - name: Check local builds and legacy removal
+        run: |
+          bash scripts/test-build.sh
+          bash scripts/test-uninstall.sh
+          bash scripts/test-install.sh
+          bash scripts/test-codex-install.sh
+          bash scripts/test-native-packaging.sh
+          bash scripts/test-native-rules.sh
+          bash scripts/test-codex-plugin.sh
+      - name: Check what the Claude plugin adds to every session
         run: bash scripts/test-session-footprint.sh
       - name: Run the oss-security-case routing test (mocked agents)
         run: node tests/workflows/oss-security-case.test.mjs
-      - name: Check the move of installed rules out of ~/.claude/rules
+      - name: Check current and legacy project rule lookup
         run: bash scripts/test-rules-migration.sh
-      - name: Check the Claude workflow install
+      - name: Check the Claude workflow bundle
         run: bash scripts/test-claude-workflow-install.sh
       - name: Test the helper scripts (stand-in gh)
         run: bash scripts/test-helper-scripts.sh
       - name: Test the docs site generator
         run: bash scripts/test-build-docs.sh
+      - name: Check committed native plugin output
+        run: |
+          bash build.sh claude
+          git diff --exit-code -- plugin/ bob-extension.json BOB.md
+          test -z "$(git ls-files --others --exclude-standard -- plugin/ bob-extension.json BOB.md)"

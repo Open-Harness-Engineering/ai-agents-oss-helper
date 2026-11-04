@@ -13,11 +13,11 @@ node scripts/build-docs.mjs
 [[ -f site/index.html ]] || fail "site/index.html not created"
 [[ -f site/.nojekyll ]] || fail "site/.nojekyll not created"
 
-# Every command in the install.sh registry must appear on the page.
+# Every command in the build.sh registry must appear on the page.
 missing=0
 while IFS='|' read -r _skill _file command _desc; do
     grep -q "/${command}<" site/index.html || { echo "missing command: /${command}" >&2; missing=1; }
-done < <(grep -oE '"oss-[a-z0-9-]+\|[^|]+\|oss-[a-z0-9-]+\|[^"]+"' install.sh | tr -d '"')
+done < <(grep -oE '"oss-[a-z0-9-]+\|[^|]+\|oss-[a-z0-9-]+\|[^"]+"' build.sh | tr -d '"')
 [[ "$missing" -eq 0 ]] || fail "one or more registry commands are missing from the site"
 
 # The workflow must be documented.

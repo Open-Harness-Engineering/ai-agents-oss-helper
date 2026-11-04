@@ -10,7 +10,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const src = readFileSync(join(root, 'workflows', 'oss-security-case.js'), 'utf8')
 const guideline = readFileSync(join(root, 'skills', 'oss-security', 'security-case.md'), 'utf8')
 const probe = readFileSync(join(root, 'skills', 'oss-security', 'security-case-probe.sh'), 'utf8')
-const installer = readFileSync(join(root, 'install.sh'), 'utf8')
+const installer = readFileSync(join(root, 'build.sh'), 'utf8')
 if (!/^export const meta = \{/.test(src)) throw new Error('the script must begin with export const meta')
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
 const wf = new AsyncFunction('agent', 'parallel', 'pipeline', 'phase', 'log', 'args', 'budget', 'workflow', src.replace(/^export const meta/m, 'const meta'))
@@ -117,7 +117,7 @@ function makeSim(rec, config) {
     } finally { if (lane) sim.active[lane]-- }
   }
   async function parallel(thunks) { return Promise.all(thunks.map(t => Promise.resolve().then(t).catch(e => { console.log('  thunk error: ' + e.message); failures++; return null }))) }
-  const runIt = async a => { sim.prompts = {}; return wf(agent, parallel, null, () => {}, () => {}, Object.assign({ case: 'demo' }, a), { total: null }, null) }
+  const runIt = async a => { sim.prompts = {}; return wf(agent, parallel, null, () => {}, () => {}, Object.assign({ case: 'demo', skillsRoot: '/relocated/plugin/skills' }, a), { total: null }, null) }
   return { sim, disk, runIt }
 }
 
@@ -158,7 +158,7 @@ function makeSim(rec, config) {
   check(sim.opts.load.effort === 'low' && sim.opts.persist.effort === 'low', 'the loader and the persistence step run at low effort')
   check(/between "--- nodes digest" and "--- end nodes digest": return that JSON object as nodes/.test(sim.prompts.load), 'the loader returns the probe\'s digest, not the node files')
   check(sim.opts.triage.model === undefined && sim.opts['challenge:code'].model === undefined && sim.opts['draft:reply'].model === undefined, 'triage, the challenge lenses and the drafts keep the session model')
-  check(/security-case-probe\.sh demo /.test(sim.prompts.load), 'the loader starts from the probe script')
+  check(sim.prompts.load.includes('/relocated/plugin/skills/oss-security/security-case-probe.sh'), 'the loader starts from the probe script')
   check(/slices of at most 180 seconds/.test(sim.prompts.triage) && /your own turn counts/.test(sim.prompts.triage), 'every node is told to keep tool calls under the cache TTL')
   check(sim.persisted.nodes.length === 0 && sim.persisted.checked.length === 6, 'every node of run 1 wrote its own record; the persistence step only checks them')
   check(/\(code lens\) a non-default codec is needed/.test(disk.status), 'the lens of a missed fact comes from the node name')
@@ -367,6 +367,18 @@ function makeSim(rec, config) {
   await runIt({ report: '/tmp/report.txt' })
   check(/\/work\/server-triage-demo /.test(sim.prompts.triage) && !/undefined/.test(sim.prompts.triage), 'the triage worktree is named after the clone directory when the loader leaves repoBase out')
   check(/required: \['repoRoot', 'repoBase'/.test(src), 'the loader schema requires repoBase')
+}
+
+// ---- Relocated plugin paths ---------------------------------------------------------------
+{
+  console.log('\nRelocated plugin')
+  const { sim, runIt } = makeSim('VALID', JIRA_PROJECT)
+  await runIt({ report: '/tmp/report.txt', skillsRoot: '/cache/Plugin With Spaces/skills' })
+  check(sim.prompts.load.includes('/cache/Plugin With Spaces/skills/oss-security/security-case-probe.sh'), 'the loader uses the supplied plugin location, including spaces')
+  check(sim.prompts.triage.includes('/cache/Plugin With Spaces/skills/oss-security/init.md'), 'downstream nodes use the supplied plugin location rather than a stored installation path')
+  check(!sim.prompts.load.includes('~/.claude/skills'), 'the loader does not depend on a legacy installation')
+  const r = await runIt({ skillsRoot: undefined })
+  check(r.error === 'invalid arguments' && Object.keys(sim.prompts).length === 0, 'a missing bundled skills root fails before invoking agents')
 }
 
 // ---- Argument validation and plan mode ------------------------------------------------------

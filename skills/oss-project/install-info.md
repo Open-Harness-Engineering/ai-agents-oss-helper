@@ -24,7 +24,7 @@ Determine the rules directory based on the agent that invoked this command:
 
 Project rule files will be written to `<RULES_DIR>/<project>/`.
 
-For Claude and Bob, never write to `~/.claude/rules/` or `~/.bob/rules/`: Claude Code loads every file under `~/.claude/rules/` into every session, in every repository. `install.sh` moves rule sets it finds there into `oss-helper/rules/`.
+For Claude and Bob, never write to `~/.claude/rules/` or `~/.bob/rules/`: Claude Code loads every file under `~/.claude/rules/` into every session, in every repository. Move legacy project rule directories into `oss-helper/rules/` manually; the builder and legacy uninstaller preserve them.
 
 ### 3. List Mode (no `<project>` argument)
 
@@ -189,7 +189,7 @@ You MUST:
 You MUST NOT:
 
 - Modify the known-projects repository itself (this command is read-only against it)
-- Install commands or other helper files (use `install.sh` for that)
+- Install commands or other helper files (use the plugin marketplace or copy the output of `build.sh` for that)
 - Install rules for projects other than those covered by the current invocation (single slug, `auto` match, or every project under `all`)
 - Overwrite local rules without performing the version check first
 - Touch project-local `.oss-ai-helper-rules/` directories (those take precedence over installed rules)

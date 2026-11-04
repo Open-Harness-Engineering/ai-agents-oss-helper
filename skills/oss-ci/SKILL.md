@@ -1,4 +1,5 @@
 ---
+name: oss-ci
 description: >
   CI/CD and code quality for open source projects. Covers fixing CI
   errors, SonarCloud issues, GitHub security/quality alerts, and

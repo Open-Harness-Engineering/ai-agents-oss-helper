@@ -1,4 +1,5 @@
 ---
+name: oss-project
 description: >
   Project setup and workspace management for open source projects.
   Covers adding new projects, installing project rules, generating
