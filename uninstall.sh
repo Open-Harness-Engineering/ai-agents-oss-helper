@@ -12,8 +12,27 @@ remove_asset() {
     if [[ "$apply" == true ]]; then rm -rf -- "$path" || return 1; fi
 }
 
+# Detection only: prefixes suggest possible leftovers but do not establish ownership.
+report_possible_leftovers() {
+    local directory="$1" path seen known
+    for path in "$directory"/*; do
+        [[ -e "$path" || -L "$path" ]] || continue
+        case "${path##*/}" in
+            oss-*) ;;
+            camel-*|wanaku-*|ai-agents-oss-helper-*) [[ "${directory##*/}" == commands ]] || continue ;;
+            *) continue ;;
+        esac
+        known=false
+        for seen in "${listed_assets[@]+"${listed_assets[@]}"}"; do
+            if [[ "$seen" == "$path" ]]; then known=true; break; fi
+        done
+        [[ "$known" == false ]] || continue
+        printf 'Possible leftover (ownership unverified; preserved): %s\n' "$path"
+    done
+}
+
 uninstall_agent() {
-    local agent="$1" root skills entry skill guideline command description file
+    local agent="$1" root skills entry skill guideline command description file directory
     case "$agent" in
         opencode) root="$HOME/.config/opencode" ;;
         *) root="$HOME/.$agent" ;;
@@ -53,6 +72,9 @@ uninstall_agent() {
     fi
     remove_asset "$root/oss-helper/.oss-init.md" || return 1
     remove_asset "$root/commands/.oss-init.md" || return 1
+    for directory in "$skills" "$root/commands" "$root/agents" "$root/workflows"; do
+        report_possible_leftovers "$directory" || return 1
+    done
 }
 
 main() {
@@ -67,6 +89,7 @@ main() {
                 echo 'Usage: ./uninstall.sh [--yes|--dry-run] [agent]'
                 echo 'Default: preview legacy OSS Helper removal for all agents.'
                 echo 'Preserves project rules, case data, unrelated assets and marketplace plugins.'
+                echo 'Reports possible unknown leftovers without removing them, including with --yes.'
                 return 0 ;;
             -*) echo "Unknown option: $1" >&2; return 1 ;;
             *) [[ -z "$selected" ]] || { echo 'Expected one agent' >&2; return 1; }; selected="$1"; shift ;;
@@ -79,6 +102,8 @@ main() {
         [[ "$valid" == true ]] || { echo "Unknown agent: $selected" >&2; return 1; }
         targets=("$selected")
     fi
+    echo 'Warning: removal covers known filenames from recent OSS Helper versions. Older installers may have left other files or directories behind.' >&2
+    echo "Inspect the selected agents' skills, commands, agents and workflows directories. Possible leftovers are reported and preserved; verify ownership before removing any remaining assets manually." >&2
     for agent in "${targets[@]}"; do
         if uninstall_agent "$agent"; then
             :

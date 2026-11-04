@@ -94,4 +94,27 @@ chmod +x "$test_root/bin/rm"
 if PATH="$test_root/bin:$PATH" REAL_RM="$real_rm" bash "$repo_root/uninstall.sh" --yes > "$test_root/failure.log" 2> "$test_root/failure.err"; then fail 'ignored rm failure'; fi
 [[ -d "$HOME/.claude/skills/oss-issues" && ! -e "$HOME/.agy/skills/oss-issues" ]]
 grep -Fq 'simulated removal failure' "$test_root/failure.err"
-echo 'PASS: legacy uninstall preview, selection, preservation, repeatability and failure isolation'
+# Report unknown candidates by filename without claiming ownership or deleting them.
+export HOME="$test_root/detection-home"
+base="$HOME/.claude"
+mkdir -p "$base/skills/oss-unknown-skill" "$base/skills/oss-issues" "$base/skills/unrelated" "$base/commands" "$base/agents" "$base/workflows" "$HOME/.bob/skills/oss-unselected" "$test_root/scan-external/oss-nested"
+for file in oss-unknown-command.md camel-unknown-command.md wanaku-unknown-command.md ai-agents-oss-helper-unknown-command.md unrelated.md; do printf 'preserve\n' > "$base/commands/$file"; done
+printf 'known\n' > "$base/commands/oss-fix-issue.md"
+printf 'preserve\n' > "$base/agents/oss-unknown-agent.md"
+printf 'preserve\n' > "$base/workflows/oss-unknown-workflow.js"
+ln -s "$test_root/scan-external" "$base/skills/oss-unknown-link"
+cp -R "$HOME" "$test_root/detection-before"
+bash "$repo_root/uninstall.sh" claude > "$test_root/detection-preview.log" 2> "$test_root/detection-preview.err"
+diff -r "$test_root/detection-before" "$HOME"
+bash "$repo_root/uninstall.sh" --yes claude > "$test_root/detection-remove.log" 2> "$test_root/detection-remove.err"
+for log in "$test_root/detection-preview.log" "$test_root/detection-remove.log"; do
+    for path in skills/oss-unknown-skill skills/oss-unknown-link commands/oss-unknown-command.md commands/camel-unknown-command.md commands/wanaku-unknown-command.md commands/ai-agents-oss-helper-unknown-command.md agents/oss-unknown-agent.md workflows/oss-unknown-workflow.js; do
+        grep -Fq "Possible leftover (ownership unverified; preserved): $base/$path" "$log"
+        [[ -e "$base/$path" || -L "$base/$path" ]]
+    done
+    if grep -F 'Possible leftover' "$log" | grep -Eq 'oss-issues|oss-fix-issue|unrelated|oss-unselected|oss-nested'; then fail 'reported known, unrelated, unselected or nested asset'; fi
+done
+[[ ! -e "$base/skills/oss-issues" && ! -e "$base/commands/oss-fix-issue.md" ]]
+[[ -d "$test_root/scan-external/oss-nested" && -d "$HOME/.bob/skills/oss-unselected" ]]
+grep -Fq "selected agents' skills" "$test_root/detection-preview.err"
+echo 'PASS: legacy uninstall preview, selection, preservation, failure isolation and detection-only scan'

@@ -93,6 +93,18 @@ assets. It does not remove marketplace-managed plugins. Remove an installed
 plugin through Claude's `/plugin` manager instead. After removing legacy Claude
 assets, install the marketplace plugin and start a fresh session.
 
+The uninstaller's filename lists cover recent OSS Helper versions. Much older
+installers may have left additional files or directories behind. The uninstaller
+reports possible leftovers by filename and leaves them untouched, even with
+`--yes`; these candidates may belong to other projects. This scan is a heuristic
+and may miss files with other names. Inspect your
+agent's skill, command, agent and workflow directories after uninstalling. For
+Claude these are `~/.claude/skills/`, `~/.claude/commands/`, `~/.claude/agents/`
+and `~/.claude/workflows/`; the copy destinations above list the other agents.
+You may need to forcefully remove remaining OSS Helper files and directories
+manually. Verify that each item belongs to OSS Helper before deleting it; an
+`oss-*` wildcard can also match unrelated skills or commands.
+
 ## How It Works
 
 The helper provides guidelines that are project-agnostic. Project-specific configuration is stored in rule files with three files per project:
