@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Claude Code marketplace plugin and local builds for all six supported agents.
+- Claude Code and Codex marketplace catalogs, a shared assembled plugin bundle,
+  Gemini native skill/extension packaging, and a Bob Shell context adapter.
+- Local builds for all six supported agents.
 - Preview-first `uninstall.sh` for removing legacy assets while preserving project
   rules, security case data and unrelated files.
 

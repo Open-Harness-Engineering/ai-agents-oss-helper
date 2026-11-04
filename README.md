@@ -34,9 +34,58 @@ Use the Add Project guideline to generate initial rule files for any project. On
 /plugin install oss-helper@ai-agents-oss-helper
 ```
 
-The marketplace installs the committed `plugin/` bundle; users do not run a build.
+The Claude marketplace installs the committed `plugin/` bundle; users do not run a build.
 Plugin skills and commands are namespaced, for example `/oss-helper:oss-issues`
 and `/oss-helper:oss-fix-issue 42`.
+
+### Codex marketplace
+
+```bash
+codex plugin marketplace add Open-Harness-Engineering/ai-agents-oss-helper
+codex plugin add oss-helper@ai-agents-oss-helper
+```
+
+Start a new session, open `/skills`, and try `$oss-helper:oss-review` to list this
+repository's pull requests. The Codex plugin exposes the six skill groups;
+Claude-specific command wrappers and workflows remain Claude-only. Native
+marketplace support requires a current Codex client.
+
+### Gemini CLI native installation
+
+Install the assembled skills directly from Git:
+
+```bash
+gemini skills install https://github.com/Open-Harness-Engineering/ai-agents-oss-helper.git --path plugin/skills
+```
+
+Run `gemini skills list` to check discovery. For local development, build the Gemini extension with its native command and
+agent formats:
+
+```bash
+./build.sh gemini
+gemini extensions install ./build/gemini
+```
+
+Gemini's Git extension installer cannot select a repository subdirectory. Use
+the native skills command above for remote installation; the repository root
+contains editable sources, while `plugin/skills/` contains assembled skills.
+See the [Gemini skill installer](https://geminicli.com/docs/cli/skills/).
+
+### Bob Shell extension adapter
+
+For Bob Shell clients that support extensions:
+
+```bash
+bob extensions install https://github.com/Open-Harness-Engineering/ai-agents-oss-helper
+```
+
+The adapter follows the [Keycloak skills pattern](https://github.com/lhanusov/keycloak-ai-skills):
+`bob-extension.json` loads `BOB.md`, which routes requests to the assembled
+`plugin/skills/` directories. The shared `plugin/` bundle can also be passed to a
+local extension installer. This adapter is structurally checked; the Bob Shell
+client available for testing here does not expose `extensions`, so live Bob
+extension installation remains unverified. Use `./install.sh bob` with older
+clients. This does not install a Bob IDE plugin.
 
 ### Compatibility installer
 
@@ -78,7 +127,8 @@ cd ai-agents-oss-helper
 ```
 
 The build uses the current checkout, works offline, and writes only generated
-output inside the project. Check out a release tag before building to select a
+output inside the project. It requires `sha256sum` or `shasum` for native package
+versions. Check out a release tag before building to select a
 specific version. Rebuild `plugin/` whenever its inputs change; CI checks it for
 drift. For isolated builds, use `./build.sh --output-dir /tmp/oss-plugin claude`.
 
@@ -94,7 +144,7 @@ files into your home directory.
 | --- | --- | --- |
 | Bob | `build/bob/{skills,commands,agents}/` | `~/.bob/{skills,commands,agents}/` |
 | agy | `build/agy/{skills,commands,agents}/` | `~/.agy/{skills,commands,agents}/` |
-| Gemini | `build/gemini/{commands,agents}/` | `~/.gemini/{commands,agents}/` |
+| Gemini | `build/gemini/{skills,commands,agents}/` | `~/.gemini/{skills,commands,agents}/` |
 | OpenCode | `build/opencode/{commands,agents}/` | `~/.config/opencode/{commands,agents}/` |
 | Codex | `build/codex/skills/` | `~/.agents/skills/` |
 | Codex | `build/codex/agents/` | `~/.codex/agents/` |
@@ -350,7 +400,12 @@ same guideline by hand.
 
 ### Gemini CLI
 
-Individual TOML commands are generated from each guideline file and installed to `~/.gemini/commands/`. Each command includes a preamble instructing Gemini to read project rules from `~/.gemini/rules/<project-directory>/`.
+The Gemini target includes six skill groups, native TOML commands, converted
+agents and extension metadata. Commands activate their matching bundled skill
+and resolve supporting files from that skill directory; inline guidelines
+remain available for older clients. The compatibility installer copies these
+components under `~/.gemini/`. Project rules remain under
+`~/.gemini/rules/<project-directory>/`.
 
 ### OpenCode
 
@@ -358,7 +413,8 @@ Individual markdown commands with frontmatter are generated and installed to `~/
 
 ### Codex
 
-Installed as 6 skill directories at `~/.agents/skills/oss-{issues,review,ci,security,project,qe}/` with all guideline files as supporting files. Project rule files are installed to `~/.codex/oss-helper/rules/`.
+Marketplace installs use Codex's managed plugin cache. Compatibility installs
+and manual copies use 6 skill directories at `~/.agents/skills/oss-{issues,review,ci,security,project,qe}/` with all guideline files as supporting files. Project rule files are installed to `~/.codex/oss-helper/rules/`.
 
 If Codex reports a missing `~/.codex/oss-helper/.oss-init.md`, remove the legacy installation with `./uninstall.sh --yes codex`, build and copy the current Codex bundle, then start a new session. Current skills use their bundled `init.md`.
 
@@ -369,9 +425,12 @@ ai-agents-oss-helper/
 ├── install.sh                              # Compatibility installation wrapper
 ├── build.sh                                # Local asset builder
 ├── uninstall.sh                            # Legacy installation cleanup
-├── .claude-plugin/                         # Marketplace catalog
+├── .claude-plugin/                         # Claude marketplace catalog
+├── .agents/plugins/                        # Codex marketplace catalog
+├── bob-extension.json                      # Generated Bob Shell adapter manifest
+├── BOB.md                                  # Generated Bob Shell skill routing
 ├── packaging/                              # Plugin metadata template
-├── plugin/                                 # Generated Claude plugin (committed)
+├── plugin/                                 # Shared native plugin bundle (committed)
 ├── build/                                  # Other generated targets (ignored)
 ├── README.md
 ├── workflows/                              # Claude Code workflows (installed for Claude only)
@@ -447,14 +506,18 @@ and are installed on demand via the Install Info guideline.
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Notable changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
-The marketplace tracks `main`. Both the plugin manifest and marketplace entry
+The marketplaces track `main`. The Claude manifest and Claude marketplace entry
 intentionally omit `version`, so Claude uses the installed directory's commit SHA
-to detect updates between releases. Do not add a fixed version to either manifest.
+to detect updates between releases. Do not add a fixed version to those files.
+The portable plugin and Gemini/Bob extension manifests use a deterministic
+prerelease version derived from the assembled package content and templates, so
+changes produce a new version without a fixed release number.
 See [Claude plugin version resolution](https://code.claude.com/docs/en/plugins/loading#how-claude-code-computes-the-version).
 Claude validation reports an advisory about the omitted version; this is
 intentional, so `--strict` treats that advisory as a failure.
 Before tagging a release, run `./build.sh claude` and commit any regenerated
-`plugin/` output.
+`plugin/` output and root `bob-extension.json` / `BOB.md`. Do not edit generated versions
+manually.
 
 Releases are cut by pushing a `vMAJOR.MINOR.PATCH` tag (for example `v1.0.0`). A
 GitHub Actions workflow (`.github/workflows/release.yml`) then publishes the
@@ -469,7 +532,7 @@ builds use the checked-out source version.
 3. Add or modify guideline files in the appropriate `skills/oss-*/` directory
 4. Update `build.sh` if adding new files
 5. For a Claude Code workflow, add the script to `workflows/` (its `meta.name` must match the file name), list it in `WORKFLOW_FILES` in `build.sh`, give it a guideline that also works by hand for the other agents, and add a test under `tests/workflows/`
-6. Run `./build.sh claude` and include updated `plugin/` output
+6. Run `./build.sh claude` and include updated `plugin/`, `bob-extension.json` and `BOB.md`
 7. Submit a pull request
 
 ## License

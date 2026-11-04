@@ -14,7 +14,8 @@
 # agent this copy was installed for, the current location first:
 #   ~/.claude/skills/<skill>/oss-init.sh  ->  ~/.claude/oss-helper/rules, ~/.claude/rules
 #   ~/.bob/skills/<skill>/oss-init.sh     ->  ~/.bob/oss-helper/rules, ~/.bob/rules
-#   ~/.agents/skills/<skill>/oss-init.sh  ->  ~/.codex/oss-helper/rules
+#   ~/.agents/skills/<skill>/oss-init.sh  ->  ${CODEX_HOME:-~/.codex}/oss-helper/rules
+# Native plugin and extension caches use the same agent-specific rules locations.
 set -u
 
 repo_arg="${1:-.}"
@@ -53,11 +54,18 @@ rules_roots() {
         printf '%s\n' "$OSS_RULES_DIR"
         return
     fi
-    local script_dir agent_home
+    local script_dir agent_home codex_home
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+    codex_home="${CODEX_HOME:-$HOME/.codex}"
+    if [ -d "$codex_home" ]; then codex_home="$(cd "$codex_home" && pwd)"; fi
+    case "$script_dir/" in
+        "$codex_home"/plugins/*) printf '%s\n' "$codex_home/oss-helper/rules"; return ;;
+        "$HOME"/.gemini/skills/* | "$HOME"/.gemini/extensions/*) printf '%s\n' "$HOME/.gemini/rules"; return ;;
+        "$HOME"/.bob/extensions/* | "$HOME"/.bob/plugins/*) printf '%s\n%s\n' "$HOME/.bob/oss-helper/rules" "$HOME/.bob/rules"; return ;;
+    esac
     agent_home="$(dirname "$(dirname "$script_dir")")"
     case "$agent_home" in
-        */.agents) printf '%s\n' "$HOME/.codex/oss-helper/rules" ;;
+        */.agents) printf '%s\n' "$codex_home/oss-helper/rules" ;;
         */.claude | */.bob) printf '%s\n%s\n' "$agent_home/oss-helper/rules" "$agent_home/rules" ;;
         *) printf '%s\n%s\n' "$HOME/.claude/oss-helper/rules" "$HOME/.claude/rules" ;;
     esac

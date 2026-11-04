@@ -1,4 +1,5 @@
 ---
+name: oss-security
 description: >
   Security management for open source projects. Covers triaging security
   vulnerability reports, driving a report end to end (triage, reply, CVE,

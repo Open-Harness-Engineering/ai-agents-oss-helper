@@ -301,11 +301,12 @@ fetch_file() {
 convert_guideline_to_toml() {
     local src="$1"
     local dest="$2"
-    local description="$3"
+    local description="$3" skill="${1%/*}"
+    skill="${skill##*/}"
     {
         printf 'description = "%s"\n' "$description"
         printf "prompt = '''\n"
-        printf 'Note: This is an OSS Helper guideline. Before following these instructions, detect the current project via git remote and load project-specific rules from ~/.gemini/rules/<project-directory>/ (project-info.md, project-standards.md, project-guidelines.md).\n\n'
+        printf 'When the %s skill is available, activate it, follow its init.md, then read and follow %s in that skill directory. Resolve supporting file references relative to that skill directory. Use the inline guideline below only when that skill is unavailable; first detect the current project via git remote and load project-specific rules from ~/.gemini/rules/<project-directory>/ (project-info.md, project-standards.md, project-guidelines.md).\n\n' "$skill" "${src##*/}"
         cat "$src"
         printf "\n'''\n"
     } > "$dest"
@@ -537,9 +538,38 @@ build_target() {
     printf 'Built %s: %s\n' "$agent" "$destination"
 }
 
+# Native clients use this content-derived identity without claiming a release tag.
+build_native_metadata() {
+    local staging="$1" agent="$2" digest version template filename
+    local templates=(agent-plugin bob-extension)
+    case "$agent" in
+        claude) sed 's|@SKILLS_PATH@|skills|g' "$SOURCE_ROOT/packaging/BOB.md" > "$staging/BOB.md" ;;
+        gemini)
+            templates=(gemini-extension)
+            sed 's|@SKILLS_PATH@|skills|g' "$SOURCE_ROOT/packaging/GEMINI.md" > "$staging/GEMINI.md"
+            ;;
+    esac
+    local checksum=(sha256sum)
+    if command -v shasum > /dev/null 2>&1; then checksum=(shasum -a 256); fi
+    digest="$(
+        (
+            cd "$staging"
+            find . -type f -exec "${checksum[@]}" {} +
+            cd "$SOURCE_ROOT"
+            find packaging -type f -exec "${checksum[@]}" {} +
+        ) | LC_ALL=C sort | "${checksum[@]}"
+    )"
+    version="0.0.0-dev.sha${digest%% *}"
+    for template in "${templates[@]}"; do
+        filename="$template.json"
+        [[ "$template" != agent-plugin ]] || filename=plugin.json
+        sed "s/@VERSION@/$version/g" "$SOURCE_ROOT/packaging/$template.json" > "$staging/$filename"
+    done
+}
+
 assemble_target() {
     local agent="$1" staging="$2" file
-    case "$agent" in claude|bob|agy|codex) build_skills "$staging" ;; esac
+    case "$agent" in claude|bob|agy|codex|gemini) build_skills "$staging" ;; esac
     build_commands "$agent" "$staging"
     build_agents "$agent" "$staging"
     if [[ "$agent" == claude ]]; then
@@ -550,6 +580,7 @@ assemble_target() {
         fetch_file 'packaging/claude-plugin.json' "$staging/.claude-plugin/plugin.json"
     fi
     fetch_file LICENSE "$staging/LICENSE"
+    case "$agent" in claude|gemini) build_native_metadata "$staging" "$agent" ;; esac
     printf 'OSS Helper generated output: %s\n' "$agent" > "$staging/.oss-helper-build"
 }
 
@@ -586,6 +617,12 @@ main() {
             if [[ "$agent" == claude ]]; then destination="$SOURCE_ROOT/plugin"; else destination="$SOURCE_ROOT/build/$agent"; fi
         fi
         build_target "$agent" "$destination"
+        case "$agent:$output" in
+            claude:)
+                cp "$destination/bob-extension.json" "$SOURCE_ROOT/bob-extension.json"
+                sed 's|@SKILLS_PATH@|plugin/skills|g' "$SOURCE_ROOT/packaging/BOB.md" > "$SOURCE_ROOT/BOB.md"
+                ;;
+        esac
     done
 }
 

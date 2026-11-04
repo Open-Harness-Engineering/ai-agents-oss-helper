@@ -1,0 +1,6 @@
+{
+  "name": "oss-helper",
+  "version": "@VERSION@",
+  "description": "Open source project maintenance skills",
+  "contextFileName": "BOB.md"
+}

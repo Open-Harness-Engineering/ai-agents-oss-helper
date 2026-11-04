@@ -1,4 +1,5 @@
 ---
+name: oss-issues
 description: >
   Issue management for open source projects. Covers fixing issues,
   analyzing issues, creating issues, listing issues, finding tasks to

@@ -1,4 +1,5 @@
 ---
+name: oss-qe
 description: >
   Quality engineering and test management for open source projects.
   Covers creating test plans for project features or components,
